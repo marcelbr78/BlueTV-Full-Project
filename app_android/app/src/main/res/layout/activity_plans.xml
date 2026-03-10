@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="match_parent">
+    <TextView android:text="Escolha um plano" android:textSize="20sp" android:textStyle="bold"/>
+    <RadioGroup android:id="@+id/rgPlans" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <RadioButton android:id="@+id/rb30" android:text="30 Dias - R$ 39.90"/>
+        <RadioButton android:id="@+id/rb90" android:text="90 Dias - R$ 99.90"/>
+        <RadioButton android:id="@+id/rb365" android:text="365 Dias - R$ 269.90"/>
+    </RadioGroup>
+    <Button android:id="@+id/btnProceed" android:text="Continuar" android:layout_width="match_parent"/>
+</LinearLayout>

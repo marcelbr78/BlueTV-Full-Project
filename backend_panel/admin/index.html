@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlueTV Admin - Painel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 260px;
+      height: 100vh;
+      background: linear-gradient(180deg, #16213e 0%, #0f0f23 100%);
+      padding: 20px 0;
+      box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+    }
+
+    .sidebar-header h1 {
+      font-size: 24px;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sidebar-header span {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .nav-section {
+      margin-bottom: 25px;
+    }
+
+    .nav-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #666;
+      padding: 0 20px;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      color: #aaa;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      background: rgba(0, 212, 255, 0.1);
+      color: #00d4ff;
+      border-left-color: #00d4ff;
+    }
+
+    .nav-item .icon {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+    .nav-item .badge {
+      margin-left: auto;
+      background: #e94560;
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      margin-left: 260px;
+      padding: 30px;
+      min-height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header h2 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .btn-danger {
+      background: #e94560;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #d63650;
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+    }
+
+    /* STATS CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #1e2746 0%, #16213e 100%);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: bold;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* DATA TABLE */
+    .data-section {
+      background: #16213e;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .data-section h3 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .data-section h3 .icon {
+      font-size: 22px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    th {
+      background: rgba(0,0,0,0.2);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .status {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status.pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .status.ok { background: rgba(0, 200, 83, 0.2); color: #00c853; }
+    .status.extracted { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+    .status.recebido_botbot { background: rgba(123, 44, 191, 0.2); color: #a855f7; }
+
+    .message-preview {
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px;
+      color: #666;
+    }
+
+    .empty-state .icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+    }
+
+    /* HIDDEN SECTIONS */
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* REFRESH */
+    .refresh-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #aaa;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-left: 15px;
+      transition: all 0.3s;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    /* CREDENTIALS VIEW */
+    .cred-box {
+      background: #0f0f23;
+      border-radius: 10px;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .cred-box .line {
+      padding: 5px 0;
+      display: flex;
+    }
+
+    .cred-box .label {
+      color: #888;
+      min-width: 100px;
+    }
+
+    .cred-box .value {
+      color: #00d4ff;
+    }
+
+    /* LOGOUT BOTTOM */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>📺 BlueTV</h1>
+    <span>Painel Administrativo</span>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Principal</div>
+    <div class="nav-item active" onclick="showSection('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('clients')">
+      <span class="icon">👥</span> Clientes
+      <span class="badge" id="clientsCount">0</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Monitoramento</div>
+    <div class="nav-item" onclick="showSection('messages')">
+      <span class="icon">💬</span> Mensagens WhatsApp
+      <span class="badge" id="messagesCount">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('xtream')">
+      <span class="icon">🔑</span> Credenciais Xtream
+      <span class="badge" id="xtreamCount">0</span>
+    </div>
+    <div class="nav-item" onclick="showSection('requests')">
+      <span class="icon">📱</span> Requests do App
+      <span class="badge" id="requestsCount">0</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Configurações</div>
+    <div class="nav-item" onclick="showSection('config')">
+      <span class="icon">⚙️</span> API & Config
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="btn btn-danger" style="width: 100%;" onclick="logout()">
+      🚪 Sair
+    </button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section active">
+    <div class="header">
+      <h2>📊 Dashboard</h2>
+      <button class="btn btn-primary" onclick="refreshAll()">🔄 Atualizar Tudo</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total de Clientes</div>
+        <div class="value" id="statClients">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Mensagens Recebidas</div>
+        <div class="value" id="statMessages">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Credenciais Extraídas</div>
+        <div class="value" id="statXtream">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Requests Pendentes</div>
+        <div class="value" id="statPending">0</div>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <h3><span class="icon">🕐</span> Últimas Credenciais Extraídas</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>WhatsApp</th>
+            <th>Host</th>
+            <th>Usuário</th>
+            <th>Senha</th>
+            <th>Validade</th>
+          </tr>
+        </thead>
+        <tbody id="recentXtream"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div id="clients" class="section">
+    <div class="header">
+      <h2>👥 Clientes</h2>
+      <button class="refresh-btn" onclick="loadClients()">🔄 Atualizar</button>
+    </div>
+    <div class="data-section">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>WhatsApp</th>
+            <th>Status</th>
+            <th>Criado em</th>
+          </tr>
+        </thead>
+        <tbody id="clientsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="messages" class="section">
+    <div class="header">
+      <h2>💬 Mensagens WhatsApp</h2>
+      <button class="refresh-btn" onclick="loadMessages()">🔄 Atualizar</button>
+    </div>
+    <div class="data-section">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Telefone</th>
+            <th>Mensagem</th>
+            <th>Recebido em</th>
+          </tr>
+        </thead>
+        <tbody id="messagesTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- XTREAM -->
+  <div id="xtream" class="section">
+    <div class="header">
+      <h2>🔑 Credenciais Xtream</h2>
+      <button class="refresh-btn" onclick="loadXtream()">🔄 Atualizar</button>
+    </div>
+    <div class="data-section">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>WhatsApp</th>
+            <th>Host</th>
+            <th>Usuário</th>
+            <th>Senha</th>
+            <th>Validade</th>
+            <th>Extraído em</th>
+          </tr>
+        </thead>
+        <tbody id="xtreamTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div id="requests" class="section">
+    <div class="header">
+      <h2>📱 Requests do App</h2>
+      <button class="refresh-btn" onclick="loadRequests()">🔄 Atualizar</button>
+    </div>
+    <div class="data-section">
+      <table>
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Device ID</th>
+            <th>WhatsApp</th>
+            <th>Status</th>
+            <th>Criado em</th>
+          </tr>
+        </thead>
+        <tbody id="requestsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="config" class="section">
+    <div class="header">
+      <h2>⚙️ Configurações da API</h2>
+    </div>
+    <div class="data-section">
+      <h3><span class="icon">🔐</span> API Key do App</h3>
+      <div class="cred-box">
+        <div class="line">
+          <span class="label">X-Api-Key:</span>
+          <span class="value">btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <h3><span class="icon">🔗</span> Endpoints</h3>
+      <div class="cred-box">
+        <div class="line">
+          <span class="label">Webhook Evolution:</span>
+          <span class="value">POST /webhook/evolution</span>
+        </div>
+        <div class="line">
+          <span class="label">App Request:</span>
+          <span class="value">POST /app/request</span>
+        </div>
+        <div class="line">
+          <span class="label">App Status:</span>
+          <span class="value">GET /app/status?request_id=xxx</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <h3><span class="icon">📱</span> Exemplo de Uso (App)</h3>
+      <div class="cred-box">
+        <pre style="color: #888; white-space: pre-wrap;">
+// 1. Solicitar teste
+fetch('/app/request', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Api-Key': 'btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ'
+  },
+  body: JSON.stringify({
+    device_id: 'android-123',
+    whatsapp_number: '5511999999999'
+  })
+})
+
+// 2. Verificar status (polling)
+fetch('/app/status?request_id=xxx&api_key=...')
+        </pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Session check
+const TEMPO_INATIVIDADE = 15 * 60 * 1000;
+
+function logout() {
+  localStorage.removeItem("logado");
+  localStorage.removeItem("ultimaAtividade");
+  fetch('/api/logout', { method: 'POST' });
+  window.location.href = "/admin/login.html";
+}
+
+function verificarSessao() {
+  const logado = localStorage.getItem("logado");
+  const ultimaAtividade = localStorage.getItem("ultimaAtividade");
+  if (logado !== "true" || !ultimaAtividade) {
+    logout();
+    return;
+  }
+  if (Date.now() - Number(ultimaAtividade) > TEMPO_INATIVIDADE) {
+    alert("Sessão expirada por inatividade.");
+    logout();
+  }
+}
+
+function atualizarAtividade() {
+  localStorage.setItem("ultimaAtividade", Date.now());
+}
+
+verificarSessao();
+document.addEventListener("click", atualizarAtividade);
+document.addEventListener("keydown", atualizarAtividade);
+
+// Navigation
+function showSection(sectionId) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  document.getElementById(sectionId).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  // Load data
+  if (sectionId === 'clients') loadClients();
+  if (sectionId === 'messages') loadMessages();
+  if (sectionId === 'xtream') loadXtream();
+  if (sectionId === 'requests') loadRequests();
+}
+
+// Format date
+function formatDate(ts) {
+  if (!ts) return '-';
+  return new Date(ts).toLocaleString('pt-BR');
+}
+
+// Load Clients
+async function loadClients() {
+  try {
+    const res = await fetch('/api/clients');
+    const data = await res.json();
+    document.getElementById('clientsCount').textContent = data.length;
+    document.getElementById('statClients').textContent = data.length;
+    
+    const tbody = document.getElementById('clientsTable');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum cliente encontrado</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(c => `
+      <tr>
+        <td>${c.id}</td>
+        <td>${c.whatsapp_number || '-'}</td>
+        <td><span class="status ${c.status}">${c.status || 'pending'}</span></td>
+        <td>${formatDate(c.criado_em)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Erro ao carregar clientes:', err);
+  }
+}
+
+// Load Messages (botbot)
+async function loadMessages() {
+  try {
+    const res = await fetch('/api/debug/botbot');
+    const data = await res.json();
+    document.getElementById('messagesCount').textContent = data.length;
+    document.getElementById('statMessages').textContent = data.length;
+    
+    const tbody = document.getElementById('messagesTable');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhuma mensagem recebida</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(m => `
+      <tr>
+        <td>${m.id}</td>
+        <td>${m.phone || '-'}</td>
+        <td class="message-preview" title="${(m.message || '').replace(/"/g, '&quot;')}">${m.message || '-'}</td>
+        <td>${formatDate(m.received_at)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Erro ao carregar mensagens:', err);
+  }
+}
+
+// Load Xtream credentials
+async function loadXtream() {
+  try {
+    const res = await fetch('/api/debug/xtream');
+    const data = await res.json();
+    document.getElementById('xtreamCount').textContent = data.length;
+    document.getElementById('statXtream').textContent = data.length;
+    
+    const tbody = document.getElementById('xtreamTable');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhuma credencial extraída</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(x => `
+      <tr>
+        <td>${x.id}</td>
+        <td>${x.whatsapp_number || '-'}</td>
+        <td>${x.host || '-'}</td>
+        <td>${x.username || '-'}</td>
+        <td>${x.password || '-'}</td>
+        <td>${x.validade || '-'}</td>
+        <td>${formatDate(x.extracted_at)}</td>
+      </tr>
+    `).join('');
+
+    // Recent for dashboard
+    const recent = document.getElementById('recentXtream');
+    recent.innerHTML = data.slice(0, 5).map(x => `
+      <tr>
+        <td>${x.whatsapp_number || '-'}</td>
+        <td>${x.host || '-'}</td>
+        <td>${x.username || '-'}</td>
+        <td>${x.password || '-'}</td>
+        <td>${x.validade || '-'}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Erro ao carregar xtream:', err);
+  }
+}
+
+// Load App Requests
+async function loadRequests() {
+  try {
+    const res = await fetch('/api/debug/requests');
+    const data = await res.json();
+    document.getElementById('requestsCount').textContent = data.length;
+    
+    const pending = data.filter(r => r.status === 'pending').length;
+    document.getElementById('statPending').textContent = pending;
+    
+    const tbody = document.getElementById('requestsTable');
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum request do app</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td style="font-family: monospace; font-size: 11px;">${r.request_id || '-'}</td>
+        <td>${r.device_id || '-'}</td>
+        <td>${r.whatsapp_number || '-'}</td>
+        <td><span class="status ${r.status}">${r.status || 'pending'}</span></td>
+        <td>${formatDate(r.created_at)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error('Erro ao carregar requests:', err);
+  }
+}
+
+// Refresh all
+function refreshAll() {
+  loadClients();
+  loadMessages();
+  loadXtream();
+  loadRequests();
+}
+
+// Initial load
+refreshAll();
+</script>
+
+</body>
+</html>
