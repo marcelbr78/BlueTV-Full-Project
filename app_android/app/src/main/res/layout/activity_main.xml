@@ -1,41 +1,191 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/topAppBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="#0D47A1"
-        android:title="BlueTV" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0a0f1a">
 
     <LinearLayout
-        android:layout_below="@id/topAppBar"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"
-        android:layout_marginTop="?attr/actionBarSize">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔵 BLUETV"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#0099ff"
+            android:layout_marginTop="24dp"
+            android:letterSpacing="0.15"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IPTV Premium"
+            android:textSize="13sp"
+            android:textColor="#445566"
+            android:layout_marginBottom="28dp"/>
+
+        <ImageView
+            android:id="@+id/ivQrCode"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:background="#ffffff"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tvClientId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BLUETV-XXXXX"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#0099ff"
+            android:fontFamily="monospace"
+            android:background="#0066ff22"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Escaneie o QR Code com o WhatsApp"
+            android:textSize="12sp"
+            android:textColor="#445566"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚪ Aguardando Activação"
+            android:textSize="16sp"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:id="@+id/tvStatusDetail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Escaneie o QR Code ou toque em Solicitar Teste"
+            android:textSize="12sp"
+            android:textColor="#556677"
+            android:gravity="center"
+            android:layout_marginBottom="24dp"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
 
         <Button
-            android:id="@+id/btnPlans"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Planos" />
+            android:id="@+id/btnSolicitarTeste"
+            android:layout_width="280dp"
+            android:layout_height="52dp"
+            android:text="📲 Solicitar Teste via WhatsApp"
+            android:textSize="14sp"
+            android:textColor="#ffffff"
+            android:backgroundTint="#0066ff"
+            android:layout_marginBottom="12dp"/>
 
         <Button
-            android:id="@+id/btnAdmin"
+            android:id="@+id/btnAbrirPlayer"
+            android:layout_width="280dp"
+            android:layout_height="52dp"
+            android:text="▶ Abrir Player IPTV"
+            android:textSize="14sp"
+            android:textColor="#ffffff"
+            android:backgroundTint="#00aa44"
+            android:visibility="gone"
+            android:layout_marginBottom="24dp"/>
+
+        <LinearLayout
+            android:id="@+id/layoutCredenciais"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Admin (M3U / Clientes)" />
+            android:orientation="vertical"
+            android:background="#111927"
+            android:padding="16dp"
+            android:visibility="gone"
+            android:layout_marginTop="8dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔑 Suas Credenciais IPTV"
+                android:textSize="13sp"
+                android:textColor="#0099ff"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Host:"
+                android:textSize="11sp"
+                android:textColor="#445566"/>
+            <TextView
+                android:id="@+id/tvHost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#00cc66"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Usuário:"
+                android:textSize="11sp"
+                android:textColor="#445566"/>
+            <TextView
+                android:id="@+id/tvUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#ffffff"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Senha:"
+                android:textSize="11sp"
+                android:textColor="#445566"/>
+            <TextView
+                android:id="@+id/tvPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#ffffff"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Válido até:"
+                android:textSize="11sp"
+                android:textColor="#445566"/>
+            <TextView
+                android:id="@+id/tvValidade"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#f59e0b"
+                android:layout_marginBottom="4dp"/>
+
+        </LinearLayout>
+
     </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</ScrollView>
