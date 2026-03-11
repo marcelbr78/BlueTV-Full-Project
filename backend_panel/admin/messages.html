@@ -235,11 +235,10 @@ async function loadClients() {
   const data = await apiFetch('/api/debug/clients');
   if (!data) return;
 
-  const pending = data.filter(r => r.status === 'pending').length;
-  const ok = data.filter(r => r.status === 'ok').length;
-  const online = data.filter(r => r.is_online === 1).length;
+  const pending = (data || []).filter(r => r.status === 'pending').length;
+  const ok = (data || []).filter(r => r.status === 'ok').length;
   document.getElementById('s-pending').textContent = pending;
-  document.getElementById('s-ok').textContent = ok;
+  document.getElementById('s-ok').textContent = ok + (data.filter(r => r.is_online === 1 && r.last_seen && (Date.now() - r.last_seen) < 120000).length > 0 ? ' 🟢' : '');
 
   const tbody = document.getElementById('tbody-clients');
   tbody.innerHTML = '';

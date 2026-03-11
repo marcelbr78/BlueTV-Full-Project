@@ -418,7 +418,13 @@ app.post('/webhook/evolution', async (req, res) => {
     
     // Número de quem enviou
     const remoteJid = key.remoteJid || data.remoteJid || '';
-    const senderPhone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '');
+    const senderPhone = remoteJid
+      .replace(/@s\.whatsapp\.net/g, '')
+      .replace(/@c\.us/g, '')
+      .replace(/@lid/g, '')
+      .replace(/:[0-9]+$/g, '')
+      .replace(/\.[0-9]+$/g, '')
+      .trim();
     
     // Conteúdo da mensagem
     const message = messageData.conversation 
@@ -495,8 +501,8 @@ app.post('/webhook/evolution', async (req, res) => {
       const insertResult = await db.run(
         `INSERT INTO xtream_credentials 
          (request_id, client_id, whatsapp_number, host, username, password, 
-          validade, m3u_url, raw_message, extracted_at, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'extracted')`,
+          validade, m3u_url, raw_message, extracted_at, status, plano)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'extracted', ?)`,
         [
           require('crypto').randomUUID(),
           clientId,
@@ -507,7 +513,8 @@ app.post('/webhook/evolution', async (req, res) => {
           parsed.validade,
           parsed.m3u_url,
           message,
-          now
+          now,
+          parsed.plano || null
         ]
       );
 
@@ -986,6 +993,7 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
   try {
     const rows = await db.all(`
       SELECT 
+        ar.id,
         ar.client_code,
         ar.whatsapp_number,
         ar.status,
@@ -996,6 +1004,7 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
         ar.is_online,
         ar.created_at,
         ar.updated_at,
+        ar.xtream_id,
         xc.host,
         xc.username,
         xc.password,
@@ -1006,9 +1015,11 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
       LEFT JOIN xtream_credentials xc ON ar.xtream_id = xc.id
       ORDER BY ar.updated_at DESC
     `);
-    return res.json(rows);
+    console.log('Debug clients:', rows.length, 'registos');
+    return res.json(Array.isArray(rows) ? rows : []);
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('Erro /api/debug/clients:', err);
+    return res.status(500).json([]);
   }
 });
 

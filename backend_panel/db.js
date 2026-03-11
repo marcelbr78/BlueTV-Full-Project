@@ -61,8 +61,12 @@ async function initDb() {
     m3u_url TEXT,
     raw_message TEXT,
     extracted_at INTEGER,
-    status TEXT DEFAULT 'extracted'
+    status TEXT DEFAULT 'extracted',
+    plano TEXT
   )`);
+
+  // Adicionar coluna plano se não existir
+  await run("ALTER TABLE xtream_credentials ADD COLUMN plano TEXT").catch(() => {});
   await run(`CREATE TABLE IF NOT EXISTS app_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT UNIQUE,
