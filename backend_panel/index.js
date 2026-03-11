@@ -4,7 +4,8 @@ const crypto = require("crypto");
 const db = require("./db");
 db.initDb().catch(err => console.error('Erro ao inicializar DB:', err));
 const config = require("./config");
-const { isXtreamResponse, parseXtreamMessage, extractM3uUrl, parseAtivarTesteCommand } = require("./parser");
+const { isXtreamResponse, parseXtreamMessage, extractM3uUrl, 
+        parseAtivarTesteCommand, parseClientIdFromMessage } = require('./parser');
 
 const app = express();
 const PORT = config.PORT;
@@ -456,11 +457,15 @@ app.post("/webhook/evolution", async (req, res) => {
     const xtreamResult = isXtreamResponse(message) ? parseXtreamMessage(message) : null;
     
     if (xtreamResult && xtreamResult.success) {
+      // Tentar extrair Client ID da mensagem Xtream
+      // O Client ID pode vir na própria mensagem ou numa mensagem anterior
+      const extractedClientId = parseClientIdFromMessage(message) || null;
+
       const result = await db.run(
         `INSERT INTO xtream_credentials 
          (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [null, null, phone, xtreamResult.host, xtreamResult.username, 
+        [null, extractedClientId, phone, xtreamResult.host, xtreamResult.username, 
          xtreamResult.password, xtreamResult.validade, xtreamResult.m3u_url, 
          message, Date.now()]
       );
@@ -538,14 +543,14 @@ app.post("/webhook/evolution", async (req, res) => {
 // - Retorna client_code e link do WhatsApp
 // =====================
 
-// Função para gerar código legível (6 caracteres alfanuméricos maiúsculos)
+// Função para gerar código legível (BLUETV-XXXXX)
 function generateClientCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sem 0, O, I, 1 para evitar confusão
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return code;
+  return 'BLUETV-' + code;
 }
 
 app.post("/app/request", requireApiKey, async (req, res) => {
@@ -700,6 +705,105 @@ app.get("/api/debug/requests", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("Erro ao buscar app_requests:", err);
     return res.status(500).json({ error: "Erro ao buscar dados" });
+  }
+});
+
+// =====================
+// APP: STATUS BLUETV-XXXXX
+// =====================
+app.get('/app/status/bluetv/:clientId', requireApiKey, async (req, res) => {
+  try {
+    const clientId = req.params.clientId.toUpperCase();
+    
+    // Buscar request pelo client_code
+    const appRequest = await db.get(
+      "SELECT * FROM app_requests WHERE client_code = ?",
+      [clientId]
+    );
+    
+    if (!appRequest) {
+      return res.json({ success: true, status: 'pending', message: 'Aguardando activação' });
+    }
+    
+    if (appRequest.status === 'ok' && appRequest.xtream_id) {
+      const xtream = await db.get(
+        "SELECT host, username, password, validade, m3u_url, plano FROM xtream_credentials WHERE id = ?",
+        [appRequest.xtream_id]
+      );
+      
+      if (xtream) {
+        return res.json({
+          success: true,
+          status: 'ok',
+          xtream: {
+            host: xtream.host,
+            username: xtream.username,
+            password: xtream.password,
+            validade: xtream.validade,
+            m3u_url: xtream.m3u_url,
+            plano: xtream.plano
+          }
+        });
+      }
+    }
+    
+    return res.json({ success: true, status: 'pending', message: 'A processar...' });
+  } catch (err) {
+    console.error('Erro status bluetv:', err);
+    return res.status(500).json({ success: false, error: 'Erro interno' });
+  }
+});
+
+// =====================
+// APP: REGISTER
+// =====================
+app.post('/app/register', requireApiKey, async (req, res) => {
+  try {
+    const { client_code, device_id } = req.body;
+    
+    if (!client_code || !client_code.startsWith('BLUETV-')) {
+      return res.status(400).json({ success: false, error: 'Client ID inválido' });
+    }
+    
+    const whatsappNumber = '5547997193147';
+    const message = encodeURIComponent(
+      'Olá bom dia! Sou cliente ID ' + client_code + ' e gostaria de um teste IPTV BlueTV 😊'
+    );
+    const whatsappLink = 'https://wa.me/' + whatsappNumber + '?text=' + message;
+    
+    // Verificar se já existe
+    const existing = await db.get(
+      "SELECT * FROM app_requests WHERE client_code = ?",
+      [client_code]
+    );
+    
+    if (existing) {
+      return res.json({ 
+        success: true, 
+        client_code,
+        whatsapp_link: whatsappLink,
+        status: existing.status
+      });
+    }
+    
+    // Criar novo registo
+    const requestId = crypto.randomUUID();
+    const now = Date.now();
+    
+    await db.run(
+      "INSERT INTO app_requests (request_id, client_code, device_id, status, created_at, updated_at) VALUES (?, ?, ?, 'pending', ?, ?)",
+      [requestId, client_code, device_id || 'unknown', now, now]
+    );
+    
+    return res.json({ 
+      success: true, 
+      client_code,
+      whatsapp_link: whatsappLink,
+      status: 'pending'
+    });
+  } catch (err) {
+    console.error('Erro register:', err);
+    return res.status(500).json({ success: false, error: 'Erro interno' });
   }
 });
 

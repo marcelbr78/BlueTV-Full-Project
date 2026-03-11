@@ -124,4 +124,17 @@ function parseAtivarTesteCommand(message) {
   return { success: false };
 }
 
-module.exports = { parseXtreamMessage, isXtreamResponse, extractM3uUrl, parseAtivarTesteCommand };
+function parseClientIdFromMessage(message) {
+  if (!message || typeof message !== 'string') return null;
+  const match = message.match(/BLUETV-([A-Z0-9]{5})/i);
+  if (match) return match[0].toUpperCase();
+  return null;
+}
+
+module.exports = { 
+  parseXtreamMessage, 
+  isXtreamResponse, 
+  extractM3uUrl, 
+  parseAtivarTesteCommand,
+  parseClientIdFromMessage
+};
