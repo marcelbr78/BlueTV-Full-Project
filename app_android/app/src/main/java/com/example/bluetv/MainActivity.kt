@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
             checkStatus(clientId)
         } else {
             setStatus("pending")
+            // Iniciar polling automaticamente ao abrir o app
+            startPolling(clientId)
         }
 
         btnSolicitarTeste.setOnClickListener {
@@ -158,13 +160,16 @@ class MainActivity : AppCompatActivity() {
         isPolling = true
         setStatus("waiting")
 
+        // Verificar imediatamente
+        checkStatus(clientId)
+
         pollingRunnable = object : Runnable {
             override fun run() {
                 checkStatus(clientId)
                 handler.postDelayed(this, 5000)
             }
         }
-        handler.post(pollingRunnable!!)
+        handler.postDelayed(pollingRunnable!!, 5000)
     }
 
     private fun stopPolling() {
@@ -173,44 +178,62 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkStatus(clientId: String) {
+        val url = "$BACKEND_URL/app/status/bluetv/$clientId"
+        android.util.Log.d("BlueTV", "Checking status: $url")
+        
         val request = Request.Builder()
-            .url("$BACKEND_URL/app/status/bluetv/$clientId")
+            .url(url)
+            .get()
             .addHeader("x-api-key", API_KEY)
+            .addHeader("Content-Type", "application/json")
             .build()
 
         client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {}
+            override fun onFailure(call: Call, e: IOException) {
+                android.util.Log.e("BlueTV", "Status check failed: ${e.message}")
+            }
 
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string() ?: return
-                val json = JSONObject(body)
-                val status = json.optString("status", "pending")
+                val bodyStr = response.body?.string() ?: return
+                android.util.Log.d("BlueTV", "Status response: $bodyStr")
+                
+                try {
+                    val json = JSONObject(bodyStr)
+                    val status = json.optString("status", "pending")
+                    android.util.Log.d("BlueTV", "Status: $status")
 
-                if (status == "ok") {
-                    val xtream = json.optJSONObject("xtream")
-                    if (xtream != null) {
-                        val host = xtream.optString("host")
-                        val username = xtream.optString("username")
-                        val password = xtream.optString("password")
-                        val validade = xtream.optString("validade")
-                        val m3uUrl = xtream.optString("m3u_url")
+                    if (status == "ok") {
+                        val xtream = json.optJSONObject("xtream")
+                        if (xtream != null) {
+                            val host = xtream.optString("host")
+                            val username = xtream.optString("username")
+                            val password = xtream.optString("password")
+                            val validade = xtream.optString("validade")
+                            val m3uUrl = xtream.optString("m3u_url")
+                            val plano = xtream.optString("plano")
 
-                        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                        prefs.edit()
-                            .putString(KEY_STATUS, "ok")
-                            .putString("host", host)
-                            .putString("username", username)
-                            .putString("password", password)
-                            .putString("validade", validade)
-                            .putString("m3u_url", m3uUrl)
-                            .apply()
+                            android.util.Log.d("BlueTV", "Credenciais recebidas! Host: $host")
 
-                        stopPolling()
-                        runOnUiThread {
-                            setStatus("ok")
-                            showCredenciais(host, username, password, validade)
+                            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                            prefs.edit()
+                                .putString(KEY_STATUS, "ok")
+                                .putString("host", host)
+                                .putString("username", username)
+                                .putString("password", password)
+                                .putString("validade", validade)
+                                .putString("m3u_url", m3uUrl)
+                                .putString("plano", plano)
+                                .apply()
+
+                            stopPolling()
+                            runOnUiThread {
+                                setStatus("ok")
+                                showCredenciais(host, username, password, validade)
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    android.util.Log.e("BlueTV", "Erro ao parsear resposta: ${e.message}")
                 }
             }
         })
