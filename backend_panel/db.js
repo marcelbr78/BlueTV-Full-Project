@@ -6,7 +6,7 @@ const db = createClient({
 });
 
 async function run(sql, params = []) {
-  await db.execute({ sql, args: params });
+  return await db.execute({ sql, args: params });
 }
 
 async function get(sql, params = []) {
