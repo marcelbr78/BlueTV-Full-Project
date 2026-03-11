@@ -817,6 +817,118 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.post('/webhook/botbot', async (req, res) => {
+  try {
+    const body = req.body;
+    console.log('📨 BotBot webhook recebido:', JSON.stringify(body));
+
+    // Dados que chegam do BotBot
+    const senderPhone = body.senderPhone || body.devicePhone || null;
+    const senderMessage = body.senderMessage || '';
+    
+    // Extrair Client ID da mensagem do cliente (BLUETV-XXXXX)
+    const clientIdMatch = senderMessage.match(/BLUETV-([A-Z0-9]{5})/i);
+    const clientId = clientIdMatch ? clientIdMatch[0].toUpperCase() : null;
+
+    // Dados Xtream que chegam directamente do BotBot via tags Megga
+    const host = body.dns || null;
+    const username = body.username || null;
+    const password = body.password || null;
+    const validade = body.expiresAtFormatted || body.expiresAt || null;
+    const plano = body.package || null;
+    const m3uUrl = host && username && password
+      ? `${host}/get.php?username=${username}&password=${password}&type=m3u_plus&output=mpegts`
+      : null;
+
+    // Se tiver credenciais Xtream — guardar directamente
+    if (host && username && password) {
+      const now = Date.now();
+      
+      // Guardar credenciais
+      const insertResult = await db.run(
+        `INSERT INTO xtream_credentials 
+         (request_id, client_id, whatsapp_number, host, username, password, 
+          validade, m3u_url, raw_message, extracted_at, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'extracted')`,
+        [
+          require('crypto').randomUUID(),
+          clientId,
+          senderPhone,
+          host,
+          username,
+          password,
+          validade,
+          m3uUrl,
+          JSON.stringify(body),
+          now
+        ]
+      );
+
+      // Vincular ao app_request pelo client_code
+      if (clientId) {
+        const appRequest = await db.get(
+          "SELECT * FROM app_requests WHERE client_code = ?",
+          [clientId]
+        );
+        
+        if (appRequest) {
+          await db.run(
+            "UPDATE app_requests SET status = 'ok', xtream_id = ?, whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
+            [insertResult.lastInsertRowid || insertResult.lastID, senderPhone, now, clientId]
+          );
+          console.log(`✅ Cliente ${clientId} activado com sucesso!`);
+        } else {
+          // Criar request se não existir (cliente usou WhatsApp manual)
+          await db.run(
+            `INSERT OR IGNORE INTO app_requests 
+             (request_id, client_code, device_id, whatsapp_number, status, xtream_id, created_at, updated_at)
+             VALUES (?, ?, 'whatsapp', ?, 'ok', ?, ?, ?)`,
+            [
+              require('crypto').randomUUID(),
+              clientId || senderPhone,
+              senderPhone,
+              insertResult.lastInsertRowid || insertResult.lastID,
+              now,
+              now
+            ]
+          );
+        }
+      } else {
+        // Sem Client ID — guardar pelo número de telefone
+        await db.run(
+          `INSERT OR IGNORE INTO app_requests 
+           (request_id, client_code, device_id, whatsapp_number, status, xtream_id, created_at, updated_at)
+           VALUES (?, ?, 'whatsapp', ?, 'ok', ?, ?, ?)`,
+          [
+            require('crypto').randomUUID(),
+            senderPhone,
+            senderPhone,
+            insertResult.lastInsertRowid || insertResult.lastID,
+            now,
+            now
+          ]
+        );
+      }
+
+      return res.json({ success: true, message: 'Credenciais guardadas', clientId, senderPhone });
+    }
+
+    // Se não tiver credenciais — apenas registar a mensagem
+    if (senderPhone) {
+      await db.run(
+        "INSERT INTO botbot_messages (phone, message, received_at) VALUES (?, ?, ?)",
+        [senderPhone, senderMessage, Date.now()]
+      );
+    }
+
+    return res.json({ success: true, message: 'Mensagem registada' });
+
+  } catch (err) {
+    console.error('❌ Erro webhook botbot:', err);
+    return res.status(500).json({ success: false, error: 'Erro interno' });
+  }
+});
+
 // Start server
 const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);
