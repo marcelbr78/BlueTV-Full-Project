@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#1a0a0a</color>
+    <color name="bg_darker">#0d0505</color>
+    <color name="accent_red">#e50914</color>
+    <color name="accent_orange">#f59e0b</color>
+    <color name="text_white">#ffffff</color>
+    <color name="text_gray">#aaaaaa</color>
+    <color name="tab_selected">#e50914</color>
+    <color name="tab_normal">#ffffff</color>
+    <color name="card_bg">#2a1010</color>
+    <color name="overlay">#88000000</color>
+</resources>

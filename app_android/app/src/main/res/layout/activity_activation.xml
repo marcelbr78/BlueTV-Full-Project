@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#1a0a0a">
+
+    <!-- Lado esquerdo: QR Code -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BlueTV"
+            android:textColor="#e50914"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Escaneie para activar"
+            android:textColor="#aaaaaa"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp"/>
+
+        <ImageView
+            android:id="@+id/ivQrCode"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:background="#ffffff"
+            android:padding="8dp"/>
+
+        <TextView
+            android:id="@+id/tvClientId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:indeterminateTint="#e50914"/>
+
+    </LinearLayout>
+
+    <!-- Lado direito: Instruções -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Como activar:"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1️⃣  Escaneie o QR Code\n\n2️⃣  Envie a mensagem no WhatsApp\n\n3️⃣  Aguarde as credenciais\n\n4️⃣  O app activa automaticamente!"
+            android:textColor="#cccccc"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="32dp"/>
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚪ Aguardando activação..."
+            android:textColor="#aaaaaa"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnSolicitar"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="📲 Solicitar via WhatsApp"
+            android:textColor="#ffffff"
+            android:backgroundTint="#25D366"
+            android:paddingHorizontal="24dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

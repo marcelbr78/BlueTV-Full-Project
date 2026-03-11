@@ -4,86 +4,126 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
 class HomeActivity : AppCompatActivity() {
 
-    private val PREFS_NAME = "bluetv_prefs"
     private val BACKEND_URL = "https://bluetv-full-project.onrender.com"
     private val API_KEY = "btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ"
+    private val PREFS_NAME = "bluetv_prefs"
     private val client = OkHttpClient()
+
+    private val tabs = listOf("LIVE", "FILMES", "SÉRIES", "KIDS", "ANIME", "ESPORTES")
+    private var currentTab = 0
+    private var channels = listOf<Channel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val clientId = prefs.getString("client_id", "—")
-        val plano = prefs.getString("plano", "Teste")
         val validade = prefs.getString("validade", "—")
         val m3uUrl = prefs.getString("m3u_url", null)
+        val clientId = prefs.getString("client_id", "")
 
-        findViewById<TextView>(R.id.tvClientId).text = clientId
-        findViewById<TextView>(R.id.tvPlano).text = "📦 $plano"
-        findViewById<TextView>(R.id.tvValidade).text = "🗓️ Válido até: $validade"
+        findViewById<TextView>(R.id.tvExpira).text = "Expira: $validade"
+        setupTabs()
 
-        // Botão TV ao Vivo
-        findViewById<LinearLayout>(R.id.btnTvAoVivo).setOnClickListener {
-            if (m3uUrl != null) {
-                val intent = Intent(this, PlayerActivity::class.java)
-                intent.putExtra("m3u_url", m3uUrl)
-                intent.putExtra("category", "tv")
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "URL não encontrada", Toast.LENGTH_SHORT).show()
+        if (m3uUrl != null) {
+            loadM3U(m3uUrl)
+        }
+
+        if (!clientId.isNullOrEmpty()) sendHeartbeat(clientId)
+
+        // Botão CONFIG
+        findViewById<TextView>(R.id.btnConfig).setOnClickListener {
+            val prefs2 = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs2.edit().putString("status", "pending").apply()
+            startActivity(Intent(this, ActivationActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun setupTabs() {
+        val tabsContainer = findViewById<RecyclerView>(R.id.rvTabs)
+        tabsContainer.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        val adapter = TabAdapter(tabs, currentTab) { index ->
+            currentTab = index
+            filterChannels()
+        }
+        tabsContainer.adapter = adapter
+    }
+
+    private fun loadM3U(url: String) {
+        val req = Request.Builder().url(url).build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread { Toast.makeText(this@HomeActivity, "Erro ao carregar canais", Toast.LENGTH_SHORT).show() }
             }
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: return
+                response.close()
+                channels = M3UParser.parse(body)
+                runOnUiThread { filterChannels() }
+            }
+        })
+    }
+
+    private fun filterChannels() {
+        val keyword = when (tabs[currentTab]) {
+            "LIVE" -> null // todos os grupos de TV ao vivo
+            "FILMES" -> "filme"
+            "SÉRIES" -> "serie"
+            "KIDS" -> "kid"
+            "ANIME" -> "anime"
+            "ESPORTES" -> "esport"
+            else -> null
         }
 
-        // Botão Séries
-        findViewById<LinearLayout>(R.id.btnSeries).setOnClickListener {
-            Toast.makeText(this, "Em breve!", Toast.LENGTH_SHORT).show()
+        val filtered = if (keyword == null && tabs[currentTab] == "LIVE") {
+            M3UParser.groupByQuality(
+                channels.filter { ch ->
+                    val g = ch.group.lowercase()
+                    !g.contains("filme") && !g.contains("serie") &&
+                    !g.contains("kid") && !g.contains("anime") && !g.contains("adult")
+                }
+            )
+        } else if (keyword != null) {
+            channels.filter { it.group.lowercase().contains(keyword) }
+        } else {
+            channels
         }
 
-        // Botão Filmes
-        findViewById<LinearLayout>(R.id.btnFilmes).setOnClickListener {
-            Toast.makeText(this, "Em breve!", Toast.LENGTH_SHORT).show()
-        }
-
-        // Botão Sair / Voltar à activação
-        findViewById<TextView>(R.id.tvSair).setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        val recycler = findViewById<RecyclerView>(R.id.rvChannels)
+        recycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        recycler.adapter = ChannelAdapter(filtered) { channel ->
+            val intent = Intent(this, PlayerActivity::class.java)
+            intent.putExtra("stream_url", channel.url)
+            intent.putExtra("channel_name", channel.name)
+            intent.putExtra("channel_logo", channel.logo)
             startActivity(intent)
         }
-
-        // Heartbeat
-        sendHeartbeat(clientId ?: "")
     }
 
     private fun sendHeartbeat(clientId: String) {
         val json = JSONObject()
         json.put("client_code", clientId)
         json.put("device_model", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL)
-        json.put("apk_version", "1.0")
-
-        val body = json.toString()
-            .toRequestBody("application/json".toMediaTypeOrNull())
-        val request = Request.Builder()
-            .url("$BACKEND_URL/app/heartbeat")
-            .post(body)
-            .addHeader("x-api-key", API_KEY)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
+        val body = okhttp3.RequestBody.create("application/json".toMediaType(), json.toString())
+        val req = Request.Builder().url("$BACKEND_URL/app/heartbeat")
+            .post(body).addHeader("x-api-key", API_KEY).build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {}
             override fun onResponse(call: Call, response: Response) { response.close() }
         })
     }
+
+    private fun String.toMediaType() = okhttp3.MediaType.Companion.parse(this)!!
 }

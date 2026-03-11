@@ -1,7 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.BlueTV" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">#0D47A1</item>
-        <item name="colorPrimaryVariant">#0B3A8A</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+    <style name="Theme.BlueTV" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:statusBarColor">@color/bg_darker</item>
+        <item name="android:navigationBarColor">@color/bg_darker</item>
+        <item name="android:windowFullscreen">true</item>
     </style>
 </resources>

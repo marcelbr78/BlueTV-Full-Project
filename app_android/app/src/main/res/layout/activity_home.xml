@@ -3,208 +3,59 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0a0f1a"
-    android:padding="20dp">
+    android:background="#1a0a0a">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🔵 BLUETV"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:textColor="#0099ff"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:letterSpacing="0.15"/>
-
+    <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#111927"
-        android:padding="16dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="28dp">
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:background="#0d0505">
 
         <TextView
-            android:id="@+id/tvClientId"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="#0099ff"
-            android:textSize="13sp"
-            android:fontFamily="monospace"
+            android:layout_weight="1"
+            android:text="BlueTV"
+            android:textColor="#e50914"
+            android:textSize="22sp"
             android:textStyle="bold"/>
 
         <TextView
-            android:id="@+id/tvPlano"
+            android:id="@+id/tvExpira"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#00cc66"
-            android:textSize="13sp"
-            android:layout_marginTop="4dp"/>
-
-        <TextView
-            android:id="@+id/tvValidade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#f59e0b"
+            android:textColor="#aaaaaa"
             android:textSize="12sp"
-            android:layout_marginTop="4dp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/btnTvAoVivo"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:background="#111927"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📺"
-            android:textSize="32sp"
             android:layout_marginEnd="16dp"/>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TV ao Vivo"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Canais ao vivo"
-                android:textColor="#445566"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="›"
-            android:textColor="#0099ff"
-            android:textSize="24sp"
-            android:gravity="end"/>
+            android:id="@+id/btnConfig"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="⚙"
+            android:textColor="#aaaaaa"
+            android:textSize="20sp"
+            android:gravity="center"/>
+
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/btnSeries"
+    <!-- TABS -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTabs"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:background="#111927"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:gravity="center_vertical">
+        android:layout_height="44dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="4dp"
+        android:background="#0d0505"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎬"
-            android:textSize="32sp"
-            android:layout_marginEnd="16dp"/>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Séries"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Em breve"
-                android:textColor="#445566"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="›"
-            android:textColor="#334"
-            android:textSize="24sp"
-            android:gravity="end"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/btnFilmes"
+    <!-- CANAIS GRID -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvChannels"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:background="#111927"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:gravity="center_vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎥"
-            android:textSize="32sp"
-            android:layout_marginEnd="16dp"/>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Filmes"
-                android:textColor="#ffffff"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Em breve"
-                android:textColor="#445566"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="›"
-            android:textColor="#334"
-            android:textSize="24sp"
-            android:gravity="end"/>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tvSair"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="← Voltar à activação"
-        android:textColor="#445566"
-        android:textSize="12sp"
-        android:layout_gravity="center"
-        android:layout_marginTop="24dp"
+        android:layout_height="match_parent"
         android:padding="8dp"/>
 
 </LinearLayout>
