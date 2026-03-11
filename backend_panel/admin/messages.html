@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlueTV — Mensagens WhatsApp</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; }
+  .topbar { background: #1a2a3a; border-bottom: 2px solid #00aaff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h1 { font-size: 1.2rem; color: #00aaff; letter-spacing: 1px; }
+  .topbar .nav a { color: #aac; text-decoration: none; margin-left: 18px; font-size: 0.9rem; }
+  .topbar .nav a:hover { color: #00aaff; }
+  .container { max-width: 1200px; margin: 32px auto; padding: 0 20px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: #1a2a3a; border: 1px solid #1e3a5f; border-radius: 10px; padding: 18px 22px; }
+  .stat-card .label { font-size: 0.78rem; color: #7799bb; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .value { font-size: 2rem; font-weight: 700; color: #00aaff; margin-top: 6px; }
+  .card { background: #1a2a3a; border: 1px solid #1e3a5f; border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .card-header { padding: 16px 22px; border-bottom: 1px solid #1e3a5f; display: flex; align-items: center; justify-content: space-between; }
+  .card-header h2 { font-size: 1rem; color: #00aaff; }
+  .toolbar { display: flex; gap: 10px; align-items: center; }
+  .btn { padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: #00aaff; color: #fff; }
+  .btn-primary:hover { background: #0088dd; }
+  .btn-danger { background: #c0392b; color: #fff; }
+  .btn-outline { background: transparent; color: #00aaff; border: 1px solid #00aaff; }
+  .btn-outline:hover { background: #00aaff22; }
+  .search-box { padding: 7px 14px; border-radius: 6px; border: 1px solid #1e3a5f; background: #0f1923; color: #e0e0e0; font-size: 0.85rem; width: 220px; }
+  .search-box:focus { outline: none; border-color: #00aaff; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #0f1923; color: #7799bb; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; padding: 12px 16px; text-align: left; }
+  td { padding: 12px 16px; border-bottom: 1px solid #1e3a5f22; font-size: 0.88rem; vertical-align: top; }
+  tr:hover td { background: #1e3a5f22; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .badge-xtream { background: #00aa4422; color: #00cc66; border: 1px solid #00aa44; }
+  .badge-pending { background: #b4530922; color: #f59e0b; border: 1px solid #b45309; }
+  .badge-unknown { background: #44444422; color: #888; border: 1px solid #444; }
+  .msg-preview { max-width: 380px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #aac; font-size: 0.82rem; }
+  .msg-full { display: none; white-space: pre-wrap; font-size: 0.82rem; color: #aac; background: #0f1923; padding: 10px; border-radius: 6px; margin-top: 6px; max-height: 200px; overflow-y: auto; }
+  .expand-btn { background: none; border: none; color: #00aaff; cursor: pointer; font-size: 0.78rem; margin-top: 4px; display: block; }
+  .phone { font-weight: 600; color: #e0e0e0; }
+  .time { color: #556; font-size: 0.8rem; }
+  .credential-box { background: #0f192388; border: 1px solid #00aa4444; border-radius: 6px; padding: 8px 12px; margin-top: 6px; font-size: 0.8rem; }
+  .credential-box .cred-row { display: flex; gap: 8px; margin-bottom: 3px; }
+  .cred-label { color: #7799bb; min-width: 60px; }
+  .cred-value { color: #00cc66; font-family: monospace; }
+  .empty { text-align: center; padding: 48px; color: #556; }
+  .auto-refresh { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #7799bb; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #00cc66; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .tab-bar { display: flex; border-bottom: 1px solid #1e3a5f; }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 0.88rem; color: #7799bb; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.active { color: #00aaff; border-bottom-color: #00aaff; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  #toast { position: fixed; bottom: 24px; right: 24px; background: #00aa44; color: #fff; padding: 12px 22px; border-radius: 8px; font-size: 0.9rem; display: none; z-index: 999; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🔵 BlueTV — Monitor WhatsApp</h1>
+  <nav class="nav">
+    <a href="/admin">Dashboard</a>
+    <a href="/admin/messages.html">Mensagens</a>
+    <a href="#" onclick="logout()">Sair</a>
+  </nav>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat-card"><div class="label">Total Mensagens</div><div class="value" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="label">Credenciais Extraídas</div><div class="value" id="stat-xtream">—</div></div>
+    <div class="stat-card"><div class="label">Requests Pendentes</div><div class="value" id="stat-pending">—</div></div>
+    <div class="stat-card"><div class="label">Activações OK</div><div class="value" id="stat-ok">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>📨 Mensagens Recebidas</h2>
+      <div class="toolbar">
+        <input class="search-box" id="search" placeholder="Pesquisar número ou mensagem..." oninput="filterMessages()">
+        <button class="btn btn-primary" onclick="loadAll()">↻ Actualizar</button>
+        <div class="auto-refresh"><div class="dot"></div> Auto-refresh 10s</div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('all')">Todas</div>
+      <div class="tab" onclick="switchTab('xtream')">✅ Xtream Extraído</div>
+      <div class="tab" onclick="switchTab('pending')">⏳ Pendentes</div>
+    </div>
+
+    <div id="tab-all" class="tab-content active">
+      <table>
+        <thead><tr><th>Número</th><th>Mensagem</th><th>Credenciais</th><th>Estado</th><th>Data</th></tr></thead>
+        <tbody id="messages-body"></tbody>
+      </table>
+      <div class="empty" id="empty-all" style="display:none">Nenhuma mensagem recebida ainda</div>
+    </div>
+
+    <div id="tab-xtream" class="tab-content">
+      <table>
+        <thead><tr><th>Número</th><th>Host</th><th>Usuário</th><th>Senha</th><th>Plano</th><th>Validade</th></tr></thead>
+        <tbody id="xtream-body"></tbody>
+      </table>
+      <div class="empty" id="empty-xtream" style="display:none">Nenhuma credencial extraída ainda</div>
+    </div>
+
+    <div id="tab-pending" class="tab-content">
+      <table>
+        <thead><tr><th>Código</th><th>Device ID</th><th>Número</th><th>Estado</th><th>Criado em</th></tr></thead>
+        <tbody id="requests-body"></tbody>
+      </table>
+      <div class="empty" id="empty-pending" style="display:none">Nenhum request pendente</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let allMessages = [];
+let allXtream = [];
+let allRequests = [];
+let currentTab = 'all';
+
+async function apiFetch(url) {
+  const r = await fetch(url, { credentials: 'include' });
+  if (r.status === 401) { window.location.href = '/admin/login.html'; return null; }
+  return r.json();
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(Number(ts));
+  return d.toLocaleString('pt-BR');
+}
+
+function showToast(msg, color = '#00aa44') {
+  const t = document.getElementById('toast');
+  t.style.background = color;
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function toggleMsg(id) {
+  const el = document.getElementById('msg-' + id);
+  if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['all','xtream','pending'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function filterMessages() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const rows = document.querySelectorAll('#messages-body tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+async function loadMessages() {
+  const data = await apiFetch('/api/debug/botbot');
+  if (!data) return;
+  allMessages = data;
+  document.getElementById('stat-total').textContent = data.length;
+  const tbody = document.getElementById('messages-body');
+  tbody.innerHTML = '';
+  if (!data.length) { document.getElementById('empty-all').style.display = 'block'; return; }
+  document.getElementById('empty-all').style.display = 'none';
+  data.forEach(m => {
+    const isXtream = m.message && (m.message.includes('USUÁRIO') || m.message.includes('Dns/Url') || m.message.includes('m3u'));
+    const badge = isXtream
+      ? '<span class="badge badge-xtream">✅ Xtream</span>'
+      : '<span class="badge badge-unknown">Outro</span>';
+    tbody.innerHTML += `<tr>
+      <td><div class="phone">${m.phone || '—'}</div></td>
+      <td>
+        <div class="msg-preview">${(m.message || '').substring(0, 80)}...</div>
+        <button class="expand-btn" onclick="toggleMsg(${m.id})">▼ ver completo</button>
+        <div class="msg-full" id="msg-${m.id}">${m.message || ''}</div>
+      </td>
+      <td>${isXtream ? '<span style="color:#00cc66;font-size:0.8rem">Credenciais detectadas</span>' : '—'}</td>
+      <td>${badge}</td>
+      <td><div class="time">${formatDate(m.received_at)}</div></td>
+    </tr>`;
+  });
+}
+
+async function loadXtream() {
+  const data = await apiFetch('/api/debug/xtream');
+  if (!data) return;
+  allXtream = data;
+  document.getElementById('stat-xtream').textContent = data.length;
+  const tbody = document.getElementById('xtream-body');
+  tbody.innerHTML = '';
+  if (!data.length) { document.getElementById('empty-xtream').style.display = 'block'; return; }
+  document.getElementById('empty-xtream').style.display = 'none';
+  data.forEach(x => {
+    tbody.innerHTML += `<tr>
+      <td><div class="phone">${x.whatsapp_number || '—'}</div></td>
+      <td><span style="color:#00aaff;font-family:monospace;font-size:0.82rem">${x.host || '—'}</span></td>
+      <td><span style="font-family:monospace">${x.username || '—'}</span></td>
+      <td><span style="font-family:monospace">${x.password || '—'}</span></td>
+      <td>${x.validade ? '<span style="color:#f59e0b">'+x.validade+'</span>' : '—'}</td>
+      <td>${formatDate(x.extracted_at)}</td>
+    </tr>`;
+  });
+}
+
+async function loadRequests() {
+  const data = await apiFetch('/api/debug/requests');
+  if (!data) return;
+  allRequests = Array.isArray(data) ? data : [];
+  const pending = allRequests.filter(r => r.status === 'pending').length;
+  const ok = allRequests.filter(r => r.status === 'ok').length;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-ok').textContent = ok;
+  const tbody = document.getElementById('requests-body');
+  tbody.innerHTML = '';
+  if (!allRequests.length) { document.getElementById('empty-pending').style.display = 'block'; return; }
+  document.getElementById('empty-pending').style.display = 'none';
+  allRequests.forEach(r => {
+    const badge = r.status === 'ok'
+      ? '<span class="badge badge-xtream">✅ OK</span>'
+      : '<span class="badge badge-pending">⏳ Pendente</span>';
+    tbody.innerHTML += `<tr>
+      <td><span style="font-family:monospace;color:#00aaff">${r.client_code || r.request_id?.substring(0,8) || '—'}</span></td>
+      <td><span style="font-size:0.78rem;color:#556">${(r.device_id || '—').substring(0,20)}</span></td>
+      <td><div class="phone">${r.whatsapp_number || '—'}</div></td>
+      <td>${badge}</td>
+      <td><div class="time">${formatDate(r.created_at)}</div></td>
+    </tr>`;
+  });
+}
+
+async function loadAll() {
+  await Promise.all([loadMessages(), loadXtream(), loadRequests()]);
+  showToast('Dados actualizados!');
+}
+
+async function logout() {
+  await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = '/admin/login.html';
+}
+
+// Auto-refresh a cada 10 segundos
+loadAll();
+setInterval(loadAll, 10000);
+</script>
+</body>
+</html>

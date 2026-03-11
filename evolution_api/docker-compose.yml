@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   evolution-api:
-    image: atendai/evolution-api:latest
+    image: atendai/evolution-api:v1.8.2
     container_name: bluetv-evolution
     restart: always
     ports:
