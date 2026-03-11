@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" >
+    <LinearLayout android:orientation="vertical" android:padding="16dp" android:layout_width="match_parent" android:layout_height="wrap_content">
+        <TextView android:text="Admin - Configurar M3U" android:textStyle="bold" android:textSize="18sp"/>
+        <EditText android:id="@+id/etM3UUrl" android:hint="URL da lista M3U (ex https://.../lista.m3u)" android:inputType="textUri"/>
+        <Button android:id="@+id/btnSaveM3U" android:text="Salvar M3U" />
+        <View android:layout_height="16dp" />
+        <TextView android:text="Clientes (simples)" android:textStyle="bold" android:textSize="16sp"/>
+        <EditText android:id="@+id/etClientName" android:hint="Nome do cliente"/>
+        <EditText android:id="@+id/etClientId" android:hint="Identificador (ex email)"/>
+        <Button android:id="@+id/btnAddClient" android:text="Adicionar Cliente"/>
+        <ListView android:id="@+id/listClients" android:layout_width="match_parent" android:layout_height="200dp"/>
+    </LinearLayout>
+</ScrollView>
