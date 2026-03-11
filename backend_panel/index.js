@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
 const db = require("./db");
+db.initDb().catch(err => console.error('Erro ao inicializar DB:', err));
 const config = require("./config");
 const { isXtreamResponse, parseXtreamMessage, extractM3uUrl, parseAtivarTesteCommand } = require("./parser");
 
@@ -1062,6 +1063,4 @@ const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);
   console.log("📱 API Key do App:", config.APP_API_KEY);
   console.log("📞 Número do Painel IPTV:", config.IPTV_PANEL_NUMBER || "(não configurado)");
-  });
-
-
+});
