@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-30:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-30:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-30:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-30:12
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\loja\.gradle\caches\8.13\transforms\58f7b4bf04bcb09b731000cf93238a79\transformed\constraintlayout-2.1.4\AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\12287b92d7032a3ba738e96a69c3d965\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
@@ -79,8 +79,8 @@ MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja
 	android:name
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:22-76
 application
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-27:19
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-27:19
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-28:19
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-28:19
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\loja\.gradle\caches\8.13\transforms\58f7b4bf04bcb09b731000cf93238a79\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
@@ -127,32 +127,36 @@ activity#com.example.bluetv.PlansActivity
 ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:9-51
 	android:name
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:19-48
+activity#com.example.bluetv.HomeActivity
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-50
+	android:name
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:19-47
 activity#com.example.bluetv.PlayerActivity
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-18:76
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:9-19:76
 	android:screenOrientation
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:13-50
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:13-50
 	android:exported
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:13-36
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-36
 	android:configChanges
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-74
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:13-74
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:19-49
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:19-49
 activity#com.example.bluetv.MainActivity
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:9-26:20
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:9-27:20
 	android:exported
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:13-36
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:13-36
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:13-41
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:13-25:29
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:13-26:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:17-69
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:17-69
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:25-66
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:17-77
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:25:17-77
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:27-74
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:25:27-74
 uses-sdk
 INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml

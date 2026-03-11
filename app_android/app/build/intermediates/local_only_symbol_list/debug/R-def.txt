@@ -2,11 +2,14 @@ R_DEF: Internal format may change without notice
 local
 id btnAbrirPlayer
 id btnAddClient
+id btnFilmes
 id btnGenerateQR
 id btnProceed
 id btnSaveM3U
+id btnSeries
 id btnSimulate
 id btnSolicitarTeste
+id btnTvAoVivo
 id cbTerms
 id etAddress
 id etCPF
@@ -31,12 +34,15 @@ id tvError
 id tvHost
 id tvInfo
 id tvPassword
+id tvPlano
+id tvSair
 id tvStatus
 id tvStatusDetail
 id tvUsername
 id tvValidade
 layout activity_admin
 layout activity_form
+layout activity_home
 layout activity_main
 layout activity_plans
 layout activity_player

@@ -12,6 +12,7 @@
         <activity android:name=".QRActivity" />
         <activity android:name=".FormActivity" />
         <activity android:name=".PlansActivity" />
+        <activity android:name=".HomeActivity" />
         <activity android:name=".PlayerActivity"
             android:screenOrientation="landscape"
             android:exported="true"

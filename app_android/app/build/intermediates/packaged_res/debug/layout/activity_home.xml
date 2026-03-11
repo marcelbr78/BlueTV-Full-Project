@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0a0f1a"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔵 BLUETV"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="#0099ff"
+        android:layout_gravity="center"
+        android:layout_marginTop="20dp"
+        android:letterSpacing="0.15"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#111927"
+        android:padding="16dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="28dp">
+
+        <TextView
+            android:id="@+id/tvClientId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#0099ff"
+            android:textSize="13sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvPlano"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#00cc66"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvValidade"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#f59e0b"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnTvAoVivo"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="#111927"
+        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📺"
+            android:textSize="32sp"
+            android:layout_marginEnd="16dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TV ao Vivo"
+                android:textColor="#ffffff"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Canais ao vivo"
+                android:textColor="#445566"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="›"
+            android:textColor="#0099ff"
+            android:textSize="24sp"
+            android:gravity="end"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnSeries"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="#111927"
+        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎬"
+            android:textSize="32sp"
+            android:layout_marginEnd="16dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Séries"
+                android:textColor="#ffffff"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Em breve"
+                android:textColor="#445566"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="›"
+            android:textColor="#334"
+            android:textSize="24sp"
+            android:gravity="end"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnFilmes"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="#111927"
+        android:padding="16dp"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎥"
+            android:textSize="32sp"
+            android:layout_marginEnd="16dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Filmes"
+                android:textColor="#ffffff"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Em breve"
+                android:textColor="#445566"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="›"
+            android:textColor="#334"
+            android:textSize="24sp"
+            android:gravity="end"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvSair"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Voltar à activação"
+        android:textColor="#445566"
+        android:textSize="12sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:padding="8dp"/>
+
+</LinearLayout>

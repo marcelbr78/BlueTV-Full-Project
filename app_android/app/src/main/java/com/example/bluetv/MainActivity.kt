@@ -323,6 +323,12 @@ class MainActivity : AppCompatActivity() {
         tvUsername.text = username
         tvPassword.text = password
         tvValidade.text = validade
+
+        // Navegar para HomeActivity após 2 segundos
+        handler.postDelayed({
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+        }, 2000)
     }
 
     override fun onDestroy() {
