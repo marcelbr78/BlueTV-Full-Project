@@ -1,26 +1,26 @@
 [
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_plans.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_plans.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_qr.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_qr.xml"
     },
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_player.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_player.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_main.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_main.xml"
     },
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_form.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_form.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_form.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_form.xml"
     },
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_admin.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_admin.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_admin.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_admin.xml"
     },
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_main.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_main.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_player.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_player.xml"
     },
     {
-        "merged": "com.example.bluetv.app-merged_res-32:/layout_activity_qr.xml.flat",
-        "source": "com.example.bluetv.app-main-34:/layout/activity_qr.xml"
+        "merged": "com.example.bluetv.app-merged_res-36:/layout_activity_plans.xml.flat",
+        "source": "com.example.bluetv.app-main-38:/layout/activity_plans.xml"
     }
 ]

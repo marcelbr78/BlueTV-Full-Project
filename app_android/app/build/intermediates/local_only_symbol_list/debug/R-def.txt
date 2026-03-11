@@ -19,6 +19,7 @@ id ivQR
 id ivQrCode
 id layoutCredenciais
 id listClients
+id playerView
 id progressBar
 id rb30
 id rb365
@@ -26,6 +27,7 @@ id rb90
 id rgPlans
 id tvClientId
 id tvCopy
+id tvError
 id tvHost
 id tvInfo
 id tvPassword

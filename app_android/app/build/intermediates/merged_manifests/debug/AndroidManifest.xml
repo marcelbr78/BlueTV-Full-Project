@@ -49,7 +49,11 @@
         <activity android:name="com.example.bluetv.QRActivity" />
         <activity android:name="com.example.bluetv.FormActivity" />
         <activity android:name="com.example.bluetv.PlansActivity" />
-        <activity android:name="com.example.bluetv.PlayerActivity" />
+        <activity
+            android:name="com.example.bluetv.PlayerActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="true"
+            android:screenOrientation="landscape" />
         <activity
             android:name="com.example.bluetv.MainActivity"
             android:exported="true" >

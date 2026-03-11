@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.bluetv.app-mergeDebugResources-30:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+            "outputFile": "com.example.bluetv.app-mergeDebugResources-34:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
             "map": [
                 {
                     "source": "C:\\Users\\loja\\.gradle\\caches\\8.13\\transforms\\70d6164a142426d0926fcc6168de9b42\\transformed\\material-1.11.0\\res\\values-w360dp-port-v13\\values-w360dp-port-v13.xml",

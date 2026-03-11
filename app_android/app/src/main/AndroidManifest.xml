@@ -12,7 +12,10 @@
         <activity android:name=".QRActivity" />
         <activity android:name=".FormActivity" />
         <activity android:name=".PlansActivity" />
-        <activity android:name=".PlayerActivity" />
+        <activity android:name=".PlayerActivity"
+            android:screenOrientation="landscape"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

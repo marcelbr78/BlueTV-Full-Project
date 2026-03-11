@@ -1,13 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-26:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-26:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-26:12
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-26:12
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:1:1-29:12
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\loja\.gradle\caches\8.13\transforms\58f7b4bf04bcb09b731000cf93238a79\transformed\constraintlayout-2.1.4\AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\12287b92d7032a3ba738e96a69c3d965\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\2222e5b385a2e6ae314cc7523a279632\transformed\appcompat-1.6.1\AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.android.exoplayer:exoplayer-hls:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\e6de027b4e892e8098c7128e74542399\transformed\jetified-exoplayer-hls-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-dash:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6e5c8c59209241d4e77a0d604dd1fc44\transformed\jetified-exoplayer-dash-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\0f65d1c4fbe1826ffd4f52986dae0948\transformed\jetified-exoplayer-core-2.19.1\AndroidManifest.xml:17:1-26:12
 MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\c96b69434caaddd58442e9af6b207376\transformed\jetified-emoji2-views-helper-1.2.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:17:1-35:12
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\fedbc4e007023dd75fd9af0eb0a1f9f5\transformed\jetified-viewpager2-1.0.0\AndroidManifest.xml:17:1-24:12
@@ -19,10 +22,12 @@ MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] C:\Users\loja\.gr
 MERGED from [androidx.transition:transition:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\9c87d59238578b549fcf5d1891f751f0\transformed\transition-1.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\fdbbd9c8409118fa12e3863ffd9bccb0\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\ffcd3ea2a23d35cd872715f129efbd00\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-ui:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\aa3e834ff8cb69ba387fb1e45c1c9867\transformed\jetified-exoplayer-ui-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\646b1f33c2bf8397f65d39d523ae7b81\transformed\recyclerview-1.3.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media:media:1.6.0] C:\Users\loja\.gradle\caches\8.13\transforms\8d3fd2e747957154d54736d4b4abd7c9\transformed\media-1.6.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\673fa7eafdabf8847421e2d2184876d3\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\0a6926f27ea20c6727a7803f7be99ad2\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5669de29769608915c28eb001867c407\transformed\loader-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\6738a8b291e1c0106ef767de5465af6c\transformed\recyclerview-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.customview:customview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\25ed7bd0d4791ed413f6f3f1ab267cfe\transformed\customview-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:17:1-30:12
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\loja\.gradle\caches\8.13\transforms\fb03b09335edb08197fb794e813da730\transformed\jetified-savedstate-1.2.1\AndroidManifest.xml:17:1-22:12
@@ -32,10 +37,17 @@ MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] C:\Users\loja\.gradle\
 MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\4589241323e663c4aaca57eecb6ad645\transformed\lifecycle-viewmodel-2.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\31ed2c0440fa6de0e86325dd1bdb745a\transformed\lifecycle-runtime-2.6.1\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\57599fd524e5e820a663aa61efa8186f\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\6f2f233703a8171ea6b89e0a25f19369\transformed\jetified-customview-poolingcontainer-1.0.0\AndroidManifest.xml:17:1-23:12
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\b8b6cb90a7b801bbc133c24e0b00a851\transformed\jetified-core-ktx-1.12.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\ff935076aac1a667de9cbed9b349f1c6\transformed\jetified-annotation-experimental-1.3.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\c5c1452f315371a3b4ab7238661f8139\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\2a89981537951102f4ba8e82f98e74c1\transformed\cardview-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [com.google.android.exoplayer:exoplayer-extractor:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\3ebcdc2ebd070f8651c73f1219d271a8\transformed\jetified-exoplayer-extractor-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-container:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\815a4a2d50d1858074e7b8832cec84ed\transformed\jetified-exoplayer-container-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-datasource:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\016ebe09fa79890e7f2505e14caa91d8\transformed\jetified-exoplayer-datasource-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-decoder:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\9dd03208369cb05ffd1eb4ccd921f87d\transformed\jetified-exoplayer-decoder-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-database:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\5ce0e981414a1727c05fa2f5e327aa1f\transformed\jetified-exoplayer-database-2.19.1\AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6253d2c1773cd19e08e948ec7c7dca20\transformed\jetified-exoplayer-common-2.19.1\AndroidManifest.xml:17:1-26:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5b8475b0ca860a1d78e72e25d7e50e4e\transformed\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\loja\.gradle\caches\8.13\transforms\2870c36604623e973b9e0d03b61db9b7\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:17:1-55:12
@@ -60,11 +72,15 @@ ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Projec
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:3:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
 ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:5-79
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\0f65d1c4fbe1826ffd4f52986dae0948\transformed\jetified-exoplayer-core-2.19.1\AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\0f65d1c4fbe1826ffd4f52986dae0948\transformed\jetified-exoplayer-core-2.19.1\AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6253d2c1773cd19e08e948ec7c7dca20\transformed\jetified-exoplayer-common-2.19.1\AndroidManifest.xml:24:5-79
+MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6253d2c1773cd19e08e948ec7c7dca20\transformed\jetified-exoplayer-common-2.19.1\AndroidManifest.xml:24:5-79
 	android:name
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:22-76
 application
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-24:19
-INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-24:19
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-27:19
+INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-27:19
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\loja\.gradle\caches\8.13\transforms\70d6164a142426d0926fcc6168de9b42\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\loja\.gradle\caches\8.13\transforms\58f7b4bf04bcb09b731000cf93238a79\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
@@ -112,25 +128,31 @@ ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Projec
 	android:name
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:19-48
 activity#com.example.bluetv.PlayerActivity
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-52
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-18:76
+	android:screenOrientation
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:13-50
+	android:exported
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:13-36
+	android:configChanges
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-74
 	android:name
 		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:19-49
 activity#com.example.bluetv.MainActivity
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:9-23:20
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:9-26:20
 	android:exported
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-36
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:13-36
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:13-41
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:13-22:29
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:13-25:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:17-69
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:17-69
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:25-66
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:17-77
+ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:17-77
 	android:name
-		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:27-74
+		ADDED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:27-74
 uses-sdk
 INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml
@@ -143,6 +165,12 @@ MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\loja\.gradle
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\12287b92d7032a3ba738e96a69c3d965\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\2222e5b385a2e6ae314cc7523a279632\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\2222e5b385a2e6ae314cc7523a279632\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.exoplayer:exoplayer-hls:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\e6de027b4e892e8098c7128e74542399\transformed\jetified-exoplayer-hls-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-hls:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\e6de027b4e892e8098c7128e74542399\transformed\jetified-exoplayer-hls-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-dash:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6e5c8c59209241d4e77a0d604dd1fc44\transformed\jetified-exoplayer-dash-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-dash:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6e5c8c59209241d4e77a0d604dd1fc44\transformed\jetified-exoplayer-dash-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\0f65d1c4fbe1826ffd4f52986dae0948\transformed\jetified-exoplayer-core-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-core:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\0f65d1c4fbe1826ffd4f52986dae0948\transformed\jetified-exoplayer-core-2.19.1\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\c96b69434caaddd58442e9af6b207376\transformed\jetified-emoji2-views-helper-1.2.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\c96b69434caaddd58442e9af6b207376\transformed\jetified-emoji2-views-helper-1.2.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:21:5-44
@@ -165,14 +193,18 @@ MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\loj
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\fdbbd9c8409118fa12e3863ffd9bccb0\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\ffcd3ea2a23d35cd872715f129efbd00\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\ffcd3ea2a23d35cd872715f129efbd00\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-ui:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\aa3e834ff8cb69ba387fb1e45c1c9867\transformed\jetified-exoplayer-ui-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-ui:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\aa3e834ff8cb69ba387fb1e45c1c9867\transformed\jetified-exoplayer-ui-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\646b1f33c2bf8397f65d39d523ae7b81\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\646b1f33c2bf8397f65d39d523ae7b81\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.6.0] C:\Users\loja\.gradle\caches\8.13\transforms\8d3fd2e747957154d54736d4b4abd7c9\transformed\media-1.6.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.6.0] C:\Users\loja\.gradle\caches\8.13\transforms\8d3fd2e747957154d54736d4b4abd7c9\transformed\media-1.6.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\673fa7eafdabf8847421e2d2184876d3\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\673fa7eafdabf8847421e2d2184876d3\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\0a6926f27ea20c6727a7803f7be99ad2\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\0a6926f27ea20c6727a7803f7be99ad2\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5669de29769608915c28eb001867c407\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5669de29769608915c28eb001867c407\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\6738a8b291e1c0106ef767de5465af6c\transformed\recyclerview-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\6738a8b291e1c0106ef767de5465af6c\transformed\recyclerview-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.customview:customview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\25ed7bd0d4791ed413f6f3f1ab267cfe\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.customview:customview:1.1.0] C:\Users\loja\.gradle\caches\8.13\transforms\25ed7bd0d4791ed413f6f3f1ab267cfe\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:20:5-44
@@ -191,6 +223,8 @@ MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] C:\Users\loja\.gradle\c
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\31ed2c0440fa6de0e86325dd1bdb745a\transformed\lifecycle-runtime-2.6.1\AndroidManifest.xml:5:5-44
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\57599fd524e5e820a663aa61efa8186f\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\57599fd524e5e820a663aa61efa8186f\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\6f2f233703a8171ea6b89e0a25f19369\transformed\jetified-customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\6f2f233703a8171ea6b89e0a25f19369\transformed\jetified-customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\b8b6cb90a7b801bbc133c24e0b00a851\transformed\jetified-core-ktx-1.12.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\b8b6cb90a7b801bbc133c24e0b00a851\transformed\jetified-core-ktx-1.12.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\ff935076aac1a667de9cbed9b349f1c6\transformed\jetified-annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
@@ -199,6 +233,18 @@ MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\loja\.gradle\c
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\c5c1452f315371a3b4ab7238661f8139\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\2a89981537951102f4ba8e82f98e74c1\transformed\cardview-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\2a89981537951102f4ba8e82f98e74c1\transformed\cardview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.exoplayer:exoplayer-extractor:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\3ebcdc2ebd070f8651c73f1219d271a8\transformed\jetified-exoplayer-extractor-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-extractor:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\3ebcdc2ebd070f8651c73f1219d271a8\transformed\jetified-exoplayer-extractor-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-container:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\815a4a2d50d1858074e7b8832cec84ed\transformed\jetified-exoplayer-container-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-container:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\815a4a2d50d1858074e7b8832cec84ed\transformed\jetified-exoplayer-container-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-datasource:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\016ebe09fa79890e7f2505e14caa91d8\transformed\jetified-exoplayer-datasource-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-datasource:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\016ebe09fa79890e7f2505e14caa91d8\transformed\jetified-exoplayer-datasource-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-decoder:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\9dd03208369cb05ffd1eb4ccd921f87d\transformed\jetified-exoplayer-decoder-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-decoder:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\9dd03208369cb05ffd1eb4ccd921f87d\transformed\jetified-exoplayer-decoder-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-database:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\5ce0e981414a1727c05fa2f5e327aa1f\transformed\jetified-exoplayer-database-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-database:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\5ce0e981414a1727c05fa2f5e327aa1f\transformed\jetified-exoplayer-database-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6253d2c1773cd19e08e948ec7c7dca20\transformed\jetified-exoplayer-common-2.19.1\AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.exoplayer:exoplayer-common:2.19.1] C:\Users\loja\.gradle\caches\8.13\transforms\6253d2c1773cd19e08e948ec7c7dca20\transformed\jetified-exoplayer-common-2.19.1\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5b8475b0ca860a1d78e72e25d7e50e4e\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\loja\.gradle\caches\8.13\transforms\5b8475b0ca860a1d78e72e25d7e50e4e\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\loja\.gradle\caches\8.13\transforms\2870c36604623e973b9e0d03b61db9b7\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
