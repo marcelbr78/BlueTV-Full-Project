@@ -939,6 +939,79 @@ app.post('/webhook/botbot', async (req, res) => {
   }
 });
 
+// Heartbeat — APK envia a cada 30s para dizer que está online
+app.post('/app/heartbeat', requireApiKey, async (req, res) => {
+  try {
+    const { client_code, device_model, apk_version, current_channel } = req.body;
+    if (!client_code) return res.status(400).json({ success: false });
+
+    const now = Date.now();
+    await db.run(
+      `UPDATE app_requests SET 
+        is_online = 1,
+        last_seen = ?,
+        device_model = COALESCE(?, device_model),
+        apk_version = COALESCE(?, apk_version),
+        current_channel = COALESCE(?, current_channel),
+        updated_at = ?
+       WHERE client_code = ?`,
+      [now, device_model || null, apk_version || null, current_channel || null, now, client_code.toUpperCase()]
+    );
+
+    return res.json({ success: true, timestamp: now });
+  } catch (err) {
+    console.error('Erro heartbeat:', err);
+    return res.status(500).json({ success: false });
+  }
+});
+
+// Offline — APK envia quando fecha
+app.post('/app/offline', requireApiKey, async (req, res) => {
+  try {
+    const { client_code } = req.body;
+    if (!client_code) return res.status(400).json({ success: false });
+    const now = Date.now();
+    await db.run(
+      "UPDATE app_requests SET is_online = 0, last_seen = ?, updated_at = ? WHERE client_code = ?",
+      [now, now, client_code.toUpperCase()]
+    );
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false });
+  }
+});
+
+// Endpoint admin — lista clientes com dados completos
+app.get('/api/debug/clients', requireAuth, async (req, res) => {
+  try {
+    const rows = await db.all(`
+      SELECT 
+        ar.client_code,
+        ar.whatsapp_number,
+        ar.status,
+        ar.device_model,
+        ar.apk_version,
+        ar.last_seen,
+        ar.current_channel,
+        ar.is_online,
+        ar.created_at,
+        ar.updated_at,
+        xc.host,
+        xc.username,
+        xc.password,
+        xc.validade,
+        xc.m3u_url,
+        xc.plano
+      FROM app_requests ar
+      LEFT JOIN xtream_credentials xc ON ar.xtream_id = xc.id
+      ORDER BY ar.updated_at DESC
+    `);
+    return res.json(rows);
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start server
 const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);

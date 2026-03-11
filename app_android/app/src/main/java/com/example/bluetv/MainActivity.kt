@@ -240,8 +240,58 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 btnSolicitarTeste.visibility = View.GONE
                 btnAbrirPlayer.visibility = View.VISIBLE
+                
+                val clientId = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .getString(KEY_CLIENT_ID, null)
+                if (clientId != null) startHeartbeat(clientId)
             }
         }
+    }
+
+    private fun startHeartbeat(clientId: String) {
+        val heartbeatRunnable = object : Runnable {
+            override fun run() {
+                val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                val channel = prefs.getString("current_channel", null)
+                
+                val json = JSONObject()
+                json.put("client_code", clientId)
+                json.put("device_model", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL)
+                json.put("apk_version", "1.0")
+                if (channel != null) json.put("current_channel", channel)
+
+                val body = json.toString().toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("$BACKEND_URL/app/heartbeat")
+                    .post(body)
+                    .addHeader("x-api-key", API_KEY)
+                    .build()
+
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {}
+                    override fun onResponse(call: Call, response: Response) {
+                        response.close()
+                    }
+                })
+                handler.postDelayed(this, 30000) // a cada 30 segundos
+            }
+        }
+        handler.post(heartbeatRunnable)
+    }
+
+    private fun sendOffline(clientId: String) {
+        val json = JSONObject()
+        json.put("client_code", clientId)
+        val body = json.toString().toRequestBody("application/json".toMediaType())
+        val request = Request.Builder()
+            .url("$BACKEND_URL/app/offline")
+            .post(body)
+            .addHeader("x-api-key", API_KEY)
+            .build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {}
+            override fun onResponse(call: Call, response: Response) { response.close() }
+        })
     }
 
     private fun showCredenciais(host: String, username: String, password: String, validade: String) {
@@ -253,6 +303,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        val clientId = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_CLIENT_ID, null)
+        if (clientId != null) sendOffline(clientId)
+        
         super.onDestroy()
         stopPolling()
     }

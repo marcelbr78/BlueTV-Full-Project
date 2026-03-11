@@ -75,6 +75,18 @@ async function initDb() {
     created_at INTEGER,
     updated_at INTEGER
   )`);
+
+  // Adicionar colunas de monitorização se não existirem
+  const colsToAdd = [
+    "ALTER TABLE app_requests ADD COLUMN device_model TEXT",
+    "ALTER TABLE app_requests ADD COLUMN apk_version TEXT",
+    "ALTER TABLE app_requests ADD COLUMN last_seen INTEGER",
+    "ALTER TABLE app_requests ADD COLUMN current_channel TEXT",
+    "ALTER TABLE app_requests ADD COLUMN is_online INTEGER DEFAULT 0"
+  ];
+  for (const sql of colsToAdd) {
+    await run(sql).catch(() => {}); // ignora se já existe
+  }
   await run(`CREATE TABLE IF NOT EXISTS testes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     whatsapp_number TEXT,

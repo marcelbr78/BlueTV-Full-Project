@@ -115,12 +115,14 @@ tr:hover td { background:#1a305015; }
         <thead>
           <tr>
             <th>Client ID</th>
-            <th>Número WhatsApp</th>
+            <th>WhatsApp</th>
             <th>Estado</th>
             <th>Host</th>
             <th>Usuário</th>
             <th>Validade</th>
-            <th>Registado em</th>
+            <th>Dispositivo</th>
+            <th>Canal Actual</th>
+            <th>Último Acesso</th>
           </tr>
         </thead>
         <tbody id="tbody-clients"></tbody>
@@ -230,38 +232,69 @@ async function apiFetch(url) {
 }
 
 async function loadClients() {
-  const [requests, xtreams] = await Promise.all([
-    apiFetch('/api/debug/requests'),
-    apiFetch('/api/debug/xtream')
-  ]);
-  if (!requests) return;
+  const data = await apiFetch('/api/debug/clients');
+  if (!data) return;
 
-  const xtreamMap = {};
-  (xtreams||[]).forEach(x => { if(x.client_id) xtreamMap[x.client_id] = x; });
-
-  const pending = (requests||[]).filter(r => r.status==='pending').length;
-  const ok = (requests||[]).filter(r => r.status==='ok').length;
+  const pending = data.filter(r => r.status === 'pending').length;
+  const ok = data.filter(r => r.status === 'ok').length;
+  const online = data.filter(r => r.is_online === 1).length;
   document.getElementById('s-pending').textContent = pending;
   document.getElementById('s-ok').textContent = ok;
 
   const tbody = document.getElementById('tbody-clients');
   tbody.innerHTML = '';
-  if (!requests.length) { document.getElementById('empty-clients').style.display='block'; return; }
-  document.getElementById('empty-clients').style.display='none';
+  if (!data.length) { 
+    document.getElementById('empty-clients').style.display = 'block'; 
+    return; 
+  }
+  document.getElementById('empty-clients').style.display = 'none';
 
-  requests.forEach(r => {
-    const x = xtreamMap[r.client_code] || {};
-    const badge = r.status==='ok'
+  // Actualizar contador de online no stat card
+  const okCard = document.getElementById('s-ok');
+  if (okCard) okCard.textContent = ok + (online > 0 ? ' ('+online+' 🟢)' : '');
+
+  const now = Date.now();
+
+  data.forEach(r => {
+    // Estado online/offline (considera offline se last_seen > 2 minutos)
+    const isOnline = r.is_online === 1 && r.last_seen && (now - r.last_seen) < 120000;
+    const onlineBadge = isOnline
+      ? '<span style="display:inline-flex;align-items:center;gap:4px"><span class="pulse"></span><span style="color:#00cc66;font-size:0.75rem">Online</span></span>'
+      : r.last_seen 
+        ? '<span style="color:#445566;font-size:0.75rem">⚫ Offline</span>'
+        : '<span style="color:#334;font-size:0.75rem">—</span>';
+
+    // Estado activação
+    const badge = r.status === 'ok'
       ? '<span class="badge badge-ok">✅ Activo</span>'
       : '<span class="badge badge-pending">⏳ Pendente</span>';
+
+    // Last seen
+    const lastSeenText = r.last_seen
+      ? new Date(Number(r.last_seen)).toLocaleString('pt-BR')
+      : '—';
+
+    // Canal actual
+    const channelText = r.current_channel
+      ? '<span style="color:#f59e0b;font-size:0.78rem">▶ ' + r.current_channel.substring(0,30) + '</span>'
+      : '<span style="color:#334;font-size:0.75rem">—</span>';
+
     tbody.innerHTML += `<tr>
-      <td><span class="client-id">${r.client_code||'—'}</span></td>
-      <td><span class="phone">${r.whatsapp_number||'—'}</span></td>
-      <td>${badge}</td>
-      <td><span class="host">${x.host||'—'}</span></td>
-      <td><span class="cred">${x.username||'—'}</span></td>
-      <td><span style="color:#f59e0b;font-size:0.8rem">${x.validade||'—'}</span></td>
-      <td><span class="time">${fmtDate(r.created_at)}</span></td>
+      <td><span class="client-id">${r.client_code || '—'}</span></td>
+      <td><span class="phone">${r.whatsapp_number || '—'}</span></td>
+      <td>
+        ${badge}
+        <div style="margin-top:4px">${onlineBadge}</div>
+      </td>
+      <td><span class="host">${r.host || '—'}</span></td>
+      <td><span class="cred">${r.username || '—'}</span></td>
+      <td><span style="color:#f59e0b;font-size:0.8rem">${r.validade || '—'}</span></td>
+      <td>
+        <div style="font-size:0.78rem;color:#7799bb">${r.device_model || '—'}</div>
+        <div style="font-size:0.72rem;color:#445566">v${r.apk_version || '—'}</div>
+      </td>
+      <td>${channelText}</td>
+      <td><div class="time">${lastSeenText}</div></td>
     </tr>`;
   });
 }
