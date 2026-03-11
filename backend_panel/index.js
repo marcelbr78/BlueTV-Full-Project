@@ -406,132 +406,142 @@ app.get("/api/clients", async (req, res) => {
 // 4. Cliente confirma envio -> mensagem INBOUND chega aqui via Evolution API
 // 5. Backend extrai login/senha, usa DNS fixo, salva credenciais
 // =====================
-app.post("/webhook/evolution", async (req, res) => {
+app.post('/webhook/evolution', async (req, res) => {
   try {
-    let phone = null;
-    let message = null;
-    let formato = "desconhecido";
+    const body = req.body;
+    console.log('📨 Evolution webhook recebido');
 
-    if (req.body?.senderPhone && req.body?.senderMessage) {
-      phone = (req.body.senderPhone || "").replace(/\D+/g, "");
-      message = req.body.senderMessage;
-      formato = "BotBot Resposta";
-    } else if (req.body?.phone && req.body?.text) {
-      phone = (req.body.phone || "").replace(/\D+/g, "");
-      message = typeof req.body.text === 'object' 
-        ? (req.body.text.message || req.body.text.text || JSON.stringify(req.body.text))
-        : req.body.text;
-      formato = "BotBot Padrão";
-    } else if (req.body?.data?.key?.remoteJid) {
-      phone = req.body.data.key.remoteJid.replace("@s.whatsapp.net", "").replace(/\D+/g, "");
-      message = req.body.data.message?.conversation
-        || req.body.data.message?.extendedTextMessage?.text
-        || null;
-      formato = "Evolution API";
-    } else if (req.body?.from || (req.body?.phone && !req.body?.text)) {
-      phone = (req.body.from || req.body.phone || "").replace(/\D+/g, "");
-      let rawMsg = req.body.message || req.body.text || req.body.body || null;
-      message = (rawMsg && typeof rawMsg === 'object')
-        ? (rawMsg.conversation || rawMsg.extendedTextMessage?.text || rawMsg.message || rawMsg.text || JSON.stringify(rawMsg))
-        : rawMsg;
-      formato = "Evolution Alternativo";
-    } else if (Array.isArray(req.body?.messages) && req.body.messages.length > 0) {
-      const m = req.body.messages[0];
-      phone = (m.from || m.phone || m.key?.remoteJid || "").replace(/\D+/g, "").replace("@s.whatsapp.net", "");
-      let rawMsg = m.message || m.text || m.body || null;
-      message = (rawMsg && typeof rawMsg === 'object')
-        ? (rawMsg.conversation || rawMsg.extendedTextMessage?.text || rawMsg.message || rawMsg.text || JSON.stringify(rawMsg))
-        : rawMsg;
-      formato = "Evolution Array";
-    }
-
-    if (message && typeof message === 'object') {
-      message = message.conversation || message.extendedTextMessage?.text || message.message || message.text || JSON.stringify(message);
-    }
-
-    if (!phone || !message) {
-      return res.json({ success: true, ignored: true, reason: "missing_data" });
-    }
-
-    const receivedAt = Date.now();
-    const xtreamResult = isXtreamResponse(message) ? parseXtreamMessage(message) : null;
+    // Extrair dados da mensagem conforme formato Evolution API
+    const data = body.data || body;
+    const messageData = data.message || data.messages?.[0] || {};
+    const key = data.key || messageData.key || {};
     
-    if (xtreamResult && xtreamResult.success) {
-      // Tentar extrair Client ID da mensagem Xtream
-      // O Client ID pode vir na própria mensagem ou numa mensagem anterior
-      const extractedClientId = parseClientIdFromMessage(message) || null;
+    // Número de quem enviou
+    const remoteJid = key.remoteJid || data.remoteJid || '';
+    const senderPhone = remoteJid.replace('@s.whatsapp.net', '').replace('@c.us', '');
+    
+    // Conteúdo da mensagem
+    const message = messageData.conversation 
+      || messageData.extendedTextMessage?.text 
+      || data.text
+      || body.text
+      || body.message
+      || '';
 
-      const result = await db.run(
-        `INSERT INTO xtream_credentials 
-         (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [null, extractedClientId, phone, xtreamResult.host, xtreamResult.username, 
-         xtreamResult.password, xtreamResult.validade, xtreamResult.m3u_url, 
-         message, Date.now()]
-      );
-      
-      const xtreamId = result.lastInsertRowid;
-      await db.run(
-        "UPDATE app_requests SET status='ok', xtream_id=?, updated_at=? WHERE whatsapp_number=? AND status='pending'",
-        [xtreamId, Date.now(), phone]
-      );
-      
-      return res.json({ success: true, command: 'xtream_auto', extracted: true });
+    if (!message || !senderPhone) {
+      return res.json({ success: true, message: 'Sem conteúdo' });
     }
 
-    const ativarResult = parseAtivarTesteCommand(message);
-    if (ativarResult.success) {
-      const { login, senha } = ativarResult;
-      const dnsFixo = config.XTREAM_DNS_FIXO;
+    console.log(`📞 De: ${senderPhone}`);
+    console.log(`💬 Mensagem: ${message.substring(0, 100)}`);
 
-      const appRequest = await db.get(
-        "SELECT * FROM app_requests WHERE whatsapp_number = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
-        [phone]
+    const now = Date.now();
+
+    // CASO 1: Mensagem contém BLUETV-XXXXX (primeira mensagem do cliente)
+    const clientIdMatch = message.match(/BLUETV-([A-Z0-9]{5})/i);
+    if (clientIdMatch) {
+      const clientId = clientIdMatch[0].toUpperCase();
+      console.log(`🆔 Client ID detectado: ${clientId} de ${senderPhone}`);
+
+      // Criar ou actualizar o app_request vinculando número ao Client ID
+      const existing = await db.get(
+        "SELECT * FROM app_requests WHERE client_code = ?",
+        [clientId]
       );
 
-      const requestId = appRequest?.request_id || null;
-      const clientCode = appRequest?.client_code || null;
-
-      const insertResult = await db.run(
-        `INSERT INTO xtream_credentials 
-         (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [requestId, clientCode, phone, dnsFixo, login, senha, null, null, message, receivedAt]
-      );
-
-      const xtreamId = insertResult.lastInsertRowid;
-
-      if (appRequest) {
+      if (existing) {
         await db.run(
-          "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE request_id = ?",
-          [xtreamId, Date.now(), requestId]
+          "UPDATE app_requests SET whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
+          [senderPhone, now, clientId]
         );
       } else {
-        const newRequestId = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(16).toString("hex");
-        const newClientCode = generateClientCode();
         await db.run(
-          "INSERT INTO app_requests (request_id, client_code, device_id, whatsapp_number, status, xtream_id, created_at, updated_at) VALUES (?, ?, ?, ?, 'ok', ?, ?, ?)",
-          [newRequestId, newClientCode, 'ativar_teste_' + phone, phone, xtreamId, receivedAt, receivedAt]
+          `INSERT INTO app_requests 
+           (request_id, client_code, device_id, whatsapp_number, status, created_at, updated_at)
+           VALUES (?, ?, 'evolution', ?, 'pending', ?, ?)`,
+          [require('crypto').randomUUID(), clientId, senderPhone, now, now]
         );
       }
 
-      return res.json({ success: true, command: "ATIVAR_TESTE" });
-    }
-
-    const clientCodeMatch = message.match(/cliente\s+([A-Z0-9]{6})/i);
-    if (clientCodeMatch) {
-      const clientCode = clientCodeMatch[1].toUpperCase();
+      // Guardar mensagem no log
       await db.run(
-        "UPDATE app_requests SET whatsapp_number = ?, updated_at = ? WHERE client_code = ? AND status = 'pending'",
-        [phone, Date.now(), clientCode]
-      );
-      return res.json({ success: true, command: "client_code" });
+        "INSERT INTO botbot_messages (phone, message, received_at) VALUES (?, ?, ?)",
+        [senderPhone, message, now]
+      ).catch(() => {});
+
+      console.log(`✅ Número ${senderPhone} vinculado ao ${clientId}`);
+      return res.json({ success: true, clientId, senderPhone });
     }
 
-    return res.json({ success: true, ignored: true });
+    // CASO 2: Mensagem contém credenciais Xtream (resposta do BotBot)
+    if (isXtreamResponse(message)) {
+      console.log(`🔑 Credenciais Xtream detectadas de ${senderPhone}`);
+      
+      const parsed = parseXtreamMessage(message);
+      if (!parsed.success) {
+        return res.json({ success: false, error: 'Falha ao extrair credenciais' });
+      }
+
+      // Buscar o Client ID pelo número de telefone
+      const appRequest = await db.get(
+        "SELECT * FROM app_requests WHERE whatsapp_number = ? ORDER BY created_at DESC LIMIT 1",
+        [senderPhone]
+      );
+
+      const clientId = appRequest?.client_code || null;
+      console.log(`🔗 Vinculando credenciais ao Client ID: ${clientId}`);
+
+      // Guardar credenciais
+      const insertResult = await db.run(
+        `INSERT INTO xtream_credentials 
+         (request_id, client_id, whatsapp_number, host, username, password, 
+          validade, m3u_url, raw_message, extracted_at, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'extracted')`,
+        [
+          require('crypto').randomUUID(),
+          clientId,
+          senderPhone,
+          parsed.host,
+          parsed.username,
+          parsed.password,
+          parsed.validade,
+          parsed.m3u_url,
+          message,
+          now
+        ]
+      );
+
+      const xtreamId = insertResult.lastInsertRowid || insertResult.lastID;
+
+      // Activar o cliente
+      if (appRequest) {
+        await db.run(
+          "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+          [xtreamId, now, appRequest.client_code]
+        );
+        console.log(`🎉 Cliente ${clientId} ACTIVADO com sucesso!`);
+      }
+
+      // Guardar no log
+      await db.run(
+        "INSERT INTO botbot_messages (phone, message, received_at) VALUES (?, ?, ?)",
+        [senderPhone, message, now]
+      ).catch(() => {});
+
+      return res.json({ success: true, clientId, senderPhone, host: parsed.host });
+    }
+
+    // CASO 3: Outra mensagem — só registar no log
+    await db.run(
+      "INSERT INTO botbot_messages (phone, message, received_at) VALUES (?, ?, ?)",
+      [senderPhone, message, now]
+    ).catch(() => {});
+
+    return res.json({ success: true, message: 'Mensagem registada' });
+
   } catch (err) {
-    console.error("[WEBHOOK] ❌ Erro crítico:", err);
-    return res.json({ success: true, error: "internal_error" });
+    console.error('❌ Erro webhook evolution:', err);
+    return res.status(500).json({ success: false, error: 'Erro interno' });
   }
 });
 
