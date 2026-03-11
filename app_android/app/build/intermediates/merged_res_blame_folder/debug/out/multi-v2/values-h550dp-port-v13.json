@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.bluetv.app-mergeDebugResources-34:/values-h550dp-port-v13/values-h550dp-port-v13.xml",
+            "outputFile": "com.example.bluetv.app-mergeDebugResources-36:/values-h550dp-port-v13/values-h550dp-port-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\loja\\.gradle\\caches\\8.13\\transforms\\70d6164a142426d0926fcc6168de9b42\\transformed\\material-1.11.0\\res\\values-h550dp-port-v13\\values-h550dp-port-v13.xml",
+                    "source": "C:\\Users\\loja\\.gradle\\caches\\9.0-milestone-1\\transforms\\c1952a73378077b65f81db2d6398c1c7\\transformed\\material-1.11.0\\res\\values-h550dp-port-v13\\values-h550dp-port-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

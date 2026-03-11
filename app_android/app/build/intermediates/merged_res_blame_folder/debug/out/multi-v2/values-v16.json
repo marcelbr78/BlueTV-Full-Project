@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.bluetv.app-mergeDebugResources-34:/values-v16/values-v16.xml",
+            "outputFile": "com.example.bluetv.app-mergeDebugResources-36:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\loja\\.gradle\\caches\\8.13\\transforms\\db2b7ac0bb1a3c26e7f7118f22ce39c2\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\loja\\.gradle\\caches\\9.0-milestone-1\\transforms\\30c7c8f9039e97d292b91e7101680da4\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -14,7 +14,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\loja\\.gradle\\caches\\8.13\\transforms\\2222e5b385a2e6ae314cc7523a279632\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\loja\\.gradle\\caches\\9.0-milestone-1\\transforms\\d60887f05dcdfdd3967d51751046980b\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

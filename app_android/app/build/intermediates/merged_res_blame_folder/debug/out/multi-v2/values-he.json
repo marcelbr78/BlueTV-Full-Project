@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.bluetv.app-mergeDebugResources-34:/values-he/values-he.xml",
+            "outputFile": "com.example.bluetv.app-mergeDebugResources-36:/values-he/values-he.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\loja\\.gradle\\caches\\8.13\\transforms\\e41360717acc108ecf12ff5a38576568\\transformed\\jetified-zxing-android-embedded-4.3.0\\res\\values-he\\values-he.xml",
+                    "source": "C:\\Users\\loja\\.gradle\\caches\\9.0-milestone-1\\transforms\\8e988dfff8e08caf15cf8626cbd598bb\\transformed\\jetified-zxing-android-embedded-4.3.0\\res\\values-he\\values-he.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

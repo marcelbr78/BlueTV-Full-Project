@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
 import org.json.JSONObject
 import java.io.IOException
 
@@ -116,7 +117,7 @@ class HomeActivity : AppCompatActivity() {
         val json = JSONObject()
         json.put("client_code", clientId)
         json.put("device_model", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL)
-        val body = okhttp3.RequestBody.create("application/json".toMediaType(), json.toString())
+        val body = RequestBody.create("application/json".toMediaType(), json.toString())
         val req = Request.Builder().url("$BACKEND_URL/app/heartbeat")
             .post(body).addHeader("x-api-key", API_KEY).build()
         client.newCall(req).enqueue(object : Callback {
@@ -124,6 +125,4 @@ class HomeActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) { response.close() }
         })
     }
-
-    private fun String.toMediaType() = okhttp3.MediaType.Companion.parse(this)!!
 }

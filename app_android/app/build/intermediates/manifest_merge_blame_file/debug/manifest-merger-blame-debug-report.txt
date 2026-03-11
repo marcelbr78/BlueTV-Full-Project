@@ -5,204 +5,233 @@
 5    android:versionName="1.0" >
 6
 7    <uses-sdk
-8        android:minSdkVersion="24"
+8        android:minSdkVersion="21"
 9        android:targetSdkVersion="34" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:3:5-67
-11-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:3:22-64
+11-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:5-66
+11-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:22-64
 12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-12-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:5-79
-12-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:4:22-76
+12-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:5:5-78
+12-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:5:22-76
 13
-14    <permission
-14-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:22:5-24:47
-15        android:name="com.example.bluetv.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-15-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:23:9-81
-16        android:protectionLevel="signature" />
-16-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:24:9-44
-17
-18    <uses-permission android:name="com.example.bluetv.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-18-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:26:5-97
-18-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
-19    <uses-permission android:name="android.permission.CAMERA" /> <!-- Don't require camera, as this requires a rear camera. This allows it to work on the Nexus 7 -->
-19-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:22:5-65
-19-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:22:22-62
-20    <uses-feature
-20-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:25:5-27:36
-21        android:name="android.hardware.camera"
-21-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:26:9-47
-22        android:required="false" />
-22-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:27:9-33
-23    <uses-feature
-23-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
-24        android:name="android.hardware.camera.front"
-24-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:29:9-53
-25        android:required="false" /> <!-- TODO replace above two with next line after Android 4.2 -->
-25-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:30:9-33
-26    <!-- <uses-feature android:name="android.hardware.camera.any"/> -->
+14    <uses-feature
+14-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:7:5-89
+15        android:name="android.hardware.touchscreen"
+15-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:7:19-62
+16        android:required="false" />
+16-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:7:63-87
+17    <uses-feature
+17-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:8:5-86
+18        android:name="android.software.leanback"
+18-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:8:19-59
+19        android:required="false" />
+19-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:8:60-84
+20
+21    <permission
+21-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:22:5-24:47
+22        android:name="com.example.bluetv.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+22-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:23:9-81
+23        android:protectionLevel="signature" />
+23-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:24:9-44
+24
+25    <uses-permission android:name="com.example.bluetv.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+25-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:26:5-97
+25-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
+26    <uses-permission android:name="android.permission.CAMERA" /> <!-- Don't require camera, as this requires a rear camera. This allows it to work on the Nexus 7 -->
+26-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:22:5-65
+26-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:22:22-62
 27    <uses-feature
-27-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:33:5-35:36
-28        android:name="android.hardware.camera.autofocus"
-28-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:34:9-57
+27-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:25:5-27:36
+28        android:name="android.hardware.camera"
+28-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:26:9-47
 29        android:required="false" />
-29-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:35:9-33
+29-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:27:9-33
 30    <uses-feature
-30-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
-31        android:name="android.hardware.camera.flash"
-31-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:37:9-53
-32        android:required="false" />
-32-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:38:9-33
-33    <uses-feature
-33-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:39:5-41:36
-34        android:name="android.hardware.screen.landscape"
-34-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:40:9-57
-35        android:required="false" />
-35-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:41:9-33
-36    <uses-feature
-36-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:42:5-44:36
-37        android:name="android.hardware.wifi"
-37-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:43:9-45
-38        android:required="false" />
-38-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:44:9-33
-39
-40    <application
-40-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:6:5-28:19
-41        android:allowBackup="true"
-41-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:7:9-35
-42        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-42-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\8.13\transforms\db2b7ac0bb1a3c26e7f7118f22ce39c2\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
-43        android:debuggable="true"
-44        android:extractNativeLibs="false"
-45        android:label="BlueTV"
-45-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:8:9-31
-46        android:theme="@style/Theme.BlueTV"
-46-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:9:9-44
-47        android:usesCleartextTraffic="true" >
-47-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:10:9-44
-48        <activity android:name="com.example.bluetv.AdminActivity" />
-48-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:11:9-51
-48-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:11:19-48
-49        <activity android:name="com.example.bluetv.QRActivity" />
-49-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:12:9-48
-49-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:12:19-45
-50        <activity android:name="com.example.bluetv.FormActivity" />
-50-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:13:9-50
-50-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:13:19-47
-51        <activity android:name="com.example.bluetv.PlansActivity" />
-51-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:9-51
-51-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:19-48
-52        <activity android:name="com.example.bluetv.HomeActivity" />
-52-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-50
-52-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:19-47
-53        <activity
-53-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:9-19:76
-54            android:name="com.example.bluetv.PlayerActivity"
-54-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:16:19-49
-55            android:configChanges="orientation|screenSize|keyboardHidden"
-55-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:13-74
-56            android:exported="true"
-56-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-36
-57            android:screenOrientation="landscape" />
-57-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:13-50
-58        <activity
-58-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:9-27:20
-59            android:name="com.example.bluetv.MainActivity"
-59-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:13-41
-60            android:exported="true" >
-60-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:13-36
-61            <intent-filter>
-61-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:13-26:29
-62                <action android:name="android.intent.action.MAIN" />
-62-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:17-69
-62-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:24:25-66
-63
-64                <category android:name="android.intent.category.LAUNCHER" />
-64-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:25:17-77
-64-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:25:27-74
+30-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
+31        android:name="android.hardware.camera.front"
+31-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:29:9-53
+32        android:required="false" /> <!-- TODO replace above two with next line after Android 4.2 -->
+32-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:30:9-33
+33    <!-- <uses-feature android:name="android.hardware.camera.any"/> -->
+34    <uses-feature
+34-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:33:5-35:36
+35        android:name="android.hardware.camera.autofocus"
+35-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:34:9-57
+36        android:required="false" />
+36-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:35:9-33
+37    <uses-feature
+37-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
+38        android:name="android.hardware.camera.flash"
+38-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:37:9-53
+39        android:required="false" />
+39-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:38:9-33
+40    <uses-feature
+40-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:39:5-41:36
+41        android:name="android.hardware.screen.landscape"
+41-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:40:9-57
+42        android:required="false" />
+42-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:41:9-33
+43    <uses-feature
+43-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:42:5-44:36
+44        android:name="android.hardware.wifi"
+44-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:43:9-45
+45        android:required="false" />
+45-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:44:9-33
+46
+47    <application
+47-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:10:5-44:19
+48        android:allowBackup="true"
+48-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:11:9-35
+49        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+49-->[androidx.core:core:1.12.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\30c7c8f9039e97d292b91e7101680da4\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
+50        android:debuggable="true"
+51        android:extractNativeLibs="true"
+52        android:icon="@drawable/ic_launcher"
+52-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:12:9-45
+53        android:label="BlueTV"
+53-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:13:9-31
+54        android:theme="@style/Theme.BlueTV"
+54-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:14:9-44
+55        android:usesCleartextTraffic="true" >
+55-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:15:9-44
+56        <activity
+56-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:9-25:20
+57            android:name="com.example.bluetv.SplashActivity"
+57-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:17:19-49
+58            android:exported="true"
+58-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:18:13-36
+59            android:screenOrientation="landscape" >
+59-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:19:13-50
+60            <intent-filter>
+60-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:20:13-24:29
+61                <action android:name="android.intent.action.MAIN" />
+61-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:17-68
+61-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:21:25-66
+62
+63                <category android:name="android.intent.category.LAUNCHER" />
+63-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:17-76
+63-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:22:27-74
+64                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+64-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:17-85
+64-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:23:27-83
 65            </intent-filter>
 66        </activity>
-67
-68        <provider
-68-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
-69            android:name="androidx.startup.InitializationProvider"
-69-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:25:13-67
-70            android:authorities="com.example.bluetv.androidx-startup"
-70-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:26:13-68
-71            android:exported="false" >
-71-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:27:13-37
-72            <meta-data
-72-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
-73                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-73-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
-74                android:value="androidx.startup" />
-74-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\8.13\transforms\7f708f487abae35b6a518b019a742bac\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
-75            <meta-data
-75-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\ae41c80a06633c62d607acacebff46ba\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
-76                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-76-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\ae41c80a06633c62d607acacebff46ba\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
-77                android:value="androidx.startup" />
-77-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\8.13\transforms\ae41c80a06633c62d607acacebff46ba\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
-78            <meta-data
-78-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
-79                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-79-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
-80                android:value="androidx.startup" />
-80-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
-81        </provider>
-82
-83        <receiver
-83-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
-84            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-84-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
-85            android:directBootAware="false"
-85-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
-86            android:enabled="true"
-86-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
-87            android:exported="true"
-87-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
-88            android:permission="android.permission.DUMP" >
-88-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
-89            <intent-filter>
-89-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
-90                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-90-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
-90-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
-91            </intent-filter>
-92            <intent-filter>
-92-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
-93                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-93-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
-93-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
-94            </intent-filter>
-95            <intent-filter>
-95-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
-96                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-96-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
-96-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
-97            </intent-filter>
-98            <intent-filter>
-98-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
-99                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-99-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
-99-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\1842e4b97780b92d7557cc475f7ad42d\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
-100            </intent-filter>
-101        </receiver>
-102
-103        <activity
-103-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
-104            android:name="com.journeyapps.barcodescanner.CaptureActivity"
-104-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
-105            android:clearTaskOnLaunch="true"
-105-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
-106            android:screenOrientation="sensorLandscape"
-106-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
-107            android:stateNotNeeded="true"
-107-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
-108            android:theme="@style/zxing_CaptureTheme"
-108-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
-109            android:windowSoftInputMode="stateAlwaysHidden" />
-109-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\8.13\transforms\e41360717acc108ecf12ff5a38576568\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
-110    </application>
-111
-112</manifest>
+67        <activity
+67-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:27:9-29:39
+68            android:name="com.example.bluetv.ActivationActivity"
+68-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:27:19-53
+69            android:exported="false"
+69-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:29:13-37
+70            android:screenOrientation="landscape" />
+70-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:28:13-50
+71        <activity
+71-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:31:9-33:39
+72            android:name="com.example.bluetv.HomeActivity"
+72-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:31:19-47
+73            android:exported="false"
+73-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:33:13-37
+74            android:screenOrientation="landscape" />
+74-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:32:13-50
+75        <activity
+75-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:35:9-37:39
+76            android:name="com.example.bluetv.ChannelListActivity"
+76-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:35:19-54
+77            android:exported="false"
+77-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:37:13-37
+78            android:screenOrientation="landscape" />
+78-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:36:13-50
+79        <activity
+79-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:39:9-42:76
+80            android:name="com.example.bluetv.PlayerActivity"
+80-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:39:19-49
+81            android:configChanges="orientation|screenSize|keyboardHidden"
+81-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:42:13-74
+82            android:exported="false"
+82-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:41:13-37
+83            android:screenOrientation="landscape" />
+83-->C:\Users\loja\Documents\BlueTV-Full-Project-master\BlueTV-Full-Project-master\app_android\app\src\main\AndroidManifest.xml:40:13-50
+84
+85        <provider
+85-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+86            android:name="androidx.startup.InitializationProvider"
+86-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:25:13-67
+87            android:authorities="com.example.bluetv.androidx-startup"
+87-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:26:13-68
+88            android:exported="false" >
+88-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:27:13-37
+89            <meta-data
+89-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+90                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+90-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+91                android:value="androidx.startup" />
+91-->[androidx.emoji2:emoji2:1.2.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\1c27cc2fd08f466c15da3f2ab1cdc85d\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+92            <meta-data
+92-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\2aaa726602a1e31616f17e50a7366872\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
+93                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+93-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\2aaa726602a1e31616f17e50a7366872\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
+94                android:value="androidx.startup" />
+94-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\2aaa726602a1e31616f17e50a7366872\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
+95            <meta-data
+95-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+96                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+96-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+97                android:value="androidx.startup" />
+97-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+98        </provider>
+99
+100        <receiver
+100-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+101            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+101-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+102            android:directBootAware="false"
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+103            android:enabled="true"
+103-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+104            android:exported="true"
+104-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+105            android:permission="android.permission.DUMP" >
+105-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+106            <intent-filter>
+106-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+107                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+108            </intent-filter>
+109            <intent-filter>
+109-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+110                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+110-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+110-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+111            </intent-filter>
+112            <intent-filter>
+112-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+113                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+113-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+113-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+114            </intent-filter>
+115            <intent-filter>
+115-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+116                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+116-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+116-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\5a3e9531a65ba403f242a1b70def27cd\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+117            </intent-filter>
+118        </receiver>
+119
+120        <activity
+120-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
+121            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+121-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
+122            android:clearTaskOnLaunch="true"
+122-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
+123            android:screenOrientation="sensorLandscape"
+123-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
+124            android:stateNotNeeded="true"
+124-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
+125            android:theme="@style/zxing_CaptureTheme"
+125-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
+126            android:windowSoftInputMode="stateAlwaysHidden" />
+126-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\loja\.gradle\caches\9.0-milestone-1\transforms\8e988dfff8e08caf15cf8626cbd598bb\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
+127    </application>
+128
+129</manifest>
