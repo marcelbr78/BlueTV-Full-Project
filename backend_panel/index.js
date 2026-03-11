@@ -728,26 +728,35 @@ app.get("/api/debug/requests", requireAuth, async (req, res) => {
 // =====================
 // APP: STATUS BLUETV-XXXXX
 // =====================
-app.get('/app/status/bluetv/:clientId', requireApiKey, async (req, res) => {
+app.get('/app/status/bluetv/:clientId', async (req, res) => {
+  const apiKey = req.headers['x-api-key'] || req.query.key;
+  if (apiKey !== config.APP_API_KEY) {
+    return res.status(401).json({ success: false, error: 'Invalid API key' });
+  }
+
   try {
     const clientId = req.params.clientId.toUpperCase();
-    
-    // Buscar request pelo client_code
+    console.log('Status check para:', clientId);
+
     const appRequest = await db.get(
       "SELECT * FROM app_requests WHERE client_code = ?",
       [clientId]
     );
-    
+
+    console.log('App request encontrado:', JSON.stringify(appRequest));
+
     if (!appRequest) {
-      return res.json({ success: true, status: 'pending', message: 'Aguardando activação' });
+      return res.json({ success: true, status: 'pending', message: 'Cliente não encontrado' });
     }
-    
+
     if (appRequest.status === 'ok' && appRequest.xtream_id) {
       const xtream = await db.get(
         "SELECT host, username, password, validade, m3u_url, plano FROM xtream_credentials WHERE id = ?",
         [appRequest.xtream_id]
       );
-      
+
+      console.log('Xtream encontrado:', JSON.stringify(xtream));
+
       if (xtream) {
         return res.json({
           success: true,
@@ -763,10 +772,16 @@ app.get('/app/status/bluetv/:clientId', requireApiKey, async (req, res) => {
         });
       }
     }
-    
-    return res.json({ success: true, status: 'pending', message: 'A processar...' });
+
+    return res.json({ 
+      success: true, 
+      status: appRequest.status || 'pending',
+      xtream_id: appRequest.xtream_id,
+      message: 'A processar...' 
+    });
+
   } catch (err) {
-    console.error('Erro status bluetv:', err);
+    console.error('Erro status:', err);
     return res.status(500).json({ success: false, error: 'Erro interno' });
   }
 });
@@ -985,6 +1000,34 @@ app.post('/app/offline', requireApiKey, async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ success: false });
+  }
+});
+
+// Endpoint público de teste SEM autenticação para debug
+app.get('/app/status/debug/:clientId', async (req, res) => {
+  try {
+    const clientId = req.params.clientId.toUpperCase();
+    const appRequest = await db.get(
+      "SELECT * FROM app_requests WHERE client_code = ?",
+      [clientId]
+    );
+    if (!appRequest) return res.json({ found: false, clientId });
+    
+    const xtream = appRequest.xtream_id ? await db.get(
+      "SELECT * FROM xtream_credentials WHERE id = ?",
+      [appRequest.xtream_id]
+    ) : null;
+
+    return res.json({ 
+      found: true, 
+      clientId,
+      status: appRequest.status,
+      xtream_id: appRequest.xtream_id,
+      whatsapp: appRequest.whatsapp_number,
+      xtream: xtream ? { host: xtream.host, username: xtream.username } : null
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
