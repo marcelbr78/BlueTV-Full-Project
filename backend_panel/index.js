@@ -1062,5 +1062,6 @@ const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);
   console.log("📱 API Key do App:", config.APP_API_KEY);
   console.log("📞 Número do Painel IPTV:", config.IPTV_PANEL_NUMBER || "(não configurado)");
+  });
 
 
