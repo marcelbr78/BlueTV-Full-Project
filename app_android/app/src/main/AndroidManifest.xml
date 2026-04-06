@@ -43,6 +43,11 @@
             android:exported="false"/>
 
         <activity
+            android:name=".EpisodesActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
             android:name=".PlayerActivity"
             android:screenOrientation="landscape"
             android:exported="false"
