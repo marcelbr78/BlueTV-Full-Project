@@ -28,16 +28,16 @@ class DetailActivity : AppCompatActivity() {
         val group    = intent.getStringExtra("channel_group") ?: ""
         val streamId = intent.getStringExtra("stream_id") ?: ""
 
-        val ivPoster    = findViewById<ImageView>(R.id.ivPoster)
-        val tvTitle     = findViewById<TextView>(R.id.tvTitle)
-        val tvYear      = findViewById<TextView>(R.id.tvYear)
-        val tvRating    = findViewById<TextView>(R.id.tvRating)
-        val tvCategory  = findViewById<TextView>(R.id.tvCategory)
-        val tvPlot      = findViewById<TextView>(R.id.tvPlot)
-        val btnPlay     = findViewById<TextView>(R.id.btnPlay)
-        val btnBack     = findViewById<TextView>(R.id.btnBack)
+        val ivPoster   = findViewById<ImageView>(R.id.ivPoster)
+        val tvTitle    = findViewById<TextView>(R.id.tvTitle)
+        val tvYear     = findViewById<TextView>(R.id.tvYear)
+        val tvRating   = findViewById<TextView>(R.id.tvRating)
+        val tvCategory = findViewById<TextView>(R.id.tvCategory)
+        val tvPlot     = findViewById<TextView>(R.id.tvPlot)
+        val btnPlay    = findViewById<TextView>(R.id.btnPlay)
+        val btnBack    = findViewById<TextView>(R.id.btnBack)
 
-        tvTitle.text = name
+        tvTitle.text    = name
         tvCategory.text = group
 
         if (logo.isNotEmpty()) {
@@ -52,43 +52,53 @@ class DetailActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        btnPlay.setOnClickListener {
-            val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra("stream_url", url)
-            intent.putExtra("channel_name", name)
-            intent.putExtra("channel_logo", logo)
-            startActivity(intent)
+        val isSeries = group.lowercase().let { it.contains("serie") || it.contains("series") }
+
+        if (isSeries) {
+            // Séries: abre lista de episódios
+            btnPlay.text = "☰  EPISÓDIOS"
+            btnPlay.setOnClickListener {
+                val id = streamId.ifEmpty { extractIdFromUrl(url) }
+                val intent = Intent(this, EpisodesActivity::class.java)
+                intent.putExtra("series_name", name)
+                intent.putExtra("series_id", id)
+                startActivity(intent)
+            }
+        } else {
+            // Filmes / Kids / Anime: play direto
+            btnPlay.text = "▶  ASSISTIR"
+            btnPlay.setOnClickListener {
+                val intent = Intent(this, PlayerActivity::class.java)
+                intent.putExtra("stream_url", url)
+                intent.putExtra("channel_name", name)
+                intent.putExtra("channel_logo", logo)
+                startActivity(intent)
+            }
         }
 
-        // Tentar buscar detalhes extras via Xtream Codes API
-        if (streamId.isNotEmpty()) {
-            fetchDetails(streamId, group, tvYear, tvRating, tvPlot)
-        } else {
-            // Tentar extrair o ID a partir da URL (ex: .../movie/user/pass/12345.mp4)
-            val idFromUrl = extractIdFromUrl(url)
-            if (idFromUrl.isNotEmpty()) {
-                fetchDetails(idFromUrl, group, tvYear, tvRating, tvPlot)
-            }
+        // Buscar detalhes extras via Xtream Codes
+        val id = streamId.ifEmpty { extractIdFromUrl(url) }
+        if (id.isNotEmpty()) {
+            fetchDetails(id, isSeries, tvYear, tvRating, tvPlot)
         }
     }
 
     private fun extractIdFromUrl(url: String): String {
         return try {
-            // Xtream URL: http://host/movie/username/password/12345.mp4
             val segments = url.split("/")
             val lastSegment = segments.last()
             lastSegment.substringBeforeLast(".").filter { it.isDigit() }
         } catch (e: Exception) { "" }
     }
 
-    private fun fetchDetails(streamId: String, group: String,
+    private fun fetchDetails(streamId: String, isSeries: Boolean,
                              tvYear: TextView, tvRating: TextView, tvPlot: TextView) {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val host     = prefs.getString("host", null) ?: return
         val username = prefs.getString("username", null) ?: return
         val password = prefs.getString("password", null) ?: return
 
-        val action = if (group.lowercase().contains("serie") || group.lowercase().contains("series")) {
+        val action = if (isSeries) {
             "get_series_info&series_id=$streamId"
         } else {
             "get_vod_info&vod_id=$streamId"
@@ -98,13 +108,15 @@ class DetailActivity : AppCompatActivity() {
 
         val req = Request.Builder().url(apiUrl).build()
         client.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { /* sem detalhes, ok */ }
+            override fun onFailure(call: Call, e: IOException) {}
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body?.string() ?: return
                 response.close()
                 try {
                     val json = JSONObject(body)
-                    val info = json.optJSONObject("info") ?: json.optJSONObject("movie_data") ?: return
+                    val info = json.optJSONObject("info")
+                        ?: json.optJSONObject("movie_data")
+                        ?: return
 
                     val year   = info.optString("releasedate", "").take(4)
                         .ifEmpty { info.optString("year", "") }
@@ -114,11 +126,11 @@ class DetailActivity : AppCompatActivity() {
                         .ifEmpty { info.optString("description", "") }
 
                     runOnUiThread {
-                        if (year.isNotEmpty()) tvYear.text = year
+                        if (year.isNotEmpty())   tvYear.text   = year
                         if (rating.isNotEmpty()) tvRating.text = "★ $rating"
-                        if (plot.isNotEmpty()) tvPlot.text = plot
+                        if (plot.isNotEmpty())   tvPlot.text   = plot
                     }
-                } catch (e: Exception) { /* JSON inválido, não faz nada */ }
+                } catch (e: Exception) {}
             }
         })
     }
