@@ -38,7 +38,8 @@
             android:text="⚙"
             android:textColor="#aaaaaa"
             android:textSize="20sp"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:focusable="true"/>
 
     </LinearLayout>
 
@@ -51,11 +52,24 @@
         android:paddingVertical="4dp"
         android:background="#0d0505"/>
 
-    <!-- CANAIS GRID -->
+    <!-- LOADING -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTint="#e50914"
+        android:visibility="gone"
+        android:layout_weight="1"
+        android:layout_marginTop="32dp"/>
+
+    <!-- CONTEÚDO (lista ou grid) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false"/>
 
 </LinearLayout>
