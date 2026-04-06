@@ -30,6 +30,9 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var rvChannels: RecyclerView
     private lateinit var progressBar: ProgressBar
 
+    // Abas que usam player direto (sem tela de detalhe)
+    private val directPlayTabs = setOf("LIVE", "ESPORTES")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -94,10 +97,10 @@ class HomeActivity : AppCompatActivity() {
 
     private fun renderChannels() {
         val tab = tabs[currentTab]
+        val isLiveMode = tab in directPlayTabs
 
-        // Filtrar por categoria
         val filtered = when (tab) {
-            "LIVE" -> M3UParser.groupByQuality(
+            "LIVE"     -> M3UParser.groupByQuality(
                 allChannels.filter { ch ->
                     val g = ch.group.lowercase()
                     !g.contains("filme") && !g.contains("serie") &&
@@ -105,32 +108,40 @@ class HomeActivity : AppCompatActivity() {
                     !g.contains("adult") && !g.contains("esport") && !g.contains("sport")
                 }
             )
-            "FILMES"   -> allChannels.filter { it.group.lowercase().contains("filme") || it.group.lowercase().contains("movie") }
-            "SÉRIES"   -> allChannels.filter { it.group.lowercase().contains("serie") || it.group.lowercase().contains("series") }
-            "KIDS"     -> allChannels.filter { it.group.lowercase().contains("kid") || it.group.lowercase().contains("infantil") || it.group.lowercase().contains("criança") }
+            "FILMES"   -> allChannels.filter { it.group.lowercase().let { g -> g.contains("filme") || g.contains("movie") } }
+            "SÉRIES"   -> allChannels.filter { it.group.lowercase().let { g -> g.contains("serie") || g.contains("series") } }
+            "KIDS"     -> allChannels.filter { it.group.lowercase().let { g -> g.contains("kid") || g.contains("infantil") || g.contains("criança") } }
             "ANIME"    -> allChannels.filter { it.group.lowercase().contains("anime") }
-            "ESPORTES" -> allChannels.filter { it.group.lowercase().contains("esport") || it.group.lowercase().contains("sport") || it.group.lowercase().contains("futebol") }
+            "ESPORTES" -> allChannels.filter { it.group.lowercase().let { g -> g.contains("esport") || g.contains("sport") || g.contains("futebol") } }
             else -> allChannels
         }
 
-        // Definir modo de exibição e layout
-        val isLiveMode = tab == "LIVE" || tab == "ESPORTES"
         val displayMode = if (isLiveMode) ChannelAdapter.MODE_LIVE else ChannelAdapter.MODE_GRID
 
         if (isLiveMode) {
-            // Lista vertical para canais ao vivo
             rvChannels.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         } else {
-            // Grid 3 colunas para filmes/séries/etc
             rvChannels.layoutManager = GridLayoutManager(this, 3)
         }
 
         rvChannels.adapter = ChannelAdapter(filtered, displayMode) { channel ->
-            val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra("stream_url", channel.url)
-            intent.putExtra("channel_name", channel.name)
-            intent.putExtra("channel_logo", channel.logo)
-            startActivity(intent)
+            if (isLiveMode) {
+                // LIVE e ESPORTES: vai direto pro player
+                val intent = Intent(this, PlayerActivity::class.java)
+                intent.putExtra("stream_url", channel.url)
+                intent.putExtra("channel_name", channel.name)
+                intent.putExtra("channel_logo", channel.logo)
+                startActivity(intent)
+            } else {
+                // FILMES, SÉRIES, KIDS, ANIME: abre tela de detalhe
+                val intent = Intent(this, DetailActivity::class.java)
+                intent.putExtra("stream_url", channel.url)
+                intent.putExtra("channel_name", channel.name)
+                intent.putExtra("channel_logo", channel.logo)
+                intent.putExtra("channel_group", channel.group)
+                intent.putExtra("stream_id", channel.id)
+                startActivity(intent)
+            }
         }
     }
 
