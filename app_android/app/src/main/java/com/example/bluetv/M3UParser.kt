@@ -2,6 +2,11 @@ package com.example.bluetv
 
 object M3UParser {
 
+    private val qualityRegex = Regex(
+        """\s*(4K|UHD|FHD|1080[pi]?|HD|720[pi]?|SD|480[pi]?)\s*$""",
+        RegexOption.IGNORE_CASE
+    )
+
     fun parse(content: String): List<Channel> {
         val channels = mutableListOf<Channel>()
         val lines = content.lines()
@@ -9,11 +14,11 @@ object M3UParser {
         while (i < lines.size) {
             val line = lines[i].trim()
             if (line.startsWith("#EXTINF")) {
-                val name = extractName(line)
-                val logo = extractAttr(line, "tvg-logo")
+                val name  = extractName(line)
+                val logo  = extractAttr(line, "tvg-logo")
                 val group = extractAttr(line, "group-title")
-                val id = extractAttr(line, "tvg-id")
-                val url = if (i + 1 < lines.size) lines[i + 1].trim() else ""
+                val id    = extractAttr(line, "tvg-id")
+                val url   = if (i + 1 < lines.size) lines[i + 1].trim() else ""
                 if (url.isNotEmpty() && !url.startsWith("#")) {
                     channels.add(Channel(id, name, url, logo, group))
                 }
@@ -25,36 +30,56 @@ object M3UParser {
         return channels
     }
 
-    // Agrupa canais SD/HD/FHD/UHD do mesmo canal em um só
+    /**
+     * Agrupa canais com mesmo nome base (ex: "Premiere 1 HD", "Premiere 1 SD", "Premiere 1 UHD")
+     * em um único Channel, mantendo TODAS as qualidades em qualityUrls.
+     * A URL principal fica sendo a de maior qualidade.
+     */
     fun groupByQuality(channels: List<Channel>): List<Channel> {
-        val seen = mutableMapOf<String, Channel>()
-        val qualityRegex = Regex("""\s*(SD|HD|FHD|UHD|4K|\d{3,4}p)\s*$""", RegexOption.IGNORE_CASE)
+        // key = nome base lowercase -> acumula qualidades
+        data class Entry(
+            val baseName: String,
+            val logo: String,
+            val group: String,
+            val id: String,
+            val qualities: MutableMap<String, String> = mutableMapOf()
+        )
+
+        val entries = linkedMapOf<String, Entry>()
+
         for (ch in channels) {
+            val rawQuality = qualityRegex.find(ch.name)?.groupValues?.get(1)?.uppercase() ?: "HD"
             val baseName = ch.name.replace(qualityRegex, "").trim()
-            val existing = seen[baseName.lowercase()]
-            if (existing == null) {
-                seen[baseName.lowercase()] = ch.copy(name = baseName)
-            } else {
-                // Prefere HD > SD
-                val existingQuality = getQualityScore(existing.name + " " + ch.name)
-                val newQuality = getQualityScore(ch.name)
-                if (newQuality > existingQuality) {
-                    seen[baseName.lowercase()] = ch.copy(name = baseName)
-                }
+            val key = baseName.lowercase()
+
+            val entry = entries.getOrPut(key) {
+                Entry(baseName, ch.logo, ch.group, ch.id)
             }
+            // Se essa qualidade ainda não está registrada, adiciona
+            entry.qualities[rawQuality] = ch.url
         }
-        return seen.values.toList()
+
+        // Converter para Channel — URL principal = melhor qualidade
+        return entries.values.map { entry ->
+            val bestUrl = getBestUrl(entry.qualities)
+            Channel(
+                id          = entry.id,
+                name        = entry.baseName,
+                url         = bestUrl,
+                logo        = entry.logo,
+                group       = entry.group,
+                qualityUrls = entry.qualities.toMap()
+            )
+        }
     }
 
-    private fun getQualityScore(name: String): Int {
-        val upper = name.uppercase()
-        return when {
-            upper.contains("4K") || upper.contains("UHD") -> 4
-            upper.contains("FHD") || upper.contains("1080") -> 3
-            upper.contains("HD") || upper.contains("720") -> 2
-            upper.contains("SD") -> 1
-            else -> 2
+    private fun getBestUrl(qualities: Map<String, String>): String {
+        val order = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")
+        for (q in order) {
+            val match = qualities.entries.firstOrNull { it.key.uppercase().contains(q) }
+            if (match != null) return match.value
         }
+        return qualities.values.first()
     }
 
     private fun extractName(line: String): String {
