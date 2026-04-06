@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="150dp"
+    android:layout_height="220dp"
+    android:focusable="true"
+    android:layout_margin="6dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:foreground="@drawable/card_focus_fg"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="#2a1010"
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <!-- Poster / imagem de fundo -->
+            <ImageView
+                android:id="@+id/ivPoster"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"/>
+
+            <!-- Gradiente escuro na parte inferior -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/gradient_bottom"/>
+
+            <!-- Título sobre o gradiente -->
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:padding="8dp"
+                android:textColor="#ffffff"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"/>
+
+        </FrameLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>
