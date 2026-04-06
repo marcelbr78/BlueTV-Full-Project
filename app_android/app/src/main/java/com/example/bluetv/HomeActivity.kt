@@ -30,7 +30,6 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var rvChannels: RecyclerView
     private lateinit var progressBar: ProgressBar
 
-    // Abas que usam player direto (sem tela de detalhe)
     private val directPlayTabs = setOf("LIVE", "ESPORTES")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,7 +99,7 @@ class HomeActivity : AppCompatActivity() {
         val isLiveMode = tab in directPlayTabs
 
         val filtered = when (tab) {
-            "LIVE"     -> M3UParser.groupByQuality(
+            "LIVE" -> M3UParser.groupByQuality(
                 allChannels.filter { ch ->
                     val g = ch.group.lowercase()
                     !g.contains("filme") && !g.contains("serie") &&
@@ -108,12 +107,22 @@ class HomeActivity : AppCompatActivity() {
                     !g.contains("adult") && !g.contains("esport") && !g.contains("sport")
                 }
             )
-            "FILMES"   -> allChannels.filter { it.group.lowercase().let { g -> g.contains("filme") || g.contains("movie") } }
-            "SÉRIES"   -> allChannels.filter { it.group.lowercase().let { g -> g.contains("serie") || g.contains("series") } }
-            "KIDS"     -> allChannels.filter { it.group.lowercase().let { g -> g.contains("kid") || g.contains("infantil") || g.contains("criança") } }
-            "ANIME"    -> allChannels.filter { it.group.lowercase().contains("anime") }
-            "ESPORTES" -> allChannels.filter { it.group.lowercase().let { g -> g.contains("esport") || g.contains("sport") || g.contains("futebol") } }
-            else -> allChannels
+            "ESPORTES" -> M3UParser.groupByQuality(   // ← agrupamento aplicado aqui também
+                allChannels.filter { it.group.lowercase().let { g ->
+                    g.contains("esport") || g.contains("sport") || g.contains("futebol")
+                }}
+            )
+            "FILMES" -> allChannels.filter { it.group.lowercase().let { g ->
+                g.contains("filme") || g.contains("movie")
+            }}
+            "SÉRIES" -> allChannels.filter { it.group.lowercase().let { g ->
+                g.contains("serie") || g.contains("series")
+            }}
+            "KIDS"   -> allChannels.filter { it.group.lowercase().let { g ->
+                g.contains("kid") || g.contains("infantil") || g.contains("criança")
+            }}
+            "ANIME"  -> allChannels.filter { it.group.lowercase().contains("anime") }
+            else     -> allChannels
         }
 
         val displayMode = if (isLiveMode) ChannelAdapter.MODE_LIVE else ChannelAdapter.MODE_GRID
@@ -126,23 +135,34 @@ class HomeActivity : AppCompatActivity() {
 
         rvChannels.adapter = ChannelAdapter(filtered, displayMode) { channel ->
             if (isLiveMode) {
-                // LIVE e ESPORTES: vai direto pro player
-                val intent = Intent(this, PlayerActivity::class.java)
-                intent.putExtra("stream_url", channel.url)
-                intent.putExtra("channel_name", channel.name)
-                intent.putExtra("channel_logo", channel.logo)
-                startActivity(intent)
+                openPlayer(channel)
             } else {
-                // FILMES, SÉRIES, KIDS, ANIME: abre tela de detalhe
                 val intent = Intent(this, DetailActivity::class.java)
                 intent.putExtra("stream_url", channel.url)
                 intent.putExtra("channel_name", channel.name)
                 intent.putExtra("channel_logo", channel.logo)
                 intent.putExtra("channel_group", channel.group)
                 intent.putExtra("stream_id", channel.id)
+                intent.putExtra("quality_urls", buildQualityJson(channel))
                 startActivity(intent)
             }
         }
+    }
+
+    private fun openPlayer(channel: Channel) {
+        val intent = Intent(this, PlayerActivity::class.java)
+        intent.putExtra("stream_url", channel.url)
+        intent.putExtra("channel_name", channel.name)
+        intent.putExtra("channel_logo", channel.logo)
+        intent.putExtra("quality_urls", buildQualityJson(channel))
+        startActivity(intent)
+    }
+
+    private fun buildQualityJson(channel: Channel): String {
+        if (channel.qualityUrls.isEmpty()) return ""
+        val obj = JSONObject()
+        channel.qualityUrls.forEach { (k, v) -> obj.put(k, v) }
+        return obj.toString()
     }
 
     private fun showLoading(loading: Boolean) {
