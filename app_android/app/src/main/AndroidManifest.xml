@@ -16,7 +16,6 @@
         android:theme="@style/Theme.BlueTV"
         android:usesCleartextTraffic="true">
 
-        <!-- ENTRADA DO APP: SplashActivity -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
@@ -35,6 +34,11 @@
 
         <activity
             android:name=".HomeActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".DetailActivity"
             android:screenOrientation="landscape"
             android:exported="false"/>
 
