@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
@@ -23,7 +25,10 @@ class HomeActivity : AppCompatActivity() {
 
     private val tabs = listOf("LIVE", "FILMES", "SÉRIES", "KIDS", "ANIME", "ESPORTES")
     private var currentTab = 0
-    private var channels = listOf<Channel>()
+    private var allChannels = listOf<Channel>()
+
+    private lateinit var rvChannels: RecyclerView
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,16 +39,21 @@ class HomeActivity : AppCompatActivity() {
         val m3uUrl = prefs.getString("m3u_url", null)
         val clientId = prefs.getString("client_id", "")
 
+        rvChannels = findViewById(R.id.rvChannels)
+        progressBar = findViewById(R.id.progressBar)
+
         findViewById<TextView>(R.id.tvExpira).text = "Expira: $validade"
         setupTabs()
 
         if (m3uUrl != null) {
+            showLoading(true)
             loadM3U(m3uUrl)
+        } else {
+            Toast.makeText(this, "URL não encontrada. Reative o app.", Toast.LENGTH_LONG).show()
         }
 
         if (!clientId.isNullOrEmpty()) sendHeartbeat(clientId)
 
-        // Botão CONFIG
         findViewById<TextView>(R.id.btnConfig).setOnClickListener {
             val prefs2 = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs2.edit().putString("status", "pending").apply()
@@ -53,64 +63,80 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupTabs() {
-        val tabsContainer = findViewById<RecyclerView>(R.id.rvTabs)
-        tabsContainer.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        val adapter = TabAdapter(tabs, currentTab) { index ->
+        val rvTabs = findViewById<RecyclerView>(R.id.rvTabs)
+        rvTabs.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvTabs.adapter = TabAdapter(tabs, currentTab) { index ->
             currentTab = index
-            filterChannels()
+            renderChannels()
         }
-        tabsContainer.adapter = adapter
     }
 
     private fun loadM3U(url: String) {
         val req = Request.Builder().url(url).build()
         client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread { Toast.makeText(this@HomeActivity, "Erro ao carregar canais", Toast.LENGTH_SHORT).show() }
+                runOnUiThread {
+                    showLoading(false)
+                    Toast.makeText(this@HomeActivity, "Erro ao carregar canais", Toast.LENGTH_SHORT).show()
+                }
             }
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body?.string() ?: return
                 response.close()
-                channels = M3UParser.parse(body)
-                runOnUiThread { filterChannels() }
+                allChannels = M3UParser.parse(body)
+                runOnUiThread {
+                    showLoading(false)
+                    renderChannels()
+                }
             }
         })
     }
 
-    private fun filterChannels() {
-        val keyword = when (tabs[currentTab]) {
-            "LIVE" -> null // todos os grupos de TV ao vivo
-            "FILMES" -> "filme"
-            "SÉRIES" -> "serie"
-            "KIDS" -> "kid"
-            "ANIME" -> "anime"
-            "ESPORTES" -> "esport"
-            else -> null
-        }
+    private fun renderChannels() {
+        val tab = tabs[currentTab]
 
-        val filtered = if (keyword == null && tabs[currentTab] == "LIVE") {
-            M3UParser.groupByQuality(
-                channels.filter { ch ->
+        // Filtrar por categoria
+        val filtered = when (tab) {
+            "LIVE" -> M3UParser.groupByQuality(
+                allChannels.filter { ch ->
                     val g = ch.group.lowercase()
                     !g.contains("filme") && !g.contains("serie") &&
-                    !g.contains("kid") && !g.contains("anime") && !g.contains("adult")
+                    !g.contains("kid") && !g.contains("anime") &&
+                    !g.contains("adult") && !g.contains("esport") && !g.contains("sport")
                 }
             )
-        } else if (keyword != null) {
-            channels.filter { it.group.lowercase().contains(keyword) }
-        } else {
-            channels
+            "FILMES"   -> allChannels.filter { it.group.lowercase().contains("filme") || it.group.lowercase().contains("movie") }
+            "SÉRIES"   -> allChannels.filter { it.group.lowercase().contains("serie") || it.group.lowercase().contains("series") }
+            "KIDS"     -> allChannels.filter { it.group.lowercase().contains("kid") || it.group.lowercase().contains("infantil") || it.group.lowercase().contains("criança") }
+            "ANIME"    -> allChannels.filter { it.group.lowercase().contains("anime") }
+            "ESPORTES" -> allChannels.filter { it.group.lowercase().contains("esport") || it.group.lowercase().contains("sport") || it.group.lowercase().contains("futebol") }
+            else -> allChannels
         }
 
-        val recycler = findViewById<RecyclerView>(R.id.rvChannels)
-        recycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        recycler.adapter = ChannelAdapter(filtered) { channel ->
+        // Definir modo de exibição e layout
+        val isLiveMode = tab == "LIVE" || tab == "ESPORTES"
+        val displayMode = if (isLiveMode) ChannelAdapter.MODE_LIVE else ChannelAdapter.MODE_GRID
+
+        if (isLiveMode) {
+            // Lista vertical para canais ao vivo
+            rvChannels.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        } else {
+            // Grid 3 colunas para filmes/séries/etc
+            rvChannels.layoutManager = GridLayoutManager(this, 3)
+        }
+
+        rvChannels.adapter = ChannelAdapter(filtered, displayMode) { channel ->
             val intent = Intent(this, PlayerActivity::class.java)
             intent.putExtra("stream_url", channel.url)
             intent.putExtra("channel_name", channel.name)
             intent.putExtra("channel_logo", channel.logo)
             startActivity(intent)
         }
+    }
+
+    private fun showLoading(loading: Boolean) {
+        progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+        rvChannels.visibility = if (loading) View.GONE else View.VISIBLE
     }
 
     private fun sendHeartbeat(clientId: String) {
