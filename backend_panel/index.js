@@ -734,6 +734,58 @@ app.get("/api/debug/requests", requireAuth, async (req, res) => {
 });
 
 // =====================
+// DNS TESTER — testa múltiplos servidores e cacheia o mais rápido
+// =====================
+const DNS_CANDIDATES = [
+  'http://dnmxelk01apps.top',
+  'http://akdemia.click',
+  'http://167.114.4.164',
+  'http://5.161.77.87'
+];
+const DNS_TEST_USER = '95375978';
+const DNS_TEST_PASS = '97583485';
+const DNS_TEST_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+
+let bestDns = null;
+let bestDnsTestedAt = 0;
+
+async function testDns(host) {
+  return new Promise((resolve) => {
+    const http = host.startsWith('https') ? require('https') : require('http');
+    const url = `${host}/player_api.php?username=${DNS_TEST_USER}&password=${DNS_TEST_PASS}&action=get_live_categories`;
+    const start = Date.now();
+    const req = http.get(url, { timeout: 8000 }, (res) => {
+      res.destroy(); // não precisa do body
+      const ms = Date.now() - start;
+      const ok = res.statusCode >= 200 && res.statusCode < 400;
+      resolve({ host, ms: ok ? ms : 99999, ok });
+    });
+    req.on('error', () => resolve({ host, ms: 99999, ok: false }));
+    req.on('timeout', () => { req.destroy(); resolve({ host, ms: 99999, ok: false }); });
+  });
+}
+
+async function refreshBestDns() {
+  console.log('🔍 Testando DNS servers...');
+  const results = await Promise.all(DNS_CANDIDATES.map(testDns));
+  results.sort((a, b) => a.ms - b.ms);
+  const winner = results.find(r => r.ok);
+  if (winner) {
+    bestDns = winner.host;
+    bestDnsTestedAt = Date.now();
+    console.log(`✅ Melhor DNS: ${bestDns} (${winner.ms}ms)`);
+    results.forEach(r => console.log(`   ${r.ok ? '✓' : '✗'} ${r.host} — ${r.ms}ms`));
+  } else {
+    console.log('⚠️  Nenhum DNS respondeu. Mantendo anterior:', bestDns);
+  }
+}
+
+// Testa ao iniciar (com delay para não bloquear boot)
+setTimeout(refreshBestDns, 5000);
+// Re-testa periodicamente
+setInterval(refreshBestDns, DNS_TEST_INTERVAL_MS);
+
+// =====================
 // APP: STATUS BLUETV-XXXXX
 // =====================
 app.get('/app/status/bluetv/:clientId', async (req, res) => {
@@ -766,15 +818,20 @@ app.get('/app/status/bluetv/:clientId', async (req, res) => {
       console.log('Xtream encontrado:', JSON.stringify(xtream));
 
       if (xtream) {
+        // Usa o melhor DNS testado em vez do host fixo no DB (se disponível)
+        const resolvedHost = bestDns || xtream.host;
+        const resolvedUser = xtream.username || DNS_TEST_USER;
+        const resolvedPass = xtream.password || DNS_TEST_PASS;
         return res.json({
           success: true,
           status: 'ok',
+          dns_tested_at: bestDnsTestedAt || null,
           xtream: {
-            host: xtream.host,
-            username: xtream.username,
-            password: xtream.password,
+            host: resolvedHost,
+            username: resolvedUser,
+            password: resolvedPass,
             validade: xtream.validade,
-            m3u_url: xtream.m3u_url,
+            m3u_url: `${resolvedHost}/get.php?username=${resolvedUser}&password=${resolvedPass}&type=m3u_plus&output=mpegts`,
             plano: xtream.plano
           }
         });
@@ -1205,6 +1262,27 @@ app.post('/app/edit-credentials', async (req, res) => {
     console.error('Erro /app/edit-credentials:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// =====================
+// DNS STATUS (debug)
+// =====================
+app.get('/app/dns-status', requireApiKey, async (req, res) => {
+  const results = await Promise.all(DNS_CANDIDATES.map(testDns));
+  results.sort((a, b) => a.ms - b.ms);
+  res.json({
+    best: bestDns,
+    tested_at: bestDnsTestedAt,
+    results: results.map(r => ({ host: r.host, ms: r.ms, ok: r.ok }))
+  });
+});
+
+// =====================
+// DNS FORCE REFRESH (admin)
+// =====================
+app.post('/app/dns-refresh', requireApiKey, async (req, res) => {
+  await refreshBestDns();
+  res.json({ success: true, best: bestDns, tested_at: bestDnsTestedAt });
 });
 
 // Start server
