@@ -1066,6 +1066,52 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
   }
 });
 
+// =====================
+// ATIVAÇÃO MANUAL — vincula um client_code a um xtream_id existente
+// POST /app/activate-manual
+// Body: { client_code, xtream_id, api_key }
+// Uso: ativar clientes cujas credenciais foram capturadas mas vinculadas ao ID errado
+// =====================
+app.post('/app/activate-manual', async (req, res) => {
+  try {
+    const { client_code, xtream_id, api_key } = req.body;
+    if (api_key !== config.APP_API_KEY) {
+      return res.status(401).json({ success: false, error: 'Invalid API key' });
+    }
+    if (!client_code || !xtream_id) {
+      return res.status(400).json({ success: false, error: 'client_code e xtream_id obrigatórios' });
+    }
+
+    const appRequest = await db.get(
+      "SELECT * FROM app_requests WHERE client_code = ?",
+      [client_code.toUpperCase()]
+    );
+    if (!appRequest) {
+      return res.status(404).json({ success: false, error: 'Client não encontrado' });
+    }
+
+    const xtream = await db.get(
+      "SELECT * FROM xtream_credentials WHERE id = ?",
+      [xtream_id]
+    );
+    if (!xtream) {
+      return res.status(404).json({ success: false, error: 'Xtream credential não encontrada' });
+    }
+
+    const now = Date.now();
+    await db.run(
+      "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+      [xtream_id, now, client_code.toUpperCase()]
+    );
+
+    console.log(`✅ Ativação manual: ${client_code.toUpperCase()} → xtream_id=${xtream_id}`);
+    return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id });
+  } catch (err) {
+    console.error('Erro /app/activate-manual:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start server
 const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);
