@@ -385,8 +385,16 @@ app.get("/api/debug/botbot", async (req, res) => {
 // =====================
 app.get("/api/clients", async (req, res) => {
   try {
-    const rows = await db.all("SELECT id, whatsapp_number, status, criado_em FROM clients ORDER BY id DESC", []);
-    res.json(rows);
+    const rows = await db.all(`
+      SELECT
+        ar.id, ar.client_code, ar.whatsapp_number, ar.status,
+        ar.created_at, ar.updated_at, ar.xtream_id,
+        xc.host, xc.username, xc.password, xc.validade, xc.m3u_url, xc.plano
+      FROM app_requests ar
+      LEFT JOIN xtream_credentials xc ON ar.xtream_id = xc.id
+      ORDER BY ar.updated_at DESC
+    `);
+    res.json(Array.isArray(rows) ? rows : []);
   } catch (err) {
     console.error("Erro ao buscar clients:", err);
     return res.status(500).json({ error: "Erro ao buscar clients" });
