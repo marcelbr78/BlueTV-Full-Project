@@ -2,168 +2,201 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:background="#0a0a1a">
 
-    <!-- ══ COLUNA 1: SIDEBAR (Menu Principal) ════════════════ -->
+    <!-- HEADER: BlueTV | Abas | Expira | Config -->
     <LinearLayout
-        android:id="@+id/sidebar"
-        android:layout_width="160dp"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="#05050d"
-        android:paddingTop="16dp">
-
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
+        android:background="#05050d">
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="BlueTV"
             android:textColor="#1565C0"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginBottom="24dp"/>
-
+            android:layout_marginEnd="16dp"/>
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvSidebar"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:id="@+id/rvTabs"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"/>
-
         <TextView
             android:id="@+id/tvExpira"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#444466"
-            android:textSize="10sp"
-            android:gravity="center"
-            android:padding="12dp"/>
-    </LinearLayout>
-
-    <!-- ══ COLUNA 2: CATEGORIAS / GRUPOS (Estilo UniTV) ══════ -->
-    <LinearLayout
-        android:id="@+id/layoutCategories"
-        android:layout_width="180dp"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="#08081a"
-        android:paddingTop="12dp">
-        
+            android:textColor="#666688"
+            android:textSize="11sp"
+            android:layout_marginEnd="12dp"/>
         <TextView
-            android:id="@+id/tvCatTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="GRUPOS"
-            android:textColor="#1565C0"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:paddingStart="16dp"
-            android:layout_marginBottom="12dp"
-            android:alpha="0.6"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvCategories"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:id="@+id/btnConfig"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:text="&#9881;"
+            android:textColor="#888899"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:focusable="true"/>
     </LinearLayout>
 
-    <!-- ══ COLUNA 3: CONTEÚDO (Canais / Filmes / Grid) ═══════ -->
-    <FrameLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+    <!-- CONTEUDO PRINCIPAL (horizontal) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
+        <!-- COLUNA GRUPOS (esquerda, ocultavel) -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/layoutGroups"
+            android:layout_width="175dp"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:background="#05050d"
+            android:visibility="gone">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:text="  GRUPOS"
+                android:textColor="#1565C0"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:gravity="center_vertical"
+                android:background="#08081a"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvGroups"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+        </LinearLayout>
 
-            <!-- Lista Principal -->
+        <!-- CONTEUDO DIREITO -->
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <!-- AO VIVO / ESPORTES: lista canais + preview -->
             <LinearLayout
-                android:layout_width="280dp"
+                android:id="@+id/layoutLive"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:background="#0a0a1a">
-                
-                <TextView
-                    android:id="@+id/tvTitleContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="Todos"
-                    android:textColor="#ffffff"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:background="#05050d"/>
+                android:orientation="horizontal"
+                android:visibility="visible">
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvContent"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:padding="4dp"/>
-            </LinearLayout>
-
-            <!-- Preview / Player Lateral -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#000000">
+                    android:layout_weight="38"
+                    android:orientation="vertical"
+                    android:background="#06060f">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:text="  Canais"
+                        android:textColor="#444466"
+                        android:textSize="11sp"
+                        android:gravity="center_vertical"
+                        android:background="#08081a"/>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvChannels"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+                </LinearLayout>
 
                 <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-                    
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="62"
+                    android:background="#08081a">
                     <ImageView
                         android:id="@+id/ivSelectedLogo"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerInside"
-                        android:alpha="0.2"/>
-                    
-                    <LinearLayout
+                        android:layout_width="110dp"
+                        android:layout_height="110dp"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="90dp"
+                        android:scaleType="fitCenter"/>
+                    <TextView
+                        android:id="@+id/tvSelectedName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:padding="32dp"
-                        android:orientation="vertical"
-                        android:background="#CC000000">
-                        
-                        <TextView
-                            android:id="@+id/tvSelectedName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="#ffffff"
-                            android:textSize="24sp"
-                            android:textStyle="bold"/>
-                            
-                        <TextView
-                            android:id="@+id/tvSelectedDesc"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="#4499FF"
-                            android:textSize="14sp"
-                            android:layout_marginTop="4dp"/>
-                            
-                        <TextView
-                            android:id="@+id/btnWatchNow"
-                            android:layout_width="180dp"
-                            android:layout_height="48dp"
-                            android:text="▶  ASSISTIR"
-                            android:textColor="#ffffff"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:background="#1565C0"
-                            android:layout_marginTop="20dp"
-                            android:focusable="true"
-                            android:visibility="gone"/>
-                    </LinearLayout>
+                        android:layout_gravity="center"
+                        android:layout_marginTop="90dp"
+                        android:text="Selecione um canal"
+                        android:textColor="#ffffff"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center"/>
+                    <TextView
+                        android:id="@+id/tvSelectedGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="140dp"
+                        android:textColor="#4499FF"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:maxLines="2"/>
+                    <TextView
+                        android:id="@+id/btnWatchNow"
+                        android:layout_width="160dp"
+                        android:layout_height="44dp"
+                        android:layout_gravity="center|bottom"
+                        android:layout_marginBottom="40dp"
+                        android:text="&#9654;  ASSISTIR"
+                        android:textColor="#ffffff"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:background="#1565C0"
+                        android:focusable="true"
+                        android:visibility="gone"/>
                 </FrameLayout>
+
             </LinearLayout>
-        </LinearLayout>
-    </FrameLayout>
+
+            <!-- GRID: filmes / series / kids / anime -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvGrid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:clipToPadding="false"
+                android:visibility="gone"/>
+
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- STATUS BAR -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="#05050d">
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:indeterminateTint="#1565C0"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp"/>
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#444466"
+            android:textSize="10sp"/>
+    </LinearLayout>
 
 </LinearLayout>
