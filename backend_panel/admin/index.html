@@ -655,7 +655,7 @@ function formatDate(ts) {
 // Load Clients APK (usa endpoint completo com credenciais)
 async function loadClients() {
   try {
-    const res = await fetch('/api/debug/clients');
+    const res = await fetch('/api/clients');
     const data = await res.json();
     document.getElementById('clientsCount').textContent = data.length;
     document.getElementById('statClients').textContent = data.length;
