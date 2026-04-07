@@ -518,7 +518,7 @@ app.post('/webhook/evolution', async (req, res) => {
         ]
       );
 
-      const xtreamId = insertResult.lastInsertRowid || insertResult.lastID;
+      const xtreamId = Number(insertResult.lastInsertRowid || insertResult.lastID);
 
       // Activar o cliente
       if (appRequest) {
@@ -1112,7 +1112,7 @@ app.post('/app/activate-manual', async (req, res) => {
           now
         ]
       );
-      finalXtreamId = insertResult.lastInsertRowid || insertResult.lastID;
+      finalXtreamId = Number(insertResult.lastInsertRowid || insertResult.lastID);
     }
 
     if (!finalXtreamId) {
@@ -1186,7 +1186,7 @@ app.post('/app/edit-credentials', async (req, res) => {
           validade || null, m3uUrl, now
         ]
       );
-      const newId = insertResult.lastInsertRowid || insertResult.lastID;
+      const newId = Number(insertResult.lastInsertRowid || insertResult.lastID);
       await db.run(
         "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
         [newId, now, client_code.toUpperCase()]
