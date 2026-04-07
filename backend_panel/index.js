@@ -1204,4 +1204,13 @@ const server = app.listen(PORT, () => {
   console.log("🚀 Backend rodando na porta " + PORT);
   console.log("📱 API Key do App:", config.APP_API_KEY);
   console.log("📞 Número do Painel IPTV:", config.IPTV_PANEL_NUMBER || "(não configurado)");
+
+  // Auto-ping a cada 4 minutos para evitar que o Render durma
+  const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  setInterval(() => {
+    const http = SELF_URL.startsWith('https') ? require('https') : require('http');
+    http.get(`${SELF_URL}/health`, (res) => {
+      console.log(`♻️  Keep-alive ping: ${res.statusCode}`);
+    }).on('error', () => {});
+  }, 4 * 60 * 1000); // 4 minutos
 });
