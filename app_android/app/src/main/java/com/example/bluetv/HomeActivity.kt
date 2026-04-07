@@ -186,7 +186,7 @@ class HomeActivity : AppCompatActivity() {
         } else {
             layoutLive.visibility = View.GONE
             rvGrid.visibility     = View.VISIBLE
-            rvGrid.layoutManager  = GridLayoutManager(this, 3)
+            rvGrid.layoutManager  = GridLayoutManager(this, 5)
             rvGrid.adapter = ChannelAdapter(
                 channels         = list,
                 displayMode      = ChannelAdapter.MODE_GRID,
@@ -293,86 +293,130 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    // ─── BUSCA CATEGORIAS ANTES DOS STREAMS ────────────────────────
+
     private fun loadLive() {
-        fetch("$host/player_api.php?username=$username&password=$password&action=get_live_streams") { body ->
-            val arr      = JSONArray(body)
-            val live     = mutableListOf<Channel>()
-            val esportes = mutableListOf<Channel>()
-            for (i in 0 until arr.length()) {
-                val o  = arr.getJSONObject(i)
-                val id = o.optString("stream_id")
-                val ch = Channel(id, o.optString("name"),
-                    "$host/live/$username/$password/$id.ts",
-                    o.optString("stream_icon"),
-                    o.optString("category_name", o.optString("category_id", "Geral")), id)
-                if (isSport(ch.group)) esportes.add(ch) else live.add(ch)
-            }
-            tabData["LIVE"]     = live
-            tabData["ESPORTES"] = esportes
-            networkDone += setOf("LIVE", "ESPORTES")
-            saveCache("LIVE", live); saveCache("ESPORTES", esportes)
-            runOnUiThread {
-                if (currentTab == 0 || currentTab == 5) renderTab()
+        fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_live_categories") { catBody ->
+            val catMap = buildCategoryMap(catBody)
+            fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_live_streams") { body ->
+                if (!body.isNullOrEmpty() && body.startsWith("[")) {
+                    try {
+                        val arr      = JSONArray(body)
+                        val live     = mutableListOf<Channel>()
+                        val esportes = mutableListOf<Channel>()
+                        for (i in 0 until arr.length()) {
+                            val o     = arr.getJSONObject(i)
+                            val id    = o.optString("stream_id")
+                            val catId = o.optString("category_id")
+                            val cat   = catMap[catId] ?: o.optString("category_name", catId.ifEmpty { "Geral" })
+                            val ch    = Channel(id, o.optString("name"),
+                                "$host/live/$username/$password/$id.ts",
+                                o.optString("stream_icon"), cat, id)
+                            if (isSport(cat)) esportes.add(ch) else live.add(ch)
+                        }
+                        val fusedLive     = M3UParser.fuseChannels(live)
+                        val fusedEsportes = M3UParser.fuseChannels(esportes)
+                        tabData["LIVE"]     = fusedLive
+                        tabData["ESPORTES"] = fusedEsportes
+                        networkDone += setOf("LIVE", "ESPORTES")
+                        saveCache("LIVE", fusedLive); saveCache("ESPORTES", fusedEsportes)
+                        runOnUiThread { if (currentTab == 0 || currentTab == 5) renderTab() }
+                    } catch (e: Exception) {}
+                }
+                checkDone()
             }
         }
     }
 
     private fun loadVod() {
-        fetch("$host/player_api.php?username=$username&password=$password&action=get_vod_streams") { body ->
-            val arr    = JSONArray(body)
-            val filmes = mutableListOf<Channel>()
-            val kids   = mutableListOf<Channel>()
-            val anime  = mutableListOf<Channel>()
-            for (i in 0 until arr.length()) {
-                val o   = arr.getJSONObject(i)
-                val id  = o.optString("stream_id")
-                val ext = o.optString("container_extension", "mp4")
-                val cat = o.optString("category_name", o.optString("category_id", ""))
-                val ch  = Channel(id, o.optString("name"),
-                    "$host/movie/$username/$password/$id.$ext",
-                    o.optString("stream_icon"), cat, id)
-                when {
-                    cat.lowercase().contains("anime") -> anime.add(ch)
-                    isKids(cat) -> kids.add(ch)
-                    else -> filmes.add(ch)
+        fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_vod_categories") { catBody ->
+            val catMap = buildCategoryMap(catBody)
+            fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_vod_streams") { body ->
+                if (!body.isNullOrEmpty() && body.startsWith("[")) {
+                    try {
+                        val arr    = JSONArray(body)
+                        val filmes = mutableListOf<Channel>()
+                        val kids   = mutableListOf<Channel>()
+                        val anime  = mutableListOf<Channel>()
+                        for (i in 0 until arr.length()) {
+                            val o     = arr.getJSONObject(i)
+                            val id    = o.optString("stream_id")
+                            val ext   = o.optString("container_extension", "mp4")
+                            val catId = o.optString("category_id")
+                            val cat   = catMap[catId] ?: o.optString("category_name", catId.ifEmpty { "" })
+                            val ch    = Channel(id, o.optString("name"),
+                                "$host/movie/$username/$password/$id.$ext",
+                                o.optString("stream_icon"), cat, id)
+                            when {
+                                cat.lowercase().contains("anime") -> anime.add(ch)
+                                isKids(cat) -> kids.add(ch)
+                                else -> filmes.add(ch)
+                            }
+                        }
+                        val kidsFinal = kids.ifEmpty { filmes.filter { isKids(it.name) } }
+                        tabData["FILMES"] = filmes
+                        tabData["KIDS"]   = kidsFinal
+                        tabData["ANIME"]  = anime
+                        networkDone += setOf("FILMES", "KIDS", "ANIME")
+                        saveCache("FILMES", filmes); saveCache("KIDS", kidsFinal); saveCache("ANIME", anime)
+                        runOnUiThread { if (currentTab in listOf(1, 3, 4)) renderTab() }
+                    } catch (e: Exception) {}
                 }
+                checkDone()
             }
-            val kidsFinal = kids.ifEmpty { filmes.filter { isKids(it.name) } }
-            tabData["FILMES"] = filmes
-            tabData["KIDS"]   = kidsFinal
-            tabData["ANIME"]  = anime
-            networkDone += setOf("FILMES", "KIDS", "ANIME")
-            saveCache("FILMES", filmes); saveCache("KIDS", kidsFinal); saveCache("ANIME", anime)
-            runOnUiThread { if (currentTab in listOf(1, 3, 4)) renderTab() }
         }
     }
 
     private fun loadSeries() {
-        fetch("$host/player_api.php?username=$username&password=$password&action=get_series") { body ->
-            val arr    = JSONArray(body)
-            val series = mutableListOf<Channel>()
-            for (i in 0 until arr.length()) {
-                val o  = arr.getJSONObject(i)
-                val id = o.optString("series_id")
-                series.add(Channel(id, o.optString("name"), "",
-                    o.optString("cover"), o.optString("category_name", "Séries"), id))
+        fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_series_categories") { catBody ->
+            val catMap = buildCategoryMap(catBody)
+            fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_series") { body ->
+                if (!body.isNullOrEmpty() && body.startsWith("[")) {
+                    try {
+                        val arr    = JSONArray(body)
+                        val series = mutableListOf<Channel>()
+                        for (i in 0 until arr.length()) {
+                            val o     = arr.getJSONObject(i)
+                            val id    = o.optString("series_id")
+                            val catId = o.optString("category_id")
+                            val cat   = catMap[catId] ?: o.optString("category_name", "Séries")
+                            series.add(Channel(id, o.optString("name"), "",
+                                o.optString("cover"), cat, id))
+                        }
+                        tabData["SÉRIES"] = series
+                        networkDone.add("SÉRIES")
+                        saveCache("SÉRIES", series)
+                        runOnUiThread { if (currentTab == 2) renderTab() }
+                    } catch (e: Exception) {}
+                }
+                checkDone()
             }
-            tabData["SÉRIES"] = series
-            networkDone.add("SÉRIES")
-            saveCache("SÉRIES", series)
-            runOnUiThread { if (currentTab == 2) renderTab() }
         }
     }
 
-    private fun fetch(url: String, onSuccess: (String) -> Unit) {
+    /** Constrói mapa category_id → category_name a partir do JSON de categorias */
+    private fun buildCategoryMap(body: String?): Map<String, String> {
+        if (body.isNullOrEmpty() || !body.startsWith("[")) return emptyMap()
+        return try {
+            val arr = JSONArray(body)
+            val map = mutableMapOf<String, String>()
+            for (i in 0 until arr.length()) {
+                val o  = arr.getJSONObject(i)
+                val id = o.optString("category_id")
+                val nm = o.optString("category_name")
+                if (id.isNotEmpty() && nm.isNotEmpty()) map[id] = nm
+            }
+            map
+        } catch (e: Exception) { emptyMap() }
+    }
+
+    /** HTTP simples SEM incrementar loadingCount */
+    private fun fetchRaw(url: String, onDone: (String?) -> Unit) {
         client.newCall(Request.Builder().url(url).build()).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) { checkDone() }
+            override fun onFailure(call: Call, e: IOException) { onDone(null) }
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body?.string(); response.close()
-                if (!body.isNullOrEmpty() && body.startsWith("[")) {
-                    try { onSuccess(body) } catch (e: Exception) {}
-                }
-                checkDone()
+                onDone(body)
             }
         })
     }
