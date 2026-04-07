@@ -820,20 +820,20 @@ app.get('/app/status/bluetv/:clientId', async (req, res) => {
       console.log('Xtream encontrado:', JSON.stringify(xtream));
 
       if (xtream) {
-        // Usa o melhor DNS testado em vez do host fixo no DB (se disponível)
-        const resolvedHost = bestDns || xtream.host;
-        const resolvedUser = xtream.username || DNS_TEST_USER;
-        const resolvedPass = xtream.password || DNS_TEST_PASS;
+        // Usa sempre o host cadastrado no painel — DNS automático só para referência
+        const resolvedHost = xtream.host;
+        const resolvedUser = xtream.username;
+        const resolvedPass = xtream.password;
         return res.json({
           success: true,
           status: 'ok',
-          dns_tested_at: bestDnsTestedAt || null,
+          best_dns: bestDns || null,
           xtream: {
             host: resolvedHost,
             username: resolvedUser,
             password: resolvedPass,
-            validade: xtream.validade,
-            m3u_url: `${resolvedHost}/get.php?username=${resolvedUser}&password=${resolvedPass}&type=m3u_plus&output=mpegts`,
+            validade: xtream.validade || null,
+            m3u_url: xtream.m3u_url || `${resolvedHost}/get.php?username=${resolvedUser}&password=${resolvedPass}&type=m3u_plus&output=mpegts`,
             plano: xtream.plano
           }
         });
