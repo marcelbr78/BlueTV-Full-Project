@@ -4,14 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.bluetv.databinding.ActivityHomeBinding
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -24,6 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class HomeActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityHomeBinding
+
     private val BACKEND_URL  = "https://bluetv-full-project.onrender.com"
     private val API_KEY      = "btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ"
     private val PREFS_NAME   = "bluetv_prefs"
@@ -35,31 +36,21 @@ class HomeActivity : AppCompatActivity() {
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    // Abas no topo
+    // Abas
     private val tabs = listOf("LIVE", "FILMES", "SÉRIES", "KIDS", "ANIME", "ESPORTES")
     private var currentTab = 0
 
-    private val tabData      = mutableMapOf<String, List<Channel>>()
-    private val networkDone  = mutableSetOf<String>()
-    private val loadingCount = AtomicInteger(0)
-    private val totalLoads   = 3
+    private val tabData     = mutableMapOf<String, List<Channel>>()
+    private val networkDone = mutableSetOf<String>()
+    private val loadCount   = AtomicInteger(0)
+    private val totalLoads  = 3
 
     private var selectedGroup   = "Todos"
     private val favoriteIds     = mutableSetOf<String>()
     private var selectedChannel: Channel? = null
 
-    // Views
-    private lateinit var layoutGroups:    View
-    private lateinit var layoutLive:      View
-    private lateinit var rvGroups:        RecyclerView
-    private lateinit var rvChannels:      RecyclerView
-    private lateinit var rvGrid:          RecyclerView
-    private lateinit var progressBar:     ProgressBar
-    private lateinit var tvStatus:        TextView
-    private lateinit var ivSelectedLogo:  ImageView
-    private lateinit var tvSelectedName:  TextView
-    private lateinit var tvSelectedGroup: TextView
-    private lateinit var btnWatchNow:     TextView
+    // ExoPlayer preview (novo — preview do canal antes de abrir tela cheia)
+    private var previewPlayer: ExoPlayer? = null
 
     private var host     = ""
     private var username = ""
@@ -67,9 +58,10 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            setContentView(R.layout.activity_home)
+        binding = ActivityHomeBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
+        try {
             val prefs    = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             host         = fixHost(prefs.getString("host", "") ?: "")
             username     = prefs.getString("username", "") ?: ""
@@ -77,85 +69,69 @@ class HomeActivity : AppCompatActivity() {
             val validade = prefs.getString("validade", null)
             val clientId = prefs.getString("client_id", "") ?: ""
 
-            bindViews()
+            initPreviewPlayer()
             loadFavorites()
             setupTabs()
 
             val display = if (validade.isNullOrEmpty() || validade == "null") "—" else validade
-            findViewById<TextView>(R.id.tvExpira).text = "Expira: $display"
+            binding.tvValidadeInfo.text = "Expira: $display"
 
-            btnWatchNow.setOnClickListener { selectedChannel?.let { playChannel(it) } }
-            findViewById<TextView>(R.id.btnConfig).setOnClickListener {
+            binding.btnActionPlay.setOnClickListener { selectedChannel?.let { playChannel(it) } }
+            binding.btnConfig.setOnClickListener {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
 
-            // Cache imediato da aba atual
-            val cached = readCache(tabs[currentTab])
-            if (cached != null) {
-                tabData[tabs[currentTab]] = cached
+            // Carrega cache da aba atual imediatamente
+            readCache(tabs[currentTab])?.let {
+                tabData[tabs[currentTab]] = it
                 showLoading(false)
                 renderTab()
-            } else {
-                showLoading(true)
-            }
+            } ?: showLoading(true)
 
             if (clientId.isNotEmpty()) sendHeartbeat(clientId)
 
-            val lastRefresh   = prefs.getLong("last_cred_refresh", 0L)
-            val credExpired   = System.currentTimeMillis() - lastRefresh > CRED_TTL_MS
-            val noCredentials = host.isEmpty() || username.isEmpty()
-
-            if (clientId.isNotEmpty() && (credExpired || noCredentials)) {
-                fetchFreshCredentials(clientId) { startNetworkLoad() }
+            val lastRefresh = prefs.getLong("last_cred_refresh", 0L)
+            val credExpired = System.currentTimeMillis() - lastRefresh > CRED_TTL_MS
+            if (clientId.isNotEmpty() && (credExpired || host.isEmpty())) {
+                fetchFreshCredentials(clientId) { startNetworkFetch() }
             } else {
-                startNetworkLoad()
+                startNetworkFetch()
             }
 
         } catch (e: Throwable) {
-            setContentView(android.widget.LinearLayout(this).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setBackgroundColor(android.graphics.Color.parseColor("#0a0a1a"))
-                setPadding(40, 60, 40, 40)
-                addView(android.widget.TextView(this@HomeActivity).apply {
-                    text = "ERRO: ${e.javaClass.simpleName}\n${e.message}"
-                    textSize = 12f
-                    setTextColor(android.graphics.Color.WHITE)
-                })
-            })
+            binding.tvSelectedTitle.text = "Erro: ${e.message}"
         }
     }
 
-    private fun bindViews() {
-        layoutGroups    = findViewById(R.id.layoutGroups)
-        layoutLive      = findViewById(R.id.layoutLive)
-        rvGroups        = findViewById(R.id.rvGroups)
-        rvChannels      = findViewById(R.id.rvChannels)
-        rvGrid          = findViewById(R.id.rvGrid)
-        progressBar     = findViewById(R.id.progressBar)
-        tvStatus        = findViewById(R.id.tvStatus)
-        ivSelectedLogo  = findViewById(R.id.ivSelectedLogo)
-        tvSelectedName  = findViewById(R.id.tvSelectedName)
-        tvSelectedGroup = findViewById(R.id.tvSelectedGroup)
-        btnWatchNow     = findViewById(R.id.btnWatchNow)
+    // ─── PREVIEW PLAYER ────────────────────────────────────────
+
+    private fun initPreviewPlayer() {
+        previewPlayer = ExoPlayer.Builder(this).build()
+        binding.pvPreview.player = previewPlayer
+    }
+
+    private fun startPreview(url: String) {
+        if (url.isEmpty()) return
+        previewPlayer?.setMediaItem(MediaItem.fromUri(url))
+        previewPlayer?.prepare()
+        previewPlayer?.play()
+    }
+
+    private fun stopPreview() {
+        previewPlayer?.stop()
     }
 
     // ─── TABS ──────────────────────────────────────────────────
 
     private fun setupTabs() {
-        val rv = findViewById<RecyclerView>(R.id.rvTabs)
-        rv.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rv.adapter = TabAdapter(tabs, currentTab) { idx ->
+        binding.rvTabs.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvTabs.adapter = TabAdapter(tabs, currentTab) { idx ->
             currentTab = idx
             selectedGroup = "Todos"
-            onTabSelected()
-        }
-    }
-
-    private fun onTabSelected() {
-        if (!tabData.containsKey(tabs[currentTab])) {
+            stopPreview()
             readCache(tabs[currentTab])?.let { tabData[tabs[currentTab]] = it }
+            renderTab()
         }
-        renderTab()
     }
 
     // ─── RENDER ────────────────────────────────────────────────
@@ -168,10 +144,9 @@ class HomeActivity : AppCompatActivity() {
         setupGroupsPanel(tab)
 
         if (isLive) {
-            layoutLive.visibility = View.VISIBLE
-            rvGrid.visibility     = View.GONE
-            rvChannels.layoutManager = LinearLayoutManager(this)
-            rvChannels.adapter = ChannelAdapter(
+            binding.layoutPreviewArea.visibility = View.VISIBLE
+            binding.rvContentList.layoutManager  = LinearLayoutManager(this)
+            binding.rvContentList.adapter = ChannelAdapter(
                 channels         = list,
                 displayMode      = ChannelAdapter.MODE_LIVE,
                 favoriteIds      = favoriteIds,
@@ -179,15 +154,15 @@ class HomeActivity : AppCompatActivity() {
                 onClick          = { selectChannel(it) }
             )
             if (list.isEmpty()) {
-                tvSelectedName.text    = if (!networkDone.contains(tab)) "Carregando..." else "Sem canais"
-                btnWatchNow.visibility = View.GONE
-                ivSelectedLogo.setImageResource(R.drawable.ic_channel_placeholder)
+                binding.tvSelectedTitle.text    = if (!networkDone.contains(tab)) "Carregando..." else "Sem canais"
+                binding.btnActionPlay.visibility = View.GONE
             }
         } else {
-            layoutLive.visibility = View.GONE
-            rvGrid.visibility     = View.VISIBLE
-            rvGrid.layoutManager  = GridLayoutManager(this, 5)
-            rvGrid.adapter = ChannelAdapter(
+            binding.layoutPreviewArea.visibility = View.GONE
+            stopPreview()
+            val cols = if (list.size > 10) 5 else 3
+            binding.rvContentList.layoutManager  = GridLayoutManager(this, cols)
+            binding.rvContentList.adapter = ChannelAdapter(
                 channels         = list,
                 displayMode      = ChannelAdapter.MODE_GRID,
                 favoriteIds      = favoriteIds,
@@ -196,11 +171,7 @@ class HomeActivity : AppCompatActivity() {
             )
         }
 
-        tvStatus.text = when {
-            list.isNotEmpty() -> "${list.size} ${tab.lowercase()}"
-            !networkDone.contains(tab) -> "Carregando $tab..."
-            else -> "Sem conteúdo"
-        }
+        binding.tvListTitle.text = "  $tab · ${list.size}"
     }
 
     private fun setupGroupsPanel(tab: String) {
@@ -208,13 +179,8 @@ class HomeActivity : AppCompatActivity() {
         val groups = listOf("Todos") +
             full.map { it.group }.filter { it.isNotEmpty() }.distinct().sorted()
 
-        if (groups.size <= 1) {
-            layoutGroups.visibility = View.GONE
-            return
-        }
-        layoutGroups.visibility = View.VISIBLE
-        rvGroups.layoutManager = LinearLayoutManager(this)
-        rvGroups.adapter = GroupAdapter(groups, selectedGroup) { g ->
+        binding.rvSidebar.layoutManager = LinearLayoutManager(this)
+        binding.rvSidebar.adapter = GroupAdapter(groups, selectedGroup) { g ->
             selectedGroup = g
             renderTab()
         }
@@ -231,20 +197,24 @@ class HomeActivity : AppCompatActivity() {
     // ─── CHANNEL ACTIONS ───────────────────────────────────────
 
     private fun selectChannel(ch: Channel) {
-        selectedChannel        = ch
-        tvSelectedName.text    = ch.name
-        tvSelectedGroup.text   = if (ch.epgTitle.isNotEmpty()) "Agora: ${ch.epgTitle}" else ch.group
-        btnWatchNow.visibility = View.VISIBLE
+        selectedChannel = ch
+        binding.tvSelectedTitle.text     = ch.name
+        binding.tvSelectedEpg.text       = if (ch.epgTitle.isNotEmpty()) "Agora: ${ch.epgTitle}" else ch.group
+        binding.btnActionPlay.visibility  = View.VISIBLE
+
         if (ch.logo.isNotEmpty()) {
             Glide.with(this).load(ch.logo)
                 .placeholder(R.drawable.ic_channel_placeholder)
-                .into(ivSelectedLogo)
+                .into(binding.ivPreviewLogo)
         } else {
-            ivSelectedLogo.setImageResource(R.drawable.ic_channel_placeholder)
+            binding.ivPreviewLogo.setImageResource(R.drawable.ic_channel_placeholder)
         }
+        // Preview automático
+        startPreview(ch.url)
     }
 
     private fun playChannel(ch: Channel) {
+        stopPreview()
         ChannelData.currentList  = getFilteredList(tabs[currentTab])
         ChannelData.currentIndex = ChannelData.currentList.indexOfFirst { it.id == ch.id }
         startActivity(Intent(this, PlayerActivity::class.java))
@@ -277,23 +247,16 @@ class HomeActivity : AppCompatActivity() {
 
     // ─── NETWORK LOAD ──────────────────────────────────────────
 
-    private fun startNetworkLoad() {
+    private fun startNetworkFetch() {
         if (host.isEmpty() || username.isEmpty()) {
             runOnUiThread {
                 showLoading(false)
-                tvStatus.text = "Credenciais não encontradas. Pressione ⚙ para reativar."
+                binding.tvListTitle.text = "  Sem credenciais — pressione ⚙"
             }
             return
         }
-        when (currentTab) {
-            0, 5   -> { loadLive(); loadVod(); loadSeries() }
-            1, 3, 4 -> { loadVod(); loadLive(); loadSeries() }
-            2      -> { loadSeries(); loadLive(); loadVod() }
-            else   -> { loadLive(); loadVod(); loadSeries() }
-        }
+        loadLive(); loadVod(); loadSeries()
     }
-
-    // ─── BUSCA CATEGORIAS ANTES DOS STREAMS ────────────────────────
 
     private fun loadLive() {
         fetchRaw("$host/player_api.php?username=$username&password=$password&action=get_live_categories") { catBody ->
@@ -344,9 +307,10 @@ class HomeActivity : AppCompatActivity() {
                             val ext   = o.optString("container_extension", "mp4")
                             val catId = o.optString("category_id")
                             val cat   = catMap[catId] ?: o.optString("category_name", catId.ifEmpty { "" })
+                            val year  = o.optString("year", "")
                             val ch    = Channel(id, o.optString("name"),
                                 "$host/movie/$username/$password/$id.$ext",
-                                o.optString("stream_icon"), cat, id)
+                                o.optString("stream_icon"), cat, id, year = year)
                             when {
                                 cat.lowercase().contains("anime") -> anime.add(ch)
                                 isKids(cat) -> kids.add(ch)
@@ -394,7 +358,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    /** Constrói mapa category_id → category_name a partir do JSON de categorias */
     private fun buildCategoryMap(body: String?): Map<String, String> {
         if (body.isNullOrEmpty() || !body.startsWith("[")) return emptyMap()
         return try {
@@ -410,7 +373,7 @@ class HomeActivity : AppCompatActivity() {
         } catch (e: Exception) { emptyMap() }
     }
 
-    /** HTTP simples SEM incrementar loadingCount */
+    /** HTTP simples sem incrementar loadCount */
     private fun fetchRaw(url: String, onDone: (String?) -> Unit) {
         client.newCall(Request.Builder().url(url).build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) { onDone(null) }
@@ -422,7 +385,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun checkDone() {
-        if (loadingCount.incrementAndGet() >= totalLoads) {
+        if (loadCount.incrementAndGet() >= totalLoads) {
             runOnUiThread { showLoading(false) }
         }
     }
@@ -454,8 +417,7 @@ class HomeActivity : AppCompatActivity() {
                                 .putLong("last_cred_refresh", System.currentTimeMillis())
                                 .apply()
                             runOnUiThread {
-                                val display = v ?: "—"
-                                findViewById<TextView>(R.id.tvExpira).text = "Expira: $display"
+                                binding.tvValidadeInfo.text = "Expira: ${v ?: "—"}"
                             }
                         }
                     }
@@ -473,11 +435,14 @@ class HomeActivity : AppCompatActivity() {
             list.forEach { ch ->
                 arr.put(JSONObject().apply {
                     put("id", ch.id); put("name", ch.name); put("url", ch.url)
-                    put("logo", ch.logo); put("group", ch.group); put("streamId", ch.streamId)
+                    put("logo", ch.logo); put("group", ch.group)
+                    put("streamId", ch.streamId); put("year", ch.year)
                 })
             }
             File(filesDir, "cache_$key.json").writeText(
-                JSONObject().apply { put("time", System.currentTimeMillis()); put("data", arr) }.toString()
+                JSONObject().apply {
+                    put("time", System.currentTimeMillis()); put("data", arr)
+                }.toString()
             )
         } catch (e: Exception) {}
     }
@@ -492,7 +457,8 @@ class HomeActivity : AppCompatActivity() {
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
                 Channel(o.optString("id"), o.optString("name"), o.optString("url"),
-                        o.optString("logo"), o.optString("group"), o.optString("streamId"))
+                        o.optString("logo"), o.optString("group"), o.optString("streamId"),
+                        year = o.optString("year"))
             }
         } catch (e: Exception) { null }
     }
@@ -500,7 +466,7 @@ class HomeActivity : AppCompatActivity() {
     // ─── HELPERS ───────────────────────────────────────────────
 
     private fun showLoading(v: Boolean) {
-        progressBar.visibility = if (v) View.VISIBLE else View.GONE
+        binding.pbLoading.visibility = if (v) View.VISIBLE else View.GONE
     }
 
     private fun fixHost(h: String): String {
@@ -510,18 +476,20 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun isSport(cat: String) = cat.lowercase().let {
-        it.contains("sport") || it.contains("esport") || it.contains("futebol") || it.contains("foot")
+        it.contains("sport") || it.contains("esport") || it.contains("futebol") ||
+        it.contains("foot") || it.contains("luta") || it.contains("basket")
     }
 
     private fun isKids(cat: String) = cat.lowercase().let {
         it.contains("kid") || it.contains("infantil") || it.contains("disney") ||
-        it.contains("criança") || it.contains("pixar")
+        it.contains("criança") || it.contains("pixar") || it.contains("cartoon")
     }
 
     private fun sendHeartbeat(clientId: String) {
         val body = JSONObject().apply {
             put("client_code", clientId)
             put("device_model", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL)
+            put("apk_version", "2.1")
         }.toString().toRequestBody("application/json".toMediaType())
         client.newCall(
             Request.Builder().url("$BACKEND_URL/app/heartbeat")
@@ -530,5 +498,23 @@ class HomeActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {}
             override fun onResponse(call: Call, response: Response) { response.close() }
         })
+    }
+
+    // ─── LIFECYCLE ─────────────────────────────────────────────
+
+    override fun onResume() {
+        super.onResume()
+        // Ao voltar do player, não recomeça o preview automaticamente
+    }
+
+    override fun onStop() {
+        super.onStop()
+        previewPlayer?.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        previewPlayer?.release()
+        previewPlayer = null
     }
 }

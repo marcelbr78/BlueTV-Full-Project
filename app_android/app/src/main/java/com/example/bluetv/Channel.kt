@@ -7,17 +7,13 @@ data class Channel(
     val logo: String,
     val group: String,
     val streamId: String = "",
-    // Para múltiplas qualidades (usado pelo M3UParser)
     val qualityUrls: Map<String, String> = emptyMap(),
-    // Para o Guia de Programação (EPG)
     var epgTitle: String = "",
     var epgStart: Long = 0,
     var epgEnd: Long = 0,
-    var epgDesc: String = ""
+    var epgDesc: String = "",
+    var year: String = "" // Ano de lançamento para VOD
 ) {
-    /**
-     * Retorna a porcentagem de conclusão do programa atual (0-100)
-     */
     fun getEpgProgress(): Int {
         if (epgStart == 0L || epgEnd == 0L) return 0
         val now = System.currentTimeMillis() / 1000
@@ -28,9 +24,6 @@ data class Channel(
         return ((passed.toDouble() / total.toDouble()) * 100).toInt()
     }
 
-    /**
-     * Retorna lista de URLs ordenadas da melhor para a pior qualidade
-     */
     fun urlsByQuality(): List<Pair<String, String>> {
         if (qualityUrls.isEmpty()) return listOf("AUTO" to url)
         val order = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")

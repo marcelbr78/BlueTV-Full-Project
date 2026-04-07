@@ -1,65 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
+    android:layout_height="wrap_content"
     android:focusable="true"
-    android:layout_margin="4dp">
+    android:clickable="true"
+    android:layout_margin="6dp">
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/cardMovie"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:foreground="@drawable/card_focus_fg"
-        app:cardCornerRadius="8dp"
+        android:layout_height="220dp"
+        app:cardCornerRadius="10dp"
         app:cardBackgroundColor="#10102a"
-        app:cardElevation="4dp"
-        xmlns:app="http://schemas.android.com/apk/res-auto">
+        app:cardElevation="4dp">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Poster / imagem de fundo -->
             <ImageView
                 android:id="@+id/ivPoster"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"/>
 
-            <!-- Gradiente escuro na parte inferior -->
+            <!-- Overlay de Gradiente -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="100dp"
                 android:layout_gravity="bottom"
-                android:background="@drawable/gradient_bottom"/>
+                android:background="@drawable/player_overlay_gradient"/>
 
-            <!-- Título sobre o gradiente -->
-            <TextView
-                android:id="@+id/tvName"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
-                android:padding="8dp"
-                android:textColor="#ffffff"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:maxLines="2"
-                android:ellipsize="end"/>
+                android:orientation="vertical"
+                android:padding="10dp">
 
-            <!-- Ícone favorito (topo direito) -->
+                <TextView
+                    android:id="@+id/tvName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#ffffff"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end"/>
+
+                <TextView
+                    android:id="@+id/tvYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#888899"
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp"
+                    android:text="2024"/>
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tvFavorite"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="top|end"
-                android:layout_margin="4dp"
-                android:text="☆"
-                android:textSize="16sp"
-                android:gravity="center"
-                android:textColor="#FFB300"
-                android:focusable="false"/>
+                android:layout_margin="6dp"
+                android:text="★"
+                android:textColor="#FF0000"
+                android:textSize="14sp"
+                android:visibility="gone"/>
 
         </FrameLayout>
-
     </androidx.cardview.widget.CardView>
 
 </FrameLayout>

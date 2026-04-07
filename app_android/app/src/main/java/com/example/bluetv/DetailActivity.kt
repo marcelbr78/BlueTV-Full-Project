@@ -4,24 +4,23 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.example.bluetv.databinding.ActivityDetailBinding
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
 class DetailActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityDetailBinding
     private val PREFS_NAME = "bluetv_prefs"
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detail)
+        binding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         val name        = intent.getStringExtra("channel_name") ?: ""
         val logo        = intent.getStringExtra("channel_logo") ?: ""
@@ -30,39 +29,30 @@ class DetailActivity : AppCompatActivity() {
         val streamId    = intent.getStringExtra("stream_id") ?: ""
         val qualityJson = intent.getStringExtra("quality_urls") ?: ""
 
-        val ivPoster   = findViewById<ImageView>(R.id.ivPoster)
-        val tvTitle    = findViewById<TextView>(R.id.tvTitle)
-        val tvYear     = findViewById<TextView>(R.id.tvYear)
-        val tvRating   = findViewById<TextView>(R.id.tvRating)
-        val tvCategory = findViewById<TextView>(R.id.tvCategory)
-        val tvPlot     = findViewById<TextView>(R.id.tvPlot)
-        val btnPlay    = findViewById<TextView>(R.id.btnPlay)
-        val btnBack    = findViewById<TextView>(R.id.btnBack)
-
-        tvTitle.text    = name
-        tvCategory.text = group
+        binding.tvTitle.text    = name
+        binding.tvCategory.text = group
 
         if (logo.isNotEmpty()) {
-            Glide.with(this).load(logo).placeholder(R.drawable.ic_channel_placeholder).into(ivPoster)
+            Glide.with(this).load(logo).placeholder(R.drawable.ic_channel_placeholder).into(binding.ivPoster)
         }
 
-        btnBack.setOnClickListener { finish() }
+        binding.btnBack.setOnClickListener { finish() }
 
         val isSeries = group.lowercase().let { it.contains("serie") || it.contains("series") }
 
         if (isSeries) {
-            btnPlay.text = "☰  EPISÓDIOS"
-            btnPlay.setOnClickListener {
+            binding.btnPlay.text = "☰  EPISÓDIOS"
+            binding.btnPlay.setOnClickListener {
                 val id = streamId.ifEmpty { extractIdFromUrl(url) }
                 startActivity(Intent(this, EpisodesActivity::class.java).apply {
                     putExtra("series_name", name); putExtra("series_id", id)
                 })
             }
         } else {
-            btnPlay.text = "▶  ASSISTIR"
-            btnPlay.setOnClickListener {
+            binding.btnPlay.text = "▶  ASSISTIR"
+            binding.btnPlay.setOnClickListener {
                 val savedPos = ProgressManager.getProgress(this, streamId)
-                if (savedPos > 30000) { // Se tiver mais de 30 segundos salvos
+                if (savedPos > 30000) {
                     showResumeDialog(url, name, logo, qualityJson, streamId, savedPos)
                 } else {
                     startPlayer(url, name, logo, qualityJson, streamId, 0L)
@@ -71,7 +61,7 @@ class DetailActivity : AppCompatActivity() {
         }
 
         val id = streamId.ifEmpty { extractIdFromUrl(url) }
-        if (id.isNotEmpty()) fetchDetails(id, isSeries, tvYear, tvRating, tvPlot)
+        if (id.isNotEmpty()) fetchDetails(id, isSeries)
     }
 
     private fun showResumeDialog(url: String, name: String, logo: String, qJson: String, sId: String, pos: Long) {
@@ -80,10 +70,8 @@ class DetailActivity : AppCompatActivity() {
         
         AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle("Continuar Assistindo?")
-            .setMessage("Você parou em ${String.format("%02d:%02d", minutes, seconds)}. Deseja continuar de onde parou?")
-            .setPositiveButton("CONTINUAR") { _, _ ->
-                startPlayer(url, name, logo, qJson, sId, pos)
-            }
+            .setMessage("Você parou em ${String.format("%02d:%02d", minutes, seconds)}. Deseja continuar?")
+            .setPositiveButton("CONTINUAR") { _, _ -> startPlayer(url, name, logo, qJson, sId, pos) }
             .setNegativeButton("DO INÍCIO") { _, _ ->
                 ProgressManager.clearProgress(this, sId)
                 startPlayer(url, name, logo, qJson, sId, 0L)
@@ -103,7 +91,7 @@ class DetailActivity : AppCompatActivity() {
         return try { url.split("/").last().substringBeforeLast(".").filter { it.isDigit() } } catch (e: Exception) { "" }
     }
 
-    private fun fetchDetails(streamId: String, isSeries: Boolean, tvYear: TextView, tvRating: TextView, tvPlot: TextView) {
+    private fun fetchDetails(streamId: String, isSeries: Boolean) {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val host = prefs.getString("host", null) ?: return
         val user = prefs.getString("username", null) ?: return
@@ -119,7 +107,11 @@ class DetailActivity : AppCompatActivity() {
                     val year = info.optString("releasedate", "").take(4).ifEmpty { info.optString("year", "") }
                     val rating = info.optString("rating", "").ifEmpty { info.optString("rating_5based", "") }
                     val plot = info.optString("plot", "").ifEmpty { info.optString("description", "") }
-                    runOnUiThread { if (year.isNotEmpty()) tvYear.text = year; if (rating.isNotEmpty()) tvRating.text = "★ $rating"; if (plot.isNotEmpty()) tvPlot.text = plot }
+                    runOnUiThread { 
+                        if (year.isNotEmpty()) binding.tvYear.text = year
+                        if (rating.isNotEmpty()) binding.tvRating.text = "★ $rating"
+                        if (plot.isNotEmpty()) binding.tvPlot.text = plot 
+                    }
                 } catch (e: Exception) {}
             }
         })
