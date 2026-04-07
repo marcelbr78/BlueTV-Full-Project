@@ -4,74 +4,62 @@ import java.util.Locale
 
 object M3UParser {
 
+    /**
+     * Regex que reconhece sufixos de qualidade no final do nome do canal.
+     * Trata: FHD², HD², SD², 4K, UHD, 1080p, 720p, 480p
+     * O [\u00B2\u00B3\u00B9]? captura ² ³ ¹ (superscript comuns em provedores brasileiros)
+     * O [\s\-_]* antes tolera espaço, traço ou underscore antes do sufixo
+     */
     private val qualityRegex = Regex(
-        """\s*(4K|UHD|FHD|1080[pi]?|HD|720[pi]?|SD|480[pi]?)\s*$""",
+        """[\s\-_]*(4K|UHD|FHD|1080[pi]?|HD|720[pi]?|SD|480[pi]?)[\u00B2\u00B3\u00B9]?\s*$""",
         RegexOption.IGNORE_CASE
     )
 
     private val QUALITY_ORDER = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")
 
-    fun parse(content: String): List<Channel> {
-        val rawChannels = mutableListOf<Channel>()
-        val lines = content.lines()
-        var i = 0
-        while (i < lines.size) {
-            val line = lines[i].trim()
-            if (line.startsWith("#EXTINF")) {
-                val name  = extractName(line)
-                val logo  = extractAttr(line, "tvg-logo")
-                val group = extractAttr(line, "group-title")
-                val id    = extractAttr(line, "tvg-id")
-                
-                var nextLineIndex = i + 1
-                while (nextLineIndex < lines.size && (lines[nextLineIndex].isBlank() || lines[nextLineIndex].startsWith("#"))) {
-                    nextLineIndex++
-                }
-                
-                if (nextLineIndex < lines.size) {
-                    val url = lines[nextLineIndex].trim()
-                    if (url.isNotEmpty()) {
-                        rawChannels.add(Channel(id, name, url, logo, group))
-                    }
-                    i = nextLineIndex + 1
-                } else { i++ }
-            } else { i++ }
-        }
-        
-        return fuseChannels(rawChannels)
-    }
-
     /**
-     * Une canais com o mesmo nome mas qualidades diferentes em um único objeto.
-     * Estilo Netflix: O usuário vê apenas um canal, o app gere a qualidade.
+     * Une variantes de qualidade do mesmo canal em um único objeto.
+     * Ex: "ESPN FHD²", "ESPN HD²", "ESPN SD²" → "ESPN" com qualityUrls = {FHD→url1, HD→url2, SD→url3}
+     * URL principal = melhor qualidade disponível.
+     *
+     * Chave de agrupamento: apenas o nome base (sem grupo), pois variantes do mesmo canal
+     * podem estar em grupos ligeiramente diferentes ("Esportes Premium" vs "Esportes HD").
      */
     fun fuseChannels(channels: List<Channel>): List<Channel> {
-        val entries = LinkedHashMap<String, MutableMap<String, String>>()
-        val metadata = mutableMapOf<String, Triple<String, String, String>>() // Key -> Name, Logo, Group
+        // key → mutableMap<qualityTag, url>
+        val urlsMap  = LinkedHashMap<String, MutableMap<String, String>>()
+        // key → canal de maior qualidade (para metadados: nome, logo, grupo)
+        val bestChan = LinkedHashMap<String, Pair<Channel, Int>>()
 
         for (ch in channels) {
-            val match = qualityRegex.find(ch.name)
+            val match    = qualityRegex.find(ch.name)
             val baseName = if (match != null) ch.name.substring(0, match.range.first).trim() else ch.name
-            val quality = match?.groupValues?.get(1)?.uppercase(Locale.ROOT) ?: "HD"
-            val key = baseName.lowercase(Locale.ROOT) + "_" + ch.group.lowercase(Locale.ROOT)
+            val qualTag  = match?.groupValues?.get(1)?.uppercase(Locale.ROOT) ?: "AUTO"
+            val rank     = rankOf(qualTag)
 
-            val qualities = entries.getOrPut(key) { mutableMapOf() }
-            qualities[quality] = ch.url
-            metadata[key] = Triple(baseName, ch.logo, ch.group)
+            // Chave = nome base normalizado (sem grupo, para fundir cross-grupo)
+            val key = baseName.lowercase(Locale.ROOT).trim()
+
+            urlsMap.getOrPut(key) { mutableMapOf() }[qualTag] = ch.url
+
+            val cur = bestChan[key]
+            if (cur == null || rank < cur.second) {          // menor índice = maior qualidade
+                bestChan[key] = Pair(ch.copy(name = baseName), rank)
+            }
         }
 
-        return entries.map { (key, qualities) ->
-            val meta = metadata[key]!!
-            val bestUrl = getBestUrl(qualities)
-            Channel(
-                id = key,
-                name = meta.first,
-                url = bestUrl,
-                logo = meta.second,
-                group = meta.third,
-                qualityUrls = qualities.toMap()
-            )
+        return bestChan.map { (key, pair) ->
+            val ch       = pair.first
+            val qualities = urlsMap[key] ?: emptyMap()
+            val bestUrl  = getBestUrl(qualities)
+            ch.copy(url = bestUrl, qualityUrls = qualities.toMap())
         }
+    }
+
+    /** Retorna o índice de prioridade (menor = melhor) */
+    private fun rankOf(quality: String): Int {
+        QUALITY_ORDER.forEachIndexed { i, q -> if (quality.contains(q, ignoreCase = true)) return i }
+        return QUALITY_ORDER.size
     }
 
     private fun getBestUrl(qualities: Map<String, String>): String {
@@ -82,18 +70,43 @@ object M3UParser {
         return qualities.values.firstOrNull() ?: ""
     }
 
+    // ── Parser M3U (mantido para compatibilidade) ──────────────────
+
+    fun parse(content: String): List<Channel> {
+        val raw   = mutableListOf<Channel>()
+        val lines = content.lines()
+        var i = 0
+        while (i < lines.size) {
+            val line = lines[i].trim()
+            if (line.startsWith("#EXTINF")) {
+                val name  = extractName(line)
+                val logo  = extractAttr(line, "tvg-logo")
+                val group = extractAttr(line, "group-title")
+                val id    = extractAttr(line, "tvg-id")
+                var next  = i + 1
+                while (next < lines.size && (lines[next].isBlank() || lines[next].startsWith("#"))) next++
+                if (next < lines.size) {
+                    val url = lines[next].trim()
+                    if (url.isNotEmpty()) raw.add(Channel(id, name, url, logo, group))
+                    i = next + 1
+                } else i++
+            } else i++
+        }
+        return fuseChannels(raw)
+    }
+
     private fun extractName(line: String): String {
-        val comma = line.lastIndexOf(',')
-        return if (comma >= 0) line.substring(comma + 1).trim() else "Canal"
+        val c = line.lastIndexOf(',')
+        return if (c >= 0) line.substring(c + 1).trim() else "Canal"
     }
 
     private fun extractAttr(line: String, attr: String): String {
         val key = "$attr=\""
-        val start = line.indexOf(key)
-        if (start == -1) return ""
-        val valueStart = start + key.length
-        val end = line.indexOf("\"", valueStart)
-        if (end == -1) return ""
-        return line.substring(valueStart, end)
+        val s = line.indexOf(key)
+        if (s == -1) return ""
+        val vs = s + key.length
+        val e  = line.indexOf("\"", vs)
+        if (e == -1) return ""
+        return line.substring(vs, e)
     }
 }
