@@ -410,20 +410,62 @@
     </div>
   </div>
 
-  <!-- CLIENTS -->
+  <!-- MODAL ATIVAR/EDITAR CLIENTE -->
+  <div id="modalCredenciais" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000cc;z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1e1e2e;border-radius:12px;padding:32px;width:420px;max-width:95vw;border:1px solid #e50914;">
+      <h3 id="modalTitulo" style="color:#e50914;margin:0 0 20px;">Ativar Cliente</h3>
+      <input type="hidden" id="modalClientCode"/>
+      <input type="hidden" id="modalModo"/> <!-- 'ativar' ou 'editar' -->
+      <div style="margin-bottom:14px;">
+        <label style="color:#aaa;font-size:13px;">Cliente (BLUETV-XXXXX)</label>
+        <input id="modalClientDisplay" type="text" disabled
+          style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;margin-top:4px;box-sizing:border-box;"/>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="color:#aaa;font-size:13px;">Host / DNS *</label>
+        <input id="modalHost" type="text" placeholder="http://servidor.com"
+          style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;margin-top:4px;box-sizing:border-box;"/>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="color:#aaa;font-size:13px;">Usuário *</label>
+        <input id="modalUsername" type="text" placeholder="username"
+          style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;margin-top:4px;box-sizing:border-box;"/>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="color:#aaa;font-size:13px;">Senha *</label>
+        <input id="modalPassword" type="text" placeholder="password"
+          style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;margin-top:4px;box-sizing:border-box;"/>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="color:#aaa;font-size:13px;">Validade (opcional)</label>
+        <input id="modalValidade" type="text" placeholder="ex: 31/12/2026"
+          style="width:100%;padding:8px;background:#2a2a3e;border:1px solid #555;border-radius:6px;color:#fff;margin-top:4px;box-sizing:border-box;"/>
+      </div>
+      <div id="modalErro" style="color:#ff4444;font-size:13px;margin-bottom:12px;display:none;"></div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="fecharModal()" style="flex:1;padding:10px;background:#333;border:none;border-radius:6px;color:#fff;cursor:pointer;">Cancelar</button>
+        <button onclick="salvarCredenciais()" style="flex:1;padding:10px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer;font-weight:bold;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS APK -->
   <div id="clients" class="section">
     <div class="header">
-      <h2>👥 Clientes</h2>
+      <h2>📱 Clientes APK</h2>
       <button class="refresh-btn" onclick="loadClients()">🔄 Atualizar</button>
     </div>
     <div class="data-section">
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Código</th>
             <th>WhatsApp</th>
             <th>Status</th>
-            <th>Criado em</th>
+            <th>Host</th>
+            <th>Usuário</th>
+            <th>Validade</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="clientsTable"></tbody>
@@ -610,30 +652,97 @@ function formatDate(ts) {
   return new Date(ts).toLocaleString('pt-BR');
 }
 
-// Load Clients
+// Load Clients APK (usa endpoint completo com credenciais)
 async function loadClients() {
   try {
-    const res = await fetch('/api/clients');
+    const res = await fetch('/api/debug/clients');
     const data = await res.json();
     document.getElementById('clientsCount').textContent = data.length;
     document.getElementById('statClients').textContent = data.length;
-    
+
     const tbody = document.getElementById('clientsTable');
     if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum cliente encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum cliente encontrado</td></tr>';
       return;
     }
-    
-    tbody.innerHTML = data.map(c => `
+
+    tbody.innerHTML = data.map(c => {
+      const isOk = c.status === 'ok';
+      const btnAtivar = `<button onclick="abrirModal('ativar','${c.client_code}',''  ,''  ,''  ,''  )"
+        style="padding:4px 10px;background:#27ae60;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:12px;margin-right:4px;">Ativar</button>`;
+      const btnEditar = `<button onclick="abrirModal('editar','${c.client_code}','${c.host||''}','${c.username||''}','${c.password||''}','${c.validade||''}')"
+        style="padding:4px 10px;background:#e59014;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:12px;">Editar</button>`;
+      return `
       <tr>
-        <td>${c.id}</td>
+        <td style="font-family:monospace;font-size:12px;">${c.client_code || '-'}</td>
         <td>${c.whatsapp_number || '-'}</td>
         <td><span class="status ${c.status}">${c.status || 'pending'}</span></td>
-        <td>${formatDate(c.criado_em)}</td>
-      </tr>
-    `).join('');
+        <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;">${c.host || '-'}</td>
+        <td>${c.username || '-'}</td>
+        <td>${c.validade || '-'}</td>
+        <td>${isOk ? btnEditar : btnAtivar + btnEditar}</td>
+      </tr>`;
+    }).join('');
   } catch (err) {
     console.error('Erro ao carregar clientes:', err);
+  }
+}
+
+// Modal de ativar/editar credenciais
+function abrirModal(modo, clientCode, host, username, password, validade) {
+  document.getElementById('modalModo').value = modo;
+  document.getElementById('modalClientCode').value = clientCode;
+  document.getElementById('modalClientDisplay').value = clientCode;
+  document.getElementById('modalTitulo').textContent = modo === 'editar' ? '✏️ Editar Credenciais' : '✅ Ativar Cliente';
+  document.getElementById('modalHost').value = host || '';
+  document.getElementById('modalUsername').value = username || '';
+  document.getElementById('modalPassword').value = password || '';
+  document.getElementById('modalValidade').value = validade || '';
+  document.getElementById('modalErro').style.display = 'none';
+  document.getElementById('modalCredenciais').style.display = 'flex';
+}
+
+function fecharModal() {
+  document.getElementById('modalCredenciais').style.display = 'none';
+}
+
+async function salvarCredenciais() {
+  const modo        = document.getElementById('modalModo').value;
+  const clientCode  = document.getElementById('modalClientCode').value;
+  const host        = document.getElementById('modalHost').value.trim();
+  const username    = document.getElementById('modalUsername').value.trim();
+  const password    = document.getElementById('modalPassword').value.trim();
+  const validade    = document.getElementById('modalValidade').value.trim();
+  const erroEl      = document.getElementById('modalErro');
+
+  if (!host || !username || !password) {
+    erroEl.textContent = 'Host, Usuário e Senha são obrigatórios.';
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  const endpoint = modo === 'editar' ? '/app/edit-credentials' : '/app/activate-manual';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_code: clientCode,
+        host, username, password, validade,
+        api_key: 'btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ'
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      fecharModal();
+      loadClients();
+    } else {
+      erroEl.textContent = data.error || 'Erro desconhecido';
+      erroEl.style.display = 'block';
+    }
+  } catch (err) {
+    erroEl.textContent = 'Erro de conexão: ' + err.message;
+    erroEl.style.display = 'block';
   }
 }
 
