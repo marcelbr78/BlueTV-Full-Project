@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import okhttp3.*
@@ -15,6 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class ActivationActivity : AppCompatActivity() {
 
@@ -23,7 +23,12 @@ class ActivationActivity : AppCompatActivity() {
     private val WHATSAPP_NUMBER = "5547997193147"
     private val PREFS_NAME = "bluetv_prefs"
 
-    private val client = OkHttpClient()
+    // Timeout aumentado para 30s — Render free tier pode demorar no cold start
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     private val handler = Handler(Looper.getMainLooper())
     private var pollingRunnable: Runnable? = null
 
@@ -38,13 +43,14 @@ class ActivationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_activation)
 
         tvClientId = findViewById(R.id.tvClientId)
-        tvStatus = findViewById(R.id.tvStatus)
+        tvStatus   = findViewById(R.id.tvStatus)
         btnSolicitar = findViewById(R.id.btnSolicitar)
-        ivQrCode = findViewById(R.id.ivQrCode)
+        ivQrCode   = findViewById(R.id.ivQrCode)
         progressBar = findViewById(R.id.progressBar)
 
         val clientId = getOrCreateClientId()
         tvClientId.text = clientId
+        tvStatus.text = "Aguardando ativação..."
         generateQrCode(clientId)
         startPolling(clientId)
 
@@ -55,12 +61,27 @@ class ActivationActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         var id = prefs.getString("client_id", null)
         if (id == null) {
-            val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-            id = "BLUETV-" + (1..5).map { chars.random() }.joinToString("")
+            id = generateDeviceId()
             prefs.edit().putString("client_id", id).apply()
             registerClient(id)
         }
         return id
+    }
+
+    private fun generateDeviceId(): String {
+        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        val androidId = android.provider.Settings.Secure.getString(
+            contentResolver, android.provider.Settings.Secure.ANDROID_ID
+        )
+        return "BLUETV-" + if (!androidId.isNullOrEmpty()) {
+            // ID determinístico: mesmo dispositivo = mesmo código, mesmo após limpar dados
+            val seed = androidId.toLongOrNull(16) ?: androidId.hashCode().toLong()
+            val rng = java.util.Random(seed)
+            (1..5).map { chars[rng.nextInt(chars.length)] }.joinToString("")
+        } else {
+            // Fallback: ID aleatório se ANDROID_ID não estiver disponível
+            (1..5).map { chars.random() }.joinToString("")
+        }
     }
 
     private fun registerClient(clientId: String) {
@@ -72,8 +93,13 @@ class ActivationActivity : AppCompatActivity() {
         val req = Request.Builder().url("$BACKEND_URL/app/register")
             .post(body).addHeader("x-api-key", API_KEY).build()
         client.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {}
-            override fun onResponse(call: Call, response: Response) { response.close() }
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread { tvStatus.text = "Sem conexão. Tentando..." }
+            }
+            override fun onResponse(call: Call, response: Response) {
+                response.close()
+                runOnUiThread { tvStatus.text = "Aguardando ativação..." }
+            }
         })
     }
 
@@ -109,15 +135,33 @@ class ActivationActivity : AppCompatActivity() {
         val req = Request.Builder()
             .url("$BACKEND_URL/app/status/bluetv/$clientId")
             .addHeader("x-api-key", API_KEY).build()
+
         client.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {}
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread { tvStatus.text = "Erro de conexão. Tentando..." }
+            }
+
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body?.string() ?: return
+                val body = response.body?.string()
                 response.close()
+
+                if (body == null) {
+                    runOnUiThread { tvStatus.text = "Resposta vazia. Tentando..." }
+                    return
+                }
+
                 try {
                     val json = JSONObject(body)
-                    if (json.optString("status") == "ok") {
-                        val x = json.optJSONObject("xtream") ?: return
+                    val status = json.optString("status")
+
+                    runOnUiThread { tvStatus.text = "Status: $status" }
+
+                    if (status == "ok") {
+                        val x = json.optJSONObject("xtream") ?: run {
+                            runOnUiThread { tvStatus.text = "Erro: xtream ausente" }
+                            return
+                        }
+
                         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                         prefs.edit()
                             .putString("status", "ok")
@@ -127,13 +171,17 @@ class ActivationActivity : AppCompatActivity() {
                             .putString("validade", x.optString("validade"))
                             .putString("m3u_url", x.optString("m3u_url"))
                             .apply()
+
                         pollingRunnable?.let { handler.removeCallbacks(it) }
+
                         runOnUiThread {
                             startActivity(Intent(this@ActivationActivity, HomeActivity::class.java))
                             finish()
                         }
                     }
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    runOnUiThread { tvStatus.text = "Erro: ${e.message}" }
+                }
             }
         })
     }

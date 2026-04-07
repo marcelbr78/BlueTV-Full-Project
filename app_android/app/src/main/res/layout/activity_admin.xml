@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#05050d"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CENTRAL DO REVENDEDOR"
+        android:textColor="#1565C0"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="20dp">
+        
+        <TextView
+            android:id="@+id/tvAdminStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Buscando informações dos clientes..."
+            android:textColor="#888899"
+            android:textSize="14sp"/>
+            
+        <ProgressBar
+            android:id="@+id/pbAdmin"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:indeterminateTint="#1565C0"
+            android:visibility="visible"/>
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAdminClients"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:id="@+id/btnAdminBack"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="VOLTAR AO APP"
+        android:textColor="#ffffff"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="#1A1A3A"
+        android:focusable="true"
+        android:clickable="true"/>
+
+</LinearLayout>

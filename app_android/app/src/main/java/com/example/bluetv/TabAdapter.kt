@@ -25,7 +25,7 @@ class TabAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         holder.tv.text = tabs[position]
         if (position == selected) {
-            holder.tv.setTextColor(Color.parseColor("#e50914"))
+            holder.tv.setTextColor(Color.parseColor("#1565C0"))
             holder.tv.textSize = 16f
             holder.tv.alpha = 1f
         } else {

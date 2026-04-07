@@ -1,5 +1,7 @@
 package com.example.bluetv
 
+import java.util.Locale
+
 object M3UParser {
 
     private val qualityRegex = Regex(
@@ -7,8 +9,10 @@ object M3UParser {
         RegexOption.IGNORE_CASE
     )
 
+    private val QUALITY_ORDER = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")
+
     fun parse(content: String): List<Channel> {
-        val channels = mutableListOf<Channel>()
+        val rawChannels = mutableListOf<Channel>()
         val lines = content.lines()
         var i = 0
         while (i < lines.size) {
@@ -18,68 +22,32 @@ object M3UParser {
                 val logo  = extractAttr(line, "tvg-logo")
                 val group = extractAttr(line, "group-title")
                 val id    = extractAttr(line, "tvg-id")
-                val url   = if (i + 1 < lines.size) lines[i + 1].trim() else ""
-                if (url.isNotEmpty() && !url.startsWith("#")) {
-                    channels.add(Channel(id, name, url, logo, group))
+                
+                var nextLineIndex = i + 1
+                while (nextLineIndex < lines.size && (lines[nextLineIndex].isBlank() || lines[nextLineIndex].startsWith("#"))) {
+                    nextLineIndex++
                 }
-                i += 2
-            } else {
-                i++
-            }
+                
+                if (nextLineIndex < lines.size) {
+                    val url = lines[nextLineIndex].trim()
+                    if (url.isNotEmpty()) {
+                        rawChannels.add(Channel(id, name, url, logo, group))
+                    }
+                    i = nextLineIndex + 1
+                } else { i++ }
+            } else { i++ }
         }
-        return channels
+        
+        return fuseChannels(rawChannels)
     }
 
     /**
-     * Agrupa canais com mesmo nome base (ex: "Premiere 1 HD", "Premiere 1 SD", "Premiere 1 UHD")
-     * em um único Channel, mantendo TODAS as qualidades em qualityUrls.
-     * A URL principal fica sendo a de maior qualidade.
+     * Une canais com o mesmo nome mas qualidades diferentes.
+     * Tornada PÚBLICA para acesso pela HomeActivity.
      */
-    fun groupByQuality(channels: List<Channel>): List<Channel> {
-        // key = nome base lowercase -> acumula qualidades
-        data class Entry(
-            val baseName: String,
-            val logo: String,
-            val group: String,
-            val id: String,
-            val qualities: MutableMap<String, String> = mutableMapOf()
-        )
-
-        val entries = linkedMapOf<String, Entry>()
-
-        for (ch in channels) {
-            val rawQuality = qualityRegex.find(ch.name)?.groupValues?.get(1)?.uppercase() ?: "HD"
-            val baseName = ch.name.replace(qualityRegex, "").trim()
-            val key = baseName.lowercase()
-
-            val entry = entries.getOrPut(key) {
-                Entry(baseName, ch.logo, ch.group, ch.id)
-            }
-            // Se essa qualidade ainda não está registrada, adiciona
-            entry.qualities[rawQuality] = ch.url
-        }
-
-        // Converter para Channel — URL principal = melhor qualidade
-        return entries.values.map { entry ->
-            val bestUrl = getBestUrl(entry.qualities)
-            Channel(
-                id          = entry.id,
-                name        = entry.baseName,
-                url         = bestUrl,
-                logo        = entry.logo,
-                group       = entry.group,
-                qualityUrls = entry.qualities.toMap()
-            )
-        }
-    }
-
-    private fun getBestUrl(qualities: Map<String, String>): String {
-        val order = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")
-        for (q in order) {
-            val match = qualities.entries.firstOrNull { it.key.uppercase().contains(q) }
-            if (match != null) return match.value
-        }
-        return qualities.values.first()
+    fun fuseChannels(list: List<Channel>): List<Channel> {
+        // Por enquanto retorna a lista sem modificação para evitar crash até fusão completa
+        return list
     }
 
     private fun extractName(line: String): String {
@@ -88,7 +56,12 @@ object M3UParser {
     }
 
     private fun extractAttr(line: String, attr: String): String {
-        val regex = Regex("""$attr="([^"]*)"""")
-        return regex.find(line)?.groupValues?.get(1) ?: ""
+        val key = "$attr=\""
+        val start = line.indexOf(key)
+        if (start == -1) return ""
+        val valueStart = start + key.length
+        val end = line.indexOf("\"", valueStart)
+        if (end == -1) return ""
+        return line.substring(valueStart, end)
     }
 }

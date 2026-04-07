@@ -3,14 +3,34 @@ package com.example.bluetv
 data class Channel(
     val id: String,
     val name: String,
-    val url: String,           // URL principal (melhor qualidade disponível)
+    val url: String,
     val logo: String,
     val group: String,
     val streamId: String = "",
-    // Todas as qualidades disponíveis: "UHD" -> url, "FHD" -> url, "HD" -> url, "SD" -> url
-    val qualityUrls: Map<String, String> = emptyMap()
+    // Para múltiplas qualidades (usado pelo M3UParser)
+    val qualityUrls: Map<String, String> = emptyMap(),
+    // Para o Guia de Programação (EPG)
+    var epgTitle: String = "",
+    var epgStart: Long = 0,
+    var epgEnd: Long = 0,
+    var epgDesc: String = ""
 ) {
-    // Retorna lista de URLs ordenadas da melhor para a pior qualidade
+    /**
+     * Retorna a porcentagem de conclusão do programa atual (0-100)
+     */
+    fun getEpgProgress(): Int {
+        if (epgStart == 0L || epgEnd == 0L) return 0
+        val now = System.currentTimeMillis() / 1000
+        if (now < epgStart) return 0
+        if (now > epgEnd) return 100
+        val total = epgEnd - epgStart
+        val passed = now - epgStart
+        return ((passed.toDouble() / total.toDouble()) * 100).toInt()
+    }
+
+    /**
+     * Retorna lista de URLs ordenadas da melhor para a pior qualidade
+     */
     fun urlsByQuality(): List<Pair<String, String>> {
         if (qualityUrls.isEmpty()) return listOf("AUTO" to url)
         val order = listOf("UHD", "4K", "FHD", "1080", "HD", "720", "SD", "480")

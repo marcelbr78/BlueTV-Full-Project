@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:foreground="@drawable/card_focus_fg"
         app:cardCornerRadius="8dp"
-        app:cardBackgroundColor="#2a1010"
+        app:cardBackgroundColor="#10102a"
         app:cardElevation="4dp"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -44,6 +44,19 @@
                 android:textStyle="bold"
                 android:maxLines="2"
                 android:ellipsize="end"/>
+
+            <!-- Ícone favorito (topo direito) -->
+            <TextView
+                android:id="@+id/tvFavorite"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="4dp"
+                android:text="☆"
+                android:textSize="16sp"
+                android:gravity="center"
+                android:textColor="#FFB300"
+                android:focusable="false"/>
 
         </FrameLayout>
 

@@ -10,7 +10,6 @@
         android:layout_height="match_parent"
         android:focusable="true"/>
 
-    <!-- Indicador de buffering centralizado -->
     <LinearLayout
         android:id="@+id/tvBuffering"
         android:layout_width="wrap_content"
@@ -19,56 +18,71 @@
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="gone">
-
         <ProgressBar
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:indeterminateTint="#e50914"/>
-
+            android:indeterminateTint="#1565C0"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Carregando..."
+            android:text="Carregando sinal..."
             android:textColor="#ffffff"
             android:textSize="13sp"
             android:layout_marginTop="8dp"/>
-
     </LinearLayout>
 
-    <!-- Barra de controles (topo) -->
+    <!-- CONTROLES DO TOPO (Aprimorados com EPG) -->
     <LinearLayout
         android:id="@+id/layoutControls"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="#88000000"
-        android:gravity="center_vertical"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#AA000000"
         android:visibility="visible">
 
-        <TextView
-            android:id="@+id/tvChannelName"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="#ffffff"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <!-- Badge de qualidade -->
+            <TextView
+                android:id="@+id/tvChannelName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="#ffffff"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/tvQuality"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:textColor="#ffffff"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:background="#1565C0"
+                android:layout_marginStart="12dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <!-- NOME DO PROGRAMA ATUAL (EPG) -->
         <TextView
-            android:id="@+id/tvQuality"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvPlayerEpg"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"
-            android:textColor="#ffffff"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/btn_play_bg"
-            android:visibility="gone"/>
+            android:textColor="#4499FF"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Carregando guia..."/>
 
     </LinearLayout>
 

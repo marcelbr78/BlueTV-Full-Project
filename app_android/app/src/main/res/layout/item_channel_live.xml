@@ -1,53 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
+    android:layout_height="64dp"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="8dp"
+    android:paddingStart="8dp"
+    android:paddingEnd="12dp"
     android:focusable="true"
-    android:background="@drawable/channel_item_bg">
+    android:clickable="true"
+    android:background="@drawable/bg_header_button">
+
+    <TextView
+        android:id="@+id/tvNumber"
+        android:layout_width="28dp"
+        android:layout_height="wrap_content"
+        android:textColor="#444466"
+        android:textSize="10sp"
+        android:gravity="center"/>
 
     <ImageView
         android:id="@+id/ivLogo"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:scaleType="fitCenter"
-        android:padding="4dp"/>
+        android:padding="2dp"
+        android:layout_marginEnd="10dp"/>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginStart="12dp">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#ffffff"
-            android:textSize="14sp"
+            android:textColor="#ddddee"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:maxLines="1"
             android:ellipsize="end"/>
 
+        <!-- PROGRAMA ATUAL (EPG) -->
         <TextView
-            android:id="@+id/tvGroup"
+            android:id="@+id/tvEpg"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#aaaaaa"
-            android:textSize="11sp"
+            android:textColor="#1565C0"
+            android:textSize="10sp"
             android:maxLines="1"
-            android:layout_marginTop="2dp"/>
+            android:ellipsize="end"
+            android:visibility="gone"/>
+
+        <!-- BARRA DE PROGRESSO DO EPG -->
+        <ProgressBar
+            android:id="@+id/pbEpg"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="4dp"
+            android:progressDrawable="@android:drawable/progress_horizontal"
+            android:progressTint="#1565C0"
+            android:visibility="gone"/>
 
     </LinearLayout>
 
-    <View
-        android:id="@+id/viewLiveIndicator"
-        android:layout_width="8dp"
-        android:layout_height="8dp"
-        android:background="@drawable/live_dot"/>
+    <TextView
+        android:id="@+id/tvFavorite"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:text="☆"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:textColor="#444466"
+        android:layout_marginStart="4dp"/>
 
 </LinearLayout>

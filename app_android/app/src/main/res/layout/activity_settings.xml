@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0a0a1a"
+    android:padding="32dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="32dp">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="←"
+            android:textColor="#1565C0"
+            android:textSize="24sp"
+            android:focusable="true"
+            android:layout_marginEnd="16dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Configurações"
+            android:textColor="#ffffff"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- Código do Dispositivo -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CÓDIGO DO DISPOSITIVO"
+        android:textColor="#1565C0"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvClientId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#ffffff"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="#10102a"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Servidor -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SERVIDOR"
+        android:textColor="#1565C0"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvHost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#aaaaaa"
+        android:textSize="14sp"
+        android:background="#10102a"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Usuário -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="USUÁRIO"
+        android:textColor="#1565C0"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#aaaaaa"
+        android:textSize="14sp"
+        android:background="#10102a"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Senha -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SENHA"
+        android:textColor="#1565C0"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#aaaaaa"
+        android:textSize="14sp"
+        android:background="#10102a"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Validade -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="VALIDADE"
+        android:textColor="#1565C0"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvValidade"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#aaaaaa"
+        android:textSize="14sp"
+        android:background="#10102a"
+        android:padding="12dp"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- Botão Reativar -->
+    <TextView
+        android:id="@+id/btnReactivate"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="REATIVAR ASSINATURA"
+        android:textColor="#ffffff"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="#1565C0"
+        android:focusable="true"/>
+
+</LinearLayout>

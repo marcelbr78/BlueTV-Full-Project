@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#1a0a0a">
+    android:background="#0a0a1a">
 
     <!-- Lado esquerdo: QR Code -->
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="BlueTV"
-            android:textColor="#e50914"
+            android:textColor="#1565C0"
             android:textSize="36sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"/>
@@ -52,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:indeterminateTint="#e50914"/>
+            android:indeterminateTint="#1565C0"/>
 
     </LinearLayout>
 
