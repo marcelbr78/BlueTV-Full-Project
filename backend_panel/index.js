@@ -1067,19 +1067,85 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
 });
 
 // =====================
-// ATIVAÇÃO MANUAL — vincula um client_code a um xtream_id existente
+// ATIVAÇÃO MANUAL — cria credenciais e ativa um client_code
 // POST /app/activate-manual
-// Body: { client_code, xtream_id, api_key }
-// Uso: ativar clientes cujas credenciais foram capturadas mas vinculadas ao ID errado
+// Body: { client_code, host, username, password, validade?, api_key }
+// Uso: ativar clientes manualmente pelo painel (sem passar pelo WhatsApp)
 // =====================
 app.post('/app/activate-manual', async (req, res) => {
   try {
-    const { client_code, xtream_id, api_key } = req.body;
+    const { client_code, host, username, password, validade, api_key, xtream_id } = req.body;
     if (api_key !== config.APP_API_KEY) {
       return res.status(401).json({ success: false, error: 'Invalid API key' });
     }
-    if (!client_code || !xtream_id) {
-      return res.status(400).json({ success: false, error: 'client_code e xtream_id obrigatórios' });
+    if (!client_code) {
+      return res.status(400).json({ success: false, error: 'client_code obrigatório' });
+    }
+
+    const appRequest = await db.get(
+      "SELECT * FROM app_requests WHERE client_code = ?",
+      [client_code.toUpperCase()]
+    );
+    if (!appRequest) {
+      return res.status(404).json({ success: false, error: 'Client não encontrado: ' + client_code });
+    }
+
+    const now = Date.now();
+    let finalXtreamId = xtream_id || null;
+
+    // Se passaram host/username/password, criar nova credencial
+    if (host && username && password) {
+      const m3uUrl = `${host}/get.php?username=${username}&password=${password}&type=m3u`;
+      const insertResult = await db.run(
+        `INSERT INTO xtream_credentials
+         (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at, status, plano)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, 'extracted', 'manual')`,
+        [
+          require('crypto').randomUUID(),
+          client_code.toUpperCase(),
+          appRequest.whatsapp_number || '',
+          host.trim(),
+          username.trim(),
+          password.trim(),
+          validade || null,
+          m3uUrl,
+          now
+        ]
+      );
+      finalXtreamId = insertResult.lastInsertRowid || insertResult.lastID;
+    }
+
+    if (!finalXtreamId) {
+      return res.status(400).json({ success: false, error: 'Informe host, username e password ou um xtream_id válido' });
+    }
+
+    await db.run(
+      "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+      [finalXtreamId, now, client_code.toUpperCase()]
+    );
+
+    console.log(`✅ Ativação manual: ${client_code.toUpperCase()} → xtream_id=${finalXtreamId}`);
+    return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id: finalXtreamId });
+  } catch (err) {
+    console.error('Erro /app/activate-manual:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// =====================
+// EDITAR CREDENCIAIS — atualiza host/user/pass de cliente já ativo
+// POST /app/edit-credentials
+// Body: { client_code, host, username, password, validade?, api_key }
+// Uso: trocar DNS ou credenciais de cliente ativo pelo painel
+// =====================
+app.post('/app/edit-credentials', async (req, res) => {
+  try {
+    const { client_code, host, username, password, validade, api_key } = req.body;
+    if (api_key !== config.APP_API_KEY) {
+      return res.status(401).json({ success: false, error: 'Invalid API key' });
+    }
+    if (!client_code || !host || !username || !password) {
+      return res.status(400).json({ success: false, error: 'client_code, host, username e password obrigatórios' });
     }
 
     const appRequest = await db.get(
@@ -1090,24 +1156,45 @@ app.post('/app/activate-manual', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Client não encontrado' });
     }
 
-    const xtream = await db.get(
-      "SELECT * FROM xtream_credentials WHERE id = ?",
-      [xtream_id]
-    );
-    if (!xtream) {
-      return res.status(404).json({ success: false, error: 'Xtream credential não encontrada' });
-    }
-
     const now = Date.now();
-    await db.run(
-      "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
-      [xtream_id, now, client_code.toUpperCase()]
-    );
+    const m3uUrl = `${host}/get.php?username=${username}&password=${password}&type=m3u`;
 
-    console.log(`✅ Ativação manual: ${client_code.toUpperCase()} → xtream_id=${xtream_id}`);
-    return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id });
+    if (appRequest.xtream_id) {
+      // Atualizar credencial existente
+      await db.run(
+        `UPDATE xtream_credentials SET host = ?, username = ?, password = ?, validade = ?, m3u_url = ?, extracted_at = ?
+         WHERE id = ?`,
+        [host.trim(), username.trim(), password.trim(), validade || null, m3uUrl, now, appRequest.xtream_id]
+      );
+      await db.run(
+        "UPDATE app_requests SET updated_at = ? WHERE client_code = ?",
+        [now, client_code.toUpperCase()]
+      );
+      console.log(`✏️ Credenciais editadas: ${client_code.toUpperCase()} → ${host}`);
+      return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id: appRequest.xtream_id });
+    } else {
+      // Cliente sem credencial ainda — criar e ativar
+      const insertResult = await db.run(
+        `INSERT INTO xtream_credentials
+         (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at, status, plano)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual-edit', ?, 'extracted', 'manual')`,
+        [
+          require('crypto').randomUUID(),
+          client_code.toUpperCase(),
+          appRequest.whatsapp_number || '',
+          host.trim(), username.trim(), password.trim(),
+          validade || null, m3uUrl, now
+        ]
+      );
+      const newId = insertResult.lastInsertRowid || insertResult.lastID;
+      await db.run(
+        "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+        [newId, now, client_code.toUpperCase()]
+      );
+      return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id: newId });
+    }
   } catch (err) {
-    console.error('Erro /app/activate-manual:', err);
+    console.error('Erro /app/edit-credentials:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
