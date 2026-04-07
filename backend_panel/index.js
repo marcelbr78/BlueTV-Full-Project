@@ -752,12 +752,14 @@ let bestDnsTestedAt = 0;
 async function testDns(host) {
   return new Promise((resolve) => {
     const http = host.startsWith('https') ? require('https') : require('http');
-    const url = `${host}/player_api.php?username=${DNS_TEST_USER}&password=${DNS_TEST_PASS}&action=get_live_categories`;
+    // Testa apenas conectividade — qualquer resposta HTTP indica que o servidor está online
+    const url = `${host}/player_api.php?action=get_server_info`;
     const start = Date.now();
     const req = http.get(url, { timeout: 8000 }, (res) => {
-      res.destroy(); // não precisa do body
+      res.destroy();
       const ms = Date.now() - start;
-      const ok = res.statusCode >= 200 && res.statusCode < 400;
+      // Qualquer resposta (mesmo 401/403) indica servidor online
+      const ok = res.statusCode > 0;
       resolve({ host, ms: ok ? ms : 99999, ok });
     });
     req.on('error', () => resolve({ host, ms: 99999, ok: false }));
