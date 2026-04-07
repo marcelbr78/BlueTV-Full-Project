@@ -383,21 +383,117 @@ app.get("/api/debug/botbot", async (req, res) => {
 // =====================
 // API: LISTAR CLIENTES (DO BANCO)
 // =====================
-app.get("/api/clients", async (req, res) => {
+app.get("/api/clients", requireAuth, async (req, res) => {
   try {
     const rows = await db.all(`
       SELECT
         ar.id, ar.client_code, ar.whatsapp_number, ar.status,
         ar.created_at, ar.updated_at, ar.xtream_id,
+        ar.device_model, ar.apk_version, ar.last_seen,
+        ar.current_channel, ar.is_online,
         xc.host, xc.username, xc.password, xc.validade, xc.m3u_url, xc.plano
       FROM app_requests ar
       LEFT JOIN xtream_credentials xc ON ar.xtream_id = xc.id
-      ORDER BY ar.updated_at DESC
+      ORDER BY ar.last_seen DESC NULLS LAST, ar.updated_at DESC
     `);
     res.json(Array.isArray(rows) ? rows : []);
   } catch (err) {
     console.error("Erro ao buscar clients:", err);
     return res.status(500).json({ error: "Erro ao buscar clients" });
+  }
+});
+
+// =====================
+// ADMIN: DETALHE COMPLETO DO CLIENTE
+// =====================
+app.get('/admin/client-detail/:code', requireAuth, async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+    const appReq = await db.get('SELECT * FROM app_requests WHERE client_code = ?', [code]);
+    if (!appReq) return res.status(404).json({ error: 'Cliente não encontrado' });
+
+    const xtream = appReq.xtream_id
+      ? await db.get('SELECT * FROM xtream_credentials WHERE id = ?', [appReq.xtream_id])
+      : null;
+
+    const events = await db.all(
+      'SELECT * FROM client_events WHERE client_code = ? ORDER BY ts DESC LIMIT 80',
+      [code]
+    ).catch(() => []);
+
+    const errorCount24h = await db.get(
+      `SELECT COUNT(*) as n FROM client_events WHERE client_code = ? AND event = 'PLAY_ERROR' AND ts > ?`,
+      [code, Date.now() - 86400000]
+    ).catch(() => ({ n: 0 }));
+
+    return res.json({ appReq, xtream, events, errorCount24h: errorCount24h?.n || 0 });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================
+// ADMIN: TESTAR CONEXÃO COM SERVIDOR DO CLIENTE
+// =====================
+app.post('/admin/test-connection', requireAuth, async (req, res) => {
+  try {
+    const { client_code } = req.body;
+    if (!client_code) return res.status(400).json({ error: 'client_code obrigatório' });
+
+    const code = client_code.toUpperCase();
+    const appReq = await db.get('SELECT * FROM app_requests WHERE client_code = ?', [code]);
+    if (!appReq || !appReq.xtream_id)
+      return res.json({ ok: false, error: 'Sem servidor configurado para este cliente' });
+
+    const xtream = await db.get('SELECT * FROM xtream_credentials WHERE id = ?', [appReq.xtream_id]);
+    if (!xtream || !xtream.host) return res.json({ ok: false, error: 'Host não encontrado' });
+
+    const host = xtream.host.startsWith('http') ? xtream.host.trimEnd('/') : `http://${xtream.host.trimEnd('/')}`;
+    const url  = `${host}/player_api.php?username=${xtream.username}&password=${xtream.password}&action=get_server_info`;
+
+    const start = Date.now();
+    const statusCode = await new Promise((resolve, reject) => {
+      const mod = url.startsWith('https') ? require('https') : require('http');
+      const req2 = mod.get(url, { timeout: 8000 }, (r) => { r.resume(); resolve(r.statusCode); });
+      req2.on('timeout', () => { req2.destroy(); reject(new Error('timeout após 8s')); });
+      req2.on('error', reject);
+    });
+    return res.json({ ok: true, ms: Date.now() - start, statusCode, host: xtream.host });
+  } catch (err) {
+    return res.json({ ok: false, ms: null, error: err.message });
+  }
+});
+
+// =====================
+// ADMIN: ESTATÍSTICAS DO DASHBOARD
+// =====================
+app.get('/admin/stats', requireAuth, async (req, res) => {
+  try {
+    const now = Date.now();
+    const onlineThreshold = now - 3 * 60 * 1000;         // online = visto há < 3min
+    const todayStart      = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const in7days         = now + 7 * 24 * 60 * 60 * 1000;
+
+    const [total, online, activeToday, servers] = await Promise.all([
+      db.get('SELECT COUNT(*) as n FROM app_requests', []),
+      db.get('SELECT COUNT(*) as n FROM app_requests WHERE last_seen > ?', [onlineThreshold]),
+      db.get('SELECT COUNT(*) as n FROM app_requests WHERE last_seen > ?', [todayStart.getTime()]),
+      db.all(`
+        SELECT xc.host, COUNT(ar.id) as total
+        FROM app_requests ar
+        JOIN xtream_credentials xc ON ar.xtream_id = xc.id
+        GROUP BY xc.host ORDER BY total DESC LIMIT 8
+      `, []).catch(() => [])
+    ]);
+
+    return res.json({
+      total: total?.n || 0,
+      online: online?.n || 0,
+      activeToday: activeToday?.n || 0,
+      servers: servers || []
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

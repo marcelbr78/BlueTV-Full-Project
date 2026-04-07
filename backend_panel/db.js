@@ -101,6 +101,22 @@ async function initDb() {
     m3u TEXT
   )`);
 
+  // Tabela de eventos do cliente (populada futuramente pelo APK)
+  await run(`CREATE TABLE IF NOT EXISTS client_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_code TEXT NOT NULL,
+    event TEXT NOT NULL,
+    channel TEXT,
+    quality TEXT,
+    error_code INTEGER,
+    error_msg TEXT,
+    server_ms INTEGER,
+    apk_version TEXT,
+    ts INTEGER NOT NULL
+  )`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_client_events_code ON client_events(client_code)`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_client_events_ts ON client_events(ts)`);
+
   const admin = await get("SELECT * FROM users WHERE username = 'admin'");
   if (!admin) {
     await run("INSERT INTO users (username, password) VALUES ('admin', '1234')");
