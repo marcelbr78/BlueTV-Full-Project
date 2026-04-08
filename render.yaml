@@ -12,7 +12,3 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
-    disk:
-      name: bluetv-db
-      mountPath: /data
-      sizeGB: 1
