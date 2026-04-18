@@ -117,6 +117,51 @@ async function initDb() {
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_code ON client_events(client_code)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_ts ON client_events(ts)`);
 
+  // ── FUTEBOL ──────────────────────────────────────────────
+  await run(`CREATE TABLE IF NOT EXISTS football_matches (
+    id INTEGER PRIMARY KEY,
+    date TEXT NOT NULL,
+    data TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`);
+
+  await run(`CREATE TABLE IF NOT EXISTS football_config (
+    id INTEGER PRIMARY KEY,
+    channels TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`);
+
+  // ── AGENDA ESPORTIVA (@EsportesNaTV) ─────────────────────────────────────
+  await run(`CREATE TABLE IF NOT EXISTS sports_agenda (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    date       TEXT UNIQUE NOT NULL,
+    matches    TEXT NOT NULL,
+    post_id    TEXT,
+    created_at INTEGER NOT NULL
+  )`);
+
+  // Insere config padrão ou migra config antiga (sem leagueId) para a versão nova
+  const defaultChannels = require('./config/channels.json');
+  const fConfig = await get('SELECT channels FROM football_config WHERE id = 1');
+  if (!fConfig) {
+    await run(
+      'INSERT INTO football_config (id, channels, updated_at) VALUES (1, ?, ?)',
+      [JSON.stringify(defaultChannels), Date.now()]
+    );
+  } else {
+    try {
+      const stored = JSON.parse(fConfig.channels);
+      // Migra se não tem leagueId (config antiga)
+      if (!stored[0]?.leagueId) {
+        await run(
+          'UPDATE football_config SET channels = ?, updated_at = ? WHERE id = 1',
+          [JSON.stringify(defaultChannels), Date.now()]
+        );
+        console.log('⚽ Config de canais migrada para versão com leagueId');
+      }
+    } catch (e) {}
+  }
+
   const admin = await get("SELECT * FROM users WHERE username = 'admin'");
   if (!admin) {
     await run("INSERT INTO users (username, password) VALUES ('admin', '1234')");

@@ -2,10 +2,91 @@ const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
 const db = require("./db");
-db.initDb().catch(err => console.error('Erro ao inicializar DB:', err));
 const config = require("./config");
-const { isXtreamResponse, parseXtreamMessage, extractM3uUrl, 
+const { isXtreamResponse, parseXtreamMessage, extractM3uUrl,
         parseAtivarTesteCommand, parseClientIdFromMessage } = require('./parser');
+const { syncFootball, getCache, getCacheDate, _restoreCache } = require('./services/football');
+const { getEnrichedMatches } = require('./services/matcher');
+const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
+const { syncAgenda, getAgendaForDate, todayStr, tomorrowStr } = require('./services/agenda');
+
+// Cache enriquecido (com EPG resolvido) — servido direto ao app
+let _enrichedCache = [];
+
+// Inicializa DB → Futebol → JOGOS DO DIA
+db.initDb()
+  .then(async () => {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Xtream sync (para admin status)
+    syncXtream().catch(() => {});
+    setInterval(syncXtream, 60 * 60 * 1000);
+
+    // Futebol: restaura do banco ou busca na API
+    const row = await db.get('SELECT data FROM football_matches WHERE date = ?', [today]);
+    if (row) {
+      const saved = JSON.parse(row.data);
+      _restoreCache(saved, today);
+      console.log(`⚽ Cache restaurado do banco: ${saved.length} jogos`);
+    } else {
+      await syncAndSave();
+    }
+
+    // Enriquece cruzando JOGOS DO DIA × API-Football
+    await enrichCache();
+
+    // Agenda: sincroniza hoje e amanhã na inicialização
+    syncAgenda(todayStr()).catch(e => console.error('📅 Init today:', e.message));
+    syncAgenda(tomorrowStr()).catch(e => console.error('📅 Init tomorrow:', e.message));
+
+    // Crons
+    setInterval(syncAndSave, 4 * 60 * 60 * 1000);  // futebol: 4h
+    setInterval(enrichCache, 20 * 60 * 1000);        // JOGOS DO DIA: 20min
+
+    // Agenda cron: verifica a cada 30min se é hora de sincronizar
+    const _agendaSynced = { today: '', tomorrow: '' };
+    setInterval(async () => {
+      const h    = new Date().getHours();
+      const tod  = todayStr();
+      const tom  = tomorrowStr();
+      // 07h00: confirma agenda de hoje
+      if (h === 7 && _agendaSynced.today !== tod) {
+        _agendaSynced.today = tod;
+        syncAgenda(tod).catch(e => console.error('📅 Cron today:', e.message));
+      }
+      // 23h00: busca agenda de amanhã (post já saiu à noite)
+      if (h === 23 && _agendaSynced.tomorrow !== tom) {
+        _agendaSynced.tomorrow = tom;
+        syncAgenda(tom).catch(e => console.error('📅 Cron tomorrow:', e.message));
+      }
+    }, 30 * 60 * 1000);
+  })
+  .catch(err => console.error('Erro ao inicializar DB:', err));
+
+async function syncAndSave() {
+  try {
+    const matches = await syncFootball();
+    if (matches.length === 0) return;
+    const today = new Date().toISOString().split('T')[0];
+    await db.run(
+      'INSERT OR REPLACE INTO football_matches (id, date, data, updated_at) VALUES (1, ?, ?, ?)',
+      [today, JSON.stringify(matches), Date.now()]
+    );
+  } catch (e) {
+    console.error('⚽ syncAndSave erro:', e.message);
+  }
+}
+
+async function enrichCache() {
+  try {
+    console.log('⚽ Atualizando JOGOS DO DIA...');
+    const enriched = await getEnrichedMatches();
+    _enrichedCache = enriched;
+    console.log(`⚽ JOGOS DO DIA pronto: ${enriched.length} jogo(s) com canal resolvido`);
+  } catch (e) {
+    console.error('⚽ enrichCache erro:', e.message);
+  }
+}
 
 const app = express();
 const PORT = config.PORT;
@@ -461,6 +542,60 @@ app.post('/admin/test-connection', requireAuth, async (req, res) => {
     return res.json({ ok: true, ms: Date.now() - start, statusCode, host: xtream.host });
   } catch (err) {
     return res.json({ ok: false, ms: null, error: err.message });
+  }
+});
+
+// =====================
+// ADMIN: INATIVAR CLIENTE (move para inativos, preserva dados)
+// =====================
+app.post('/admin/client-inativar', requireAuth, async (req, res) => {
+  try {
+    const { client_code, motivo } = req.body;
+    if (!client_code) return res.status(400).json({ error: 'client_code obrigatório' });
+    const code = client_code.toUpperCase();
+    const now  = Date.now();
+
+    const row = await db.get('SELECT * FROM app_requests WHERE client_code = ?', [code]);
+    if (!row) return res.status(404).json({ error: 'Cliente não encontrado' });
+
+    // Salva status anterior no campo device_model como histórico simples
+    // e marca como inativo com timestamp
+    await db.run(
+      `UPDATE app_requests
+       SET status = 'inativo', updated_at = ?, current_channel = ?
+       WHERE client_code = ?`,
+      [now, motivo ? `[INATIVO] ${motivo}` : '[INATIVO]', code]
+    );
+    console.log(`🚫 Cliente inativado: ${code} — motivo: ${motivo || 'não informado'}`);
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// =====================
+// ADMIN: REATIVAR CLIENTE
+// =====================
+app.post('/admin/client-reativar', requireAuth, async (req, res) => {
+  try {
+    const { client_code } = req.body;
+    if (!client_code) return res.status(400).json({ error: 'client_code obrigatório' });
+    const code = client_code.toUpperCase();
+    const now  = Date.now();
+
+    const row = await db.get('SELECT * FROM app_requests WHERE client_code = ?', [code]);
+    if (!row) return res.status(404).json({ error: 'Cliente não encontrado' });
+
+    // Restaura para 'ok' se tinha credenciais, ou 'pending'
+    const novoStatus = row.xtream_id ? 'ok' : 'pending';
+    await db.run(
+      `UPDATE app_requests SET status = ?, updated_at = ? WHERE client_code = ?`,
+      [novoStatus, now, code]
+    );
+    console.log(`♻️  Cliente reativado: ${code} → ${novoStatus}`);
+    return res.json({ success: true, status: novoStatus });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
@@ -1005,6 +1140,104 @@ app.post('/app/register', requireApiKey, async (req, res) => {
 
 // =====================
 // START
+// =====================
+// FUTEBOL
+// =====================
+
+// Endpoint app: agenda esportiva de hoje (@EsportesNaTV)
+app.get('/matches/today', requireApiKey, async (req, res) => {
+  const agenda = await getAgendaForDate(todayStr());
+  // Fallback: se agenda nova vazia, serve cache antigo
+  res.json(agenda.length > 0 ? agenda : _enrichedCache);
+});
+
+// Endpoint app: agenda esportiva de amanhã
+app.get('/matches/tomorrow', requireApiKey, async (req, res) => {
+  const agenda = await getAgendaForDate(tomorrowStr());
+  res.json(agenda);
+});
+
+// Admin: força sync manual da agenda
+app.post('/admin/agenda-sync', requireAuth, async (req, res) => {
+  const { date } = req.body;
+  const target = date || todayStr();
+  try {
+    const result = await syncAgenda(target);
+    res.json({ ok: true, date: target, count: result ? result.length : 0 });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Admin: visualiza agenda salva no banco
+app.get('/admin/agenda', requireAuth, async (req, res) => {
+  const date   = req.query.date || todayStr();
+  const agenda = await getAgendaForDate(date);
+  res.json({ date, count: agenda.length, matches: agenda });
+});
+
+// Admin: retorna mapeamento liga → canais atual
+app.get('/admin/matches-config', requireAuth, async (req, res) => {
+  try {
+    const row = await db.get('SELECT channels, updated_at FROM football_config WHERE id = 1');
+    const channels = row ? JSON.parse(row.channels) : [];
+    res.json({ channels, updatedAt: row ? row.updated_at : null });
+  } catch (e) {
+    res.status(500).json({ error: 'erro ao ler config' });
+  }
+});
+
+// Admin: salva mapeamento liga → canais
+app.post('/admin/matches-config', requireAuth, async (req, res) => {
+  try {
+    const { channels } = req.body;
+    if (!Array.isArray(channels)) return res.status(400).json({ error: 'channels deve ser array' });
+    await db.run(
+      'INSERT OR REPLACE INTO football_config (id, channels, updated_at) VALUES (1, ?, ?)',
+      [JSON.stringify(channels), Date.now()]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'erro ao salvar config' });
+  }
+});
+
+// Admin: força sync manual com a API-Football + re-enriquece EPG
+app.post('/admin/matches-sync', requireAuth, async (req, res) => {
+  try {
+    await syncAndSave();
+    await enrichCache();
+    res.json({ ok: true, count: _enrichedCache.length, date: getCacheDate() });
+  } catch (e) {
+    res.status(500).json({ error: 'erro no sync' });
+  }
+});
+
+// Admin: força sync manual dos canais Xtream
+app.post('/admin/xtream-sync', requireAuth, async (req, res) => {
+  try {
+    await syncXtream();
+    res.json({ ok: true, ready: xtreamReady(), syncedAt: getSyncedAt() });
+  } catch (e) {
+    res.status(500).json({ error: 'erro no sync Xtream' });
+  }
+});
+
+// Admin: retorna status do Xtream
+app.get('/admin/xtream-status', requireAuth, async (req, res) => {
+  const { getAllNames } = require('./services/xtream');
+  res.json({
+    ready: xtreamReady(),
+    channelCount: getAllNames().length,
+    syncedAt: getSyncedAt()
+  });
+});
+
+// Admin: retorna jogos enriquecidos para visualização
+app.get('/admin/matches-today', requireAuth, (req, res) => {
+  res.json({ date: getCacheDate(), count: _enrichedCache.length, matches: _enrichedCache });
+});
+
 // =====================
 // HEALTH CHECK
 // =====================
