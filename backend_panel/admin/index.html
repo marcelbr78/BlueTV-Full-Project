@@ -249,7 +249,10 @@
   <div id="clients" class="section">
     <div class="page-header">
       <h2>👥 Clientes APK</h2>
-      <button class="refresh-btn" onclick="loadClients()">🔄 Atualizar</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" onclick="abrirCadastroManual()">＋ Adicionar cliente manualmente</button>
+        <button class="refresh-btn" onclick="loadClients()">🔄 Atualizar</button>
+      </div>
     </div>
 
     <div class="filters">
@@ -437,6 +440,52 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL: CADASTRO MANUAL DE CLIENTE
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalManualClient">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3>＋ Adicionar cliente manualmente</h3>
+      <button class="modal-close" onclick="closeModal('modalManualClient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#888;font-size:12px;line-height:1.6;margin-bottom:16px">
+        Digite o código que aparece na tela de ativação do app. Depois de salvar, o app receberá as configurações automaticamente. Este cadastro manual funciona sem WhatsApp/Evolution.
+      </p>
+      <div class="cred-field">
+        <label>Código do app *</label>
+        <input id="manualClientCode" type="text" placeholder="BLUETV-ABCDE" maxlength="12" autocomplete="off">
+      </div>
+      <div class="cred-field">
+        <label>WhatsApp (opcional, com DDD)</label>
+        <input id="manualClientPhone" type="tel" placeholder="5547999999999" autocomplete="tel">
+      </div>
+      <div class="cred-field">
+        <label>Host / DNS *</label>
+        <input id="manualClientHost" type="text" placeholder="http://servidor.com">
+      </div>
+      <div class="cred-field">
+        <label>Usuário Xtream *</label>
+        <input id="manualClientUser" type="text" placeholder="Usuário">
+      </div>
+      <div class="cred-field">
+        <label>Senha Xtream *</label>
+        <input id="manualClientPass" type="text" placeholder="Senha">
+      </div>
+      <div class="cred-field">
+        <label>Validade (opcional)</label>
+        <input id="manualClientValidity" type="text" placeholder="31/12/2026">
+      </div>
+      <div class="error-msg" id="manualClientError"></div>
+      <div class="modal-actions">
+        <button class="btn" style="background:#333;color:#fff" onclick="closeModal('modalManualClient')">Cancelar</button>
+        <button class="btn btn-primary" id="manualClientSave" onclick="salvarClienteManual()">💾 Cadastrar e ativar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
 // ═══════════════ AUTH ═══════════════
@@ -594,6 +643,62 @@ function clearFilters() {
   document.getElementById('fStatus').value = '';
   document.getElementById('fOnline').value = '';
   filterClients();
+}
+
+function abrirCadastroManual() {
+  ['manualClientCode', 'manualClientPhone', 'manualClientHost', 'manualClientUser', 'manualClientPass', 'manualClientValidity']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  const error = document.getElementById('manualClientError');
+  error.textContent = '';
+  error.style.display = 'none';
+  document.getElementById('modalManualClient').classList.add('open');
+  document.getElementById('manualClientCode').focus();
+}
+
+async function salvarClienteManual() {
+  const button = document.getElementById('manualClientSave');
+  const error = document.getElementById('manualClientError');
+  const payload = {
+    client_code: document.getElementById('manualClientCode').value.trim().toUpperCase(),
+    whatsapp_number: document.getElementById('manualClientPhone').value.trim(),
+    host: document.getElementById('manualClientHost').value.trim(),
+    username: document.getElementById('manualClientUser').value.trim(),
+    password: document.getElementById('manualClientPass').value.trim(),
+    validade: document.getElementById('manualClientValidity').value.trim()
+  };
+
+  error.style.display = 'none';
+  if (!payload.client_code || !payload.host || !payload.username || !payload.password) {
+    error.textContent = 'Preencha o código do app, Host, usuário e senha.';
+    error.style.display = 'block';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = '⏳ Cadastrando...';
+  try {
+    const response = await fetch('/admin/clients/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      error.textContent = result.error || 'Não foi possível cadastrar o cliente.';
+      error.style.display = 'block';
+      return;
+    }
+
+    closeModal('modalManualClient');
+    await loadClients();
+    alert(`Cliente ${result.client_code} cadastrado e ativado. O app receberá as configurações na próxima consulta.`);
+  } catch (e) {
+    error.textContent = 'Erro de conexão: ' + e.message;
+    error.style.display = 'block';
+  } finally {
+    button.disabled = false;
+    button.textContent = '💾 Cadastrar e ativar';
+  }
 }
 
 // ═══════════════ DETALHE DO CLIENTE ═══════════════
@@ -755,8 +860,7 @@ async function salvarCredenciais() {
     const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_code: code, host, username: user, password: pass, validade: val,
-                             api_key: 'btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ' })
+      body: JSON.stringify({ client_code: code, host, username: user, password: pass, validade: val })
     });
     const d = await r.json();
     if (d.success) {
