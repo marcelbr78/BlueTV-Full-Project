@@ -484,6 +484,68 @@ app.get("/api/clients", requireAuth, async (req, res) => {
   }
 });
 
+// ADMIN: cadastrar e ativar um cliente manualmente, sem depender do WhatsApp/Evolution.
+// O código precisa ser o mesmo que aparece na tela de ativação do app.
+app.post('/admin/clients/manual', requireAuth, async (req, res) => {
+  let createdRequest = false;
+  let createdCredentialId = null;
+  try {
+    const clientCode = String(req.body?.client_code || '').trim().toUpperCase();
+    const whatsappNumber = String(req.body?.whatsapp_number || '').replace(/\D/g, '');
+    const host = String(req.body?.host || '').trim().replace(/\/+$/, '');
+    const username = String(req.body?.username || '').trim();
+    const password = String(req.body?.password || '').trim();
+    const validade = String(req.body?.validade || '').trim();
+
+    if (!/^BLUETV-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(clientCode)) {
+      return res.status(400).json({ success: false, error: 'Informe o código BLUETV-XXXXX exibido no app.' });
+    }
+    if (!host || !username || !password) {
+      return res.status(400).json({ success: false, error: 'Host, usuário e senha são obrigatórios.' });
+    }
+    if (whatsappNumber && (whatsappNumber.length < 10 || whatsappNumber.length > 15)) {
+      return res.status(400).json({ success: false, error: 'WhatsApp inválido. Informe DDD e número, somente dígitos.' });
+    }
+    if (await db.get('SELECT id FROM app_requests WHERE client_code = ?', [clientCode])) {
+      return res.status(409).json({ success: false, error: 'Este código já está cadastrado. Use a opção de editar/ativar na lista.' });
+    }
+
+    const now = Date.now();
+    const requestId = crypto.randomUUID();
+    await db.run(
+      `INSERT INTO app_requests (request_id, client_code, device_id, whatsapp_number, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
+      [requestId, clientCode, `manual-${requestId}`, whatsappNumber || null, now, now]
+    );
+    createdRequest = true;
+
+    const m3uUrl = `${host}/get.php?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&type=m3u_plus&output=mpegts`;
+    const insertResult = await db.run(
+      `INSERT INTO xtream_credentials
+       (request_id, client_id, whatsapp_number, host, username, password, validade, m3u_url, raw_message, extracted_at, status, plano)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual-admin', ?, 'extracted', 'manual')`,
+      [requestId, clientCode, whatsappNumber || '', host, username, password, validade || null, m3uUrl, now]
+    );
+    createdCredentialId = Number(insertResult.lastInsertRowid || insertResult.lastID);
+
+    await db.run(
+      "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+      [createdCredentialId, Date.now(), clientCode]
+    );
+
+    return res.status(201).json({ success: true, client_code: clientCode, status: 'ok' });
+  } catch (err) {
+    // Evita deixar cadastro ou credencial incompletos se alguma etapa falhar.
+    if (createdCredentialId) await db.run('DELETE FROM xtream_credentials WHERE id = ?', [createdCredentialId]).catch(() => {});
+    if (createdRequest) await db.run("DELETE FROM app_requests WHERE client_code = ? AND status = 'pending'", [String(req.body?.client_code || '').trim().toUpperCase()]).catch(() => {});
+    if (String(err.message || '').toLowerCase().includes('unique')) {
+      return res.status(409).json({ success: false, error: 'Este código já foi cadastrado.' });
+    }
+    console.error('Erro no cadastro manual de cliente:', err);
+    return res.status(500).json({ success: false, error: 'Não foi possível cadastrar o cliente.' });
+  }
+});
+
 // =====================
 // ADMIN: DETALHE COMPLETO DO CLIENTE
 // =====================
@@ -1468,12 +1530,9 @@ app.get('/api/debug/clients', requireAuth, async (req, res) => {
 // Body: { client_code, host, username, password, validade?, api_key }
 // Uso: ativar clientes manualmente pelo painel (sem passar pelo WhatsApp)
 // =====================
-app.post('/app/activate-manual', async (req, res) => {
+app.post('/app/activate-manual', requireAuth, async (req, res) => {
   try {
-    const { client_code, host, username, password, validade, api_key, xtream_id } = req.body;
-    if (api_key !== config.APP_API_KEY) {
-      return res.status(401).json({ success: false, error: 'Invalid API key' });
-    }
+    const { client_code, host, username, password, validade, xtream_id } = req.body;
     if (!client_code) {
       return res.status(400).json({ success: false, error: 'client_code obrigatório' });
     }
@@ -1534,12 +1593,9 @@ app.post('/app/activate-manual', async (req, res) => {
 // Body: { client_code, host, username, password, validade?, api_key }
 // Uso: trocar DNS ou credenciais de cliente ativo pelo painel
 // =====================
-app.post('/app/edit-credentials', async (req, res) => {
+app.post('/app/edit-credentials', requireAuth, async (req, res) => {
   try {
-    const { client_code, host, username, password, validade, api_key } = req.body;
-    if (api_key !== config.APP_API_KEY) {
-      return res.status(401).json({ success: false, error: 'Invalid API key' });
-    }
+    const { client_code, host, username, password, validade } = req.body;
     if (!client_code || !host || !username || !password) {
       return res.status(400).json({ success: false, error: 'client_code, host, username e password obrigatórios' });
     }
