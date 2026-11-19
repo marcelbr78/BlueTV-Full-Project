@@ -1,5 +1,16 @@
 services:
   - type: web
+    name: bluetv-frontend
+    runtime: static
+    rootDir: frontend_site
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
     name: bluetv-backend
     runtime: node
     rootDir: backend_panel
