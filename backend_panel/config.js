@@ -9,8 +9,8 @@ module.exports = {
     // Sessão admin
     INACTIVITY_TIMEOUT: 15 * 60 * 1000, // 15 minutos
 
-    // API Key para o APP BlueTV (gerada aleatoriamente)
-    APP_API_KEY: process.env.APP_API_KEY || 'btv_k8x2mP9qL4wN7vR3jY6cT1hB5fA0eZ',
+    // A chave deve vir do ambiente (no Render, use o valor gerado do Blueprint).
+    APP_API_KEY: process.env.APP_API_KEY || '',
 
     // WhatsApp do painel IPTV (para identificar respostas de teste)
     // Deixe vazio para aceitar de qualquer número, ou configure o número específico
