@@ -66,7 +66,7 @@
     .badge.pending{background:rgba(255,193,7,.18);color:#ffc107}
     .badge.extracted{background:rgba(0,212,255,.18);color:#00d4ff}
     .badge.recebido_botbot{background:rgba(123,44,191,.18);color:#a855f7}
-    .badge.error{background:rgba(233,69,96,.18);color:#e94560}
+    .badge.error,.badge.inativo{background:rgba(233,69,96,.18);color:#e94560}
 
     /* ── ONLINE DOT ── */
     .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
@@ -188,6 +188,8 @@
   <div class="nav-section-title">Configurações</div>
   <div class="nav-item" onclick="nav('config',this)">⚙️ API & Config</div>
 
+  <div class="nav-item" onclick="nav('marioUpdates',this)">Atualizações Mario TV</div>
+
   <div class="sidebar-footer">
     <button class="btn-logout" onclick="logout()">🚪 Sair</button>
   </div>
@@ -195,6 +197,28 @@
 
 <!-- MAIN CONTENT -->
 <div class="main">
+
+  <div id="marioUpdates" class="section">
+    <div class="page-header"><h2>Atualizações Mario TV</h2></div>
+    <div class="box" style="padding:16px">
+      <p>Publique um APK hospedado em um link HTTPS direto. As boxes compatíveis oferecem a atualização ao abrir o app.</p>
+      <form id="marioReleaseForm" style="display:grid;gap:12px;max-width:640px">
+        <label for="marioVersionCode">Código da versão Android</label>
+        <input class="filter-input" id="marioVersionCode" type="number" min="10" max="2100000000" required>
+        <label for="marioVersionName">Versão exibida</label>
+        <input class="filter-input" id="marioVersionName" placeholder="1.0.010" required>
+        <label for="marioApkUrl">Link HTTPS direto do APK</label>
+        <input class="filter-input" id="marioApkUrl" type="url" maxlength="2048" required>
+        <label for="marioApkHash">SHA-256 do APK</label>
+        <input class="filter-input" id="marioApkHash" pattern="[a-fA-F0-9]{64}" maxlength="64" required>
+        <div>
+          <button class="btn btn-primary" type="submit">Publicar</button>
+          <button class="btn" type="button" id="marioUnpublish">Retirar publicação</button>
+        </div>
+      </form>
+      <p id="marioReleaseStatus" role="status"></p>
+    </div>
+  </div>
 
   <!-- ═══════════════ DASHBOARD ═══════════════ -->
   <div id="dashboard" class="section active">
@@ -261,6 +285,7 @@
         <option value="">Todos os status</option>
         <option value="ok">✅ Ativo</option>
         <option value="pending">⏳ Pendente</option>
+        <option value="inativo">Bloqueado</option>
         <option value="extracted">🔑 Extraído</option>
       </select>
       <select class="filter-input" id="fOnline" onchange="filterClients()">
@@ -519,7 +544,52 @@ function nav(id, el) {
   if (id === 'clients')  loadClients();
   if (id === 'messages') loadMessages();
   if (id === 'xtream')   loadXtream();
+  if (id === 'marioUpdates') manageMarioRelease();
 }
+
+const marioReleaseForm = document.getElementById('marioReleaseForm');
+const marioUnpublish = document.getElementById('marioUnpublish');
+const marioReleaseStatus = document.getElementById('marioReleaseStatus');
+
+async function manageMarioRelease(method = 'GET', release) {
+  const publish = marioReleaseForm.querySelector('[type="submit"]');
+  publish.disabled = marioUnpublish.disabled = true;
+  try {
+    const response = await fetch('/admin/mario/update', {
+      method,
+      ...(release && { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(release) })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Falha ao acessar a atualização.');
+    if (data.release) {
+      document.getElementById('marioVersionCode').value = data.release.version_code;
+      document.getElementById('marioVersionName').value = data.release.version_name;
+      document.getElementById('marioApkUrl').value = data.release.apk_url;
+      document.getElementById('marioApkHash').value = data.release.sha256;
+    }
+    marioReleaseStatus.textContent = data.release
+      ? 'Versão publicada: ' + data.release.version_name
+      : 'Nenhuma atualização publicada.';
+  } catch (error) {
+    marioReleaseStatus.textContent = error.message;
+  } finally {
+    publish.disabled = marioUnpublish.disabled = false;
+  }
+}
+
+marioReleaseForm.addEventListener('submit', event => {
+  event.preventDefault();
+  manageMarioRelease('POST', {
+    version_code: Number(document.getElementById('marioVersionCode').value),
+    version_name: document.getElementById('marioVersionName').value.trim(),
+    apk_url: document.getElementById('marioApkUrl').value.trim(),
+    sha256: document.getElementById('marioApkHash').value.trim()
+  });
+});
+
+marioUnpublish.addEventListener('click', () => {
+  if (confirm('Retirar a atualização do Mario TV?')) manageMarioRelease('DELETE');
+});
 
 // ═══════════════ UTILS ═══════════════
 function fmt(ts) {
@@ -537,7 +607,7 @@ function ago(ts) {
 }
 
 function isOnline(c) {
-  return c.last_seen && (Date.now() - c.last_seen) < 3 * 60 * 1000;
+  return c.status !== 'inativo' && c.last_seen && (Date.now() - c.last_seen) < 3 * 60 * 1000;
 }
 
 function closeModal(id) {
@@ -615,7 +685,12 @@ function filterClients() {
   tbody.innerHTML = list.map(c => {
     const on = isOnline(c);
     const dot = `<span class="dot ${on?'on':'off'}"></span>`;
-    const statusBadge = `<span class="badge ${c.status||'pending'}">${c.status||'pending'}</span>`;
+    const blocked = c.status === 'inativo';
+    const statusBadge = `<span class="badge ${c.status||'pending'}">${blocked ? 'Bloqueado' : (c.status || 'pending')}</span>`;
+    const code = /^BLUETV-[A-Z0-9]{5}$/.test(c.client_code || '') ? c.client_code : null;
+    const deviceActions = code ? `
+      <button class="btn-sm btn-edit" onclick="changeDevice('${blocked ? 'unblock' : 'block'}','${code}')">${blocked ? 'Desbloquear' : 'Bloquear'}</button>
+      <button class="btn-sm btn-edit" onclick="changeDevice('delete','${code}')">Excluir</button>` : '';
     const host = c.host ? c.host.replace(/^https?:\/\//,'').split('/')[0].split(':')[0] : '—';
     return `
     <tr class="data-row" onclick="openDetail('${c.client_code}')">
@@ -629,13 +704,43 @@ function filterClients() {
       <td style="font-size:11px;color:${on?'#00c853':'#555'}">${ago(c.last_seen)}</td>
       <td style="font-size:11px;color:#888;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.current_channel||'—'}</td>
       <td onclick="event.stopPropagation()">
-        ${c.status==='ok'
+        ${blocked ? '' : c.status==='ok'
           ? `<button class="btn-sm btn-edit" onclick="abrirCred('editar','${c.client_code}','${c.host||''}','${c.username||''}','${c.password||''}','${c.validade||''}')">✏️</button>`
           : `<button class="btn-sm btn-activate" onclick="abrirCred('ativar','${c.client_code}','${c.host||''}','${c.username||''}','${c.password||''}','${c.validade||''}')">✅</button>
              <button class="btn-sm btn-edit" style="margin-left:4px" onclick="abrirCred('editar','${c.client_code}','${c.host||''}','${c.username||''}','${c.password||''}','${c.validade||''}')">✏️</button>`}
+        ${deviceActions}
       </td>
     </tr>`;
   }).join('');
+}
+
+async function changeDevice(action, code) {
+  const actions = {
+    block: { label: 'Bloquear', path: '/admin/client-inativar', method: 'POST' },
+    unblock: { label: 'Desbloquear', path: '/admin/client-reativar', method: 'POST' },
+    delete: { label: 'Excluir', path: '/admin/clients/' + encodeURIComponent(code), method: 'DELETE' }
+  };
+  const { label, path, method } = actions[action];
+  const message = action === 'delete'
+    ? `Excluir o cadastro da TV Box ${code}? O aparelho precisará de uma nova ativação.`
+    : `${label} a TV Box ${code}?`;
+  if (!confirm(message)) return;
+
+  try {
+    const response = await fetch(path, {
+      method,
+      ...(method === 'POST' && {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_code: code })
+      })
+    });
+    if (response.status === 401) { logout(); return; }
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Falha ao alterar o cadastro.');
+    await loadClients();
+  } catch (error) {
+    alert(error.message);
+  }
 }
 
 function clearFilters() {

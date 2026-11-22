@@ -166,6 +166,7 @@ async function requireAuth(req, res, next) {
 // Não forçamos redirecionamentos aqui para evitar loops de login.
 // O frontend será responsável por checar sessão / localStorage e redirecionar.
 app.use("/admin", express.static(path.join(__dirname, "admin")));
+require('./mario-updates')(app, db, requireAuth, requireApiKey);
 
 // =====================
 // STATUS
@@ -624,7 +625,7 @@ app.post('/admin/client-inativar', requireAuth, async (req, res) => {
     // e marca como inativo com timestamp
     await db.run(
       `UPDATE app_requests
-       SET status = 'inativo', updated_at = ?, current_channel = ?
+       SET status = 'inativo', is_online = 0, updated_at = ?, current_channel = ?
        WHERE client_code = ?`,
       [now, motivo ? `[INATIVO] ${motivo}` : '[INATIVO]', code]
     );
@@ -658,6 +659,23 @@ app.post('/admin/client-reativar', requireAuth, async (req, res) => {
     return res.json({ success: true, status: novoStatus });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// Remove only the device registration. Provider credentials may be shared.
+app.delete('/admin/clients/:code', requireAuth, async (req, res) => {
+  const code = req.params.code.trim().toUpperCase();
+  if (!/^BLUETV-[A-Z0-9]{5}$/.test(code)) {
+    return res.status(400).json({ error: 'Código de cliente inválido.' });
+  }
+
+  try {
+    const result = await db.run('DELETE FROM app_requests WHERE client_code = ?', [code]);
+    if (result.rowsAffected === 0) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao excluir cadastro de TV Box:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível excluir o cadastro.' });
   }
 });
 
@@ -824,7 +842,7 @@ app.post('/webhook/evolution', async (req, res) => {
       // Activar o cliente
       if (appRequest) {
         await db.run(
-          "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+          "UPDATE app_requests SET status = CASE WHEN status = 'inativo' THEN status ELSE 'ok' END, xtream_id = ?, updated_at = ? WHERE client_code = ?",
           [xtreamId, now, appRequest.client_code]
         );
         console.log(`🎉 Cliente ${clientId} ACTIVADO com sucesso!`);
@@ -1363,7 +1381,7 @@ app.post('/webhook/botbot', async (req, res) => {
         
         if (appRequest) {
           await db.run(
-            "UPDATE app_requests SET status = 'ok', xtream_id = ?, whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
+            "UPDATE app_requests SET status = CASE WHEN status = 'inativo' THEN status ELSE 'ok' END, xtream_id = ?, whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
             [insertResult.lastInsertRowid || insertResult.lastID, senderPhone, now, clientId]
           );
           console.log(`✅ Cliente ${clientId} activado com sucesso!`);
@@ -1434,7 +1452,7 @@ app.post('/app/heartbeat', requireApiKey, async (req, res) => {
         apk_version = COALESCE(?, apk_version),
         current_channel = COALESCE(?, current_channel),
         updated_at = ?
-       WHERE client_code = ?`,
+       WHERE client_code = ? AND status <> 'inativo'`,
       [now, device_model || null, apk_version || null, current_channel || null, now, client_code.toUpperCase()]
     );
 
@@ -1575,7 +1593,7 @@ app.post('/app/activate-manual', requireAuth, async (req, res) => {
     }
 
     await db.run(
-      "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+      "UPDATE app_requests SET status = CASE WHEN status = 'inativo' THEN status ELSE 'ok' END, xtream_id = ?, updated_at = ? WHERE client_code = ?",
       [finalXtreamId, now, client_code.toUpperCase()]
     );
 
@@ -1640,7 +1658,7 @@ app.post('/app/edit-credentials', requireAuth, async (req, res) => {
       );
       const newId = Number(insertResult.lastInsertRowid || insertResult.lastID);
       await db.run(
-        "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
+        "UPDATE app_requests SET status = CASE WHEN status = 'inativo' THEN status ELSE 'ok' END, xtream_id = ?, updated_at = ? WHERE client_code = ?",
         [newId, now, client_code.toUpperCase()]
       );
       return res.json({ success: true, client_code: client_code.toUpperCase(), xtream_id: newId });

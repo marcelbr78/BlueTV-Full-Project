@@ -20,6 +20,14 @@ async function all(sql, params = []) {
 }
 
 async function initDb() {
+  await run(`CREATE TABLE IF NOT EXISTS mario_update (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    version_code INTEGER NOT NULL,
+    version_name TEXT NOT NULL,
+    apk_url TEXT NOT NULL,
+    sha256 TEXT NOT NULL
+  )`);
+
   await run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
