@@ -10,6 +10,7 @@ const { getEnrichedMatches } = require('./services/matcher');
 const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
 const { syncAgenda, syncUpcomingDrafts, getAgendaForDate, getAgendaDraft, todayStr, tomorrowStr } = require('./services/agenda');
 const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
+const { completeSerieA } = require('./services/brasileirao-agenda');
 
 // Cache enriquecido (com EPG resolvido) — servido direto ao app
 let _enrichedCache = [];
@@ -17,7 +18,7 @@ let _enrichedCache = [];
 // Inicializa DB → Futebol → JOGOS DO DIA
 db.initDb()
   .then(async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayStr();
 
     syncUpcomingDrafts();
     setInterval(syncUpcomingDrafts, 60 * 60 * 1000);
@@ -48,7 +49,7 @@ async function syncAndSave() {
   try {
     const matches = await syncFootball();
     if (matches.length === 0) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayStr();
     await db.run(
       'INSERT OR REPLACE INTO football_matches (id, date, data, updated_at) VALUES (1, ?, ?, ?)',
       [today, JSON.stringify(matches), Date.now()]
@@ -1291,9 +1292,10 @@ app.post('/app/register', requireApiKey, async (req, res) => {
 // FUTEBOL
 // =====================
 
-async function automaticSportsAgenda(date) {
-  const source = await getAgendaForDate(date);
-  return source.length || date !== todayStr() ? source : _enrichedCache;
+async function automaticSportsAgenda(date, draft) {
+  const source = draft ?? await getAgendaForDate(date);
+  const agenda = draft || source.length || date !== todayStr() ? source : _enrichedCache;
+  return completeSerieA(date, agenda, getCache());
 }
 
 async function publishedSportsAgenda(date) {

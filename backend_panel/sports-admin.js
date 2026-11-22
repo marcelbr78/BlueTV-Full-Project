@@ -40,7 +40,7 @@ function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAg
     }
     return {
       date, manual: false, draft: Boolean(draft), source: draft?.source ?? null,
-      matches: draft?.matches ?? await getAutomaticAgenda(date)
+      matches: await getAutomaticAgenda(date, draft?.matches)
     };
   }
 
