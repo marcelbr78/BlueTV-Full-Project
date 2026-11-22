@@ -10,7 +10,9 @@ const { getEnrichedMatches } = require('./services/matcher');
 const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
 const { syncAgenda, syncUpcomingDrafts, getAgendaForDate, getAgendaDraft, todayStr, tomorrowStr } = require('./services/agenda');
 const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
-const { completeSerieA } = require('./services/brasileirao-agenda');
+const { completeSerieA, completePublishedSerieA } = require('./services/brasileirao-agenda');
+const { validDate } = require('./services/sete-agenda');
+const { getStandings } = require('./services/cbf-standings');
 
 // Cache enriquecido (com EPG resolvido) — servido direto ao app
 let _enrichedCache = [];
@@ -1303,7 +1305,7 @@ async function publishedSportsAgenda(date) {
     console.error('Erro ao ler agenda esportiva publicada:', error.code || error.name);
     return null;
   });
-  return manual ?? await automaticSportsAgenda(date);
+  return manual === null ? automaticSportsAgenda(date) : completePublishedSerieA(date, manual);
 }
 
 registerSportsAdmin(app, db, requireAuth, requireApiKey, automaticSportsAgenda, todayStr, getAgendaDraft);
@@ -1316,6 +1318,20 @@ app.get('/matches/today', requireApiKey, async (req, res) => {
 // Endpoint app: agenda esportiva de amanhã
 app.get('/matches/tomorrow', requireApiKey, async (req, res) => {
   res.json(await publishedSportsAgenda(tomorrowStr()));
+});
+
+app.get('/app/sports/calendar/:date', requireApiKey, async (req, res) => {
+  if (!validDate(req.params.date)) return res.status(400).json({ error: 'Data inválida.' });
+  res.set('Cache-Control', 'no-store').json(await publishedSportsAgenda(req.params.date));
+});
+
+app.get('/app/sports/standings', requireApiKey, async (_req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store').json(await getStandings(todayStr().slice(0, 4)));
+  } catch (error) {
+    console.warn('Classificação da CBF indisponível:', error.message);
+    res.status(503).json({ error: 'Classificação da Série A indisponível.' });
+  }
 });
 
 // Admin: força sync manual da agenda

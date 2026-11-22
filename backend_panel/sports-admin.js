@@ -1,4 +1,5 @@
 const { baseChannels } = require('./sports-channels');
+const { completePublishedSerieA } = require('./services/brasileirao-agenda');
 
 function isCalendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -36,7 +37,7 @@ function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAg
   async function calendar(date, published, preferDraft = false) {
     const draft = await getAgendaDraft(date);
     if (published !== null && !(preferDraft && draft)) {
-      return { date, manual: true, draft_available: Boolean(draft), matches: published };
+      return { date, manual: true, draft_available: Boolean(draft), matches: completePublishedSerieA(date, published) };
     }
     return {
       date, manual: false, draft: Boolean(draft), source: draft?.source ?? null,

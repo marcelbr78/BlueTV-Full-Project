@@ -26,6 +26,14 @@ const confirmed = {
   ]
 };
 
+// IDs dos escudos na tabela oficial da CBF da temporada de 2026.
+const badgeIds = {
+  'athletico pr': 20052, remo: 20022, fluminense: 20014, mirassol: 20385,
+  'red bull bragantino': 20007, 'vasco da gama': 60646, internacional: 20011,
+  vitoria: 20018, botafogo: 60175, 'sao paulo': 20005, santos: 20008,
+  gremio: 20013, 'atletico mg': 62194, corinthians: 20001
+};
+
 const clubAliases = new Map([
   ['athletico', 'athletico pr'], ['athletico paranaense', 'athletico pr'],
   ['atletico paranaense', 'athletico pr'], ['atletico pr', 'athletico pr'],
@@ -42,6 +50,11 @@ function normalize(value) {
 function club(value) {
   const key = normalize(value);
   return clubAliases.get(key) ?? key;
+}
+
+function badge(value) {
+  const id = badgeIds[club(value)];
+  return Number.isInteger(id) ? `https://conteudo.cbf.com.br/clubes/${id}/escudo.jpg` : '';
 }
 
 function matchKey(row) {
@@ -68,7 +81,7 @@ function serieAFixtures(date, feed) {
   }));
 }
 
-function completeSerieA(date, original, feed = []) {
+function completeSerieA(date, original, feed = [], preserveExisting = false) {
   const fixtures = new Map(serieAFixtures(date, feed).map(row => [matchKey(row), row]));
   if (Object.hasOwn(confirmed, date)) {
     for (const [reference, time, home, away, channels] of confirmed[date]) {
@@ -78,7 +91,8 @@ function completeSerieA(date, original, feed = []) {
         ...live,
         id: live?.id ?? `cbf-bra-serie-a-2026-${reference}`,
         match: home + ' x ' + away,
-        league, home, away, time, channels
+        league, home, away, time, channels,
+        homeLogo: live?.homeLogo || badge(home), awayLogo: live?.awayLogo || badge(away)
       });
     }
   }
@@ -88,10 +102,14 @@ function completeSerieA(date, original, feed = []) {
   for (const [key, fixture] of fixtures) {
     const existing = merged.findIndex(row => !isDifferentCompetition(row) && matchKey(row) === key);
     if (existing < 0) merged.push({ channels: [], ...fixture });
-    else merged[existing] = { ...merged[existing], ...fixture };
+    else if (!preserveExisting) merged[existing] = { ...merged[existing], ...fixture };
   }
 
   return merged.sort((left, right) => String(left.time ?? '').localeCompare(String(right.time ?? '')));
 }
 
-module.exports = { completeSerieA };
+function completePublishedSerieA(date, matches) {
+  return matches.length ? completeSerieA(date, matches, [], true) : matches;
+}
+
+module.exports = { completeSerieA, completePublishedSerieA };
