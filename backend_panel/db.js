@@ -28,6 +28,30 @@ async function initDb() {
     sha256 TEXT NOT NULL
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS bluetv_releases (
+    version_code INTEGER PRIMARY KEY,
+    version_name TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    notes TEXT NOT NULL,
+    apk_size INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  )`);
+  await run(`CREATE TABLE IF NOT EXISTS bluetv_update_chunks (
+    version_code INTEGER NOT NULL,
+    chunk_index INTEGER NOT NULL,
+    data BLOB NOT NULL,
+    PRIMARY KEY (version_code, chunk_index)
+  )`);
+  await run(`CREATE TABLE IF NOT EXISTS bluetv_update_uploads (
+    upload_id TEXT PRIMARY KEY,
+    version_code INTEGER NOT NULL,
+    version_name TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    notes TEXT NOT NULL,
+    apk_size INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  )`);
+
   await run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,

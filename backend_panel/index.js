@@ -151,6 +151,7 @@ async function requireAuth(req, res, next) {
 // O frontend será responsável por checar sessão / localStorage e redirecionar.
 app.use("/admin", express.static(path.join(__dirname, "admin")));
 require('./mario-updates')(app, db, requireAuth, requireApiKey);
+require('./bluetv-updates')(app, db, requireAuth, requireApiKey);
 
 // =====================
 // STATUS

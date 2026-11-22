@@ -189,6 +189,7 @@
   <div class="nav-item" onclick="nav('config',this)">⚙️ API & Config</div>
 
   <div class="nav-item" onclick="nav('marioUpdates',this)">Atualizações Mario TV</div>
+  <div class="nav-item" onclick="nav('blueTvUpdates',this)">Atualizações BlueTV</div>
 
   <div class="nav-item" onclick="nav('sportsSettings',this)">Jogos e Canais</div>
 
@@ -262,6 +263,27 @@
         </div>
       </form>
       <p id="marioReleaseStatus" role="status"></p>
+    </div>
+  </div>
+
+  <div id="blueTvUpdates" class="section">
+    <div class="page-header"><h2>Atualizações BlueTV</h2></div>
+    <div class="box" style="padding:16px">
+      <p>Envie juntos o APK e o TXT gerado na compilação do BlueTV. O app consulta a publicação ao abrir e oferece a instalação quando encontrar uma versão mais nova. O Android pede confirmação para instalar.</p>
+      <form id="blueTvReleaseForm" style="display:grid;gap:12px;max-width:640px">
+        <label for="blueTvApkFile">Arquivo APK</label>
+        <input class="filter-input" id="blueTvApkFile" type="file" accept=".apk,application/vnd.android.package-archive" required>
+        <label for="blueTvNotesFile">TXT com a versão e as melhorias</label>
+        <input class="filter-input" id="blueTvNotesFile" type="file" accept=".txt,text/plain" required>
+        <div>
+          <button class="btn btn-primary" id="blueTvPublish" type="submit">Enviar e publicar</button>
+        </div>
+      </form>
+      <p id="blueTvReleaseStatus" role="status"></p>
+    </div>
+    <div class="box" style="padding:16px">
+      <h3>Histórico de atualizações</h3>
+      <div id="blueTvReleaseHistory" aria-live="polite"></div>
     </div>
   </div>
 
@@ -614,6 +636,7 @@ function nav(id, el) {
   if (id === 'sportsSettings') openSportsSettings();
   if (id === 'xtream')   loadXtream();
   if (id === 'marioUpdates') manageMarioRelease();
+  if (id === 'blueTvUpdates') loadBlueTvReleases();
 }
 
 const marioReleaseForm = document.getElementById('marioReleaseForm');
@@ -659,6 +682,84 @@ marioReleaseForm.addEventListener('submit', event => {
 marioUnpublish.addEventListener('click', () => {
   if (confirm('Retirar a atualização do Mario TV?')) manageMarioRelease('DELETE');
 });
+
+const blueTvReleaseForm = document.getElementById('blueTvReleaseForm');
+const blueTvReleaseStatus = document.getElementById('blueTvReleaseStatus');
+const blueTvReleaseHistory = document.getElementById('blueTvReleaseHistory');
+
+async function loadBlueTvReleases() {
+  try {
+    const response = await fetch('/admin/bluetv/update');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Falha ao acessar a atualização do BlueTV.');
+    blueTvReleaseStatus.textContent = data.release
+      ? 'Versão atual: ' + data.release.version_name + ' (código ' + data.release.version_code + ')'
+      : 'Nenhuma versão publicada ainda.';
+    blueTvReleaseHistory.replaceChildren();
+    for (const release of data.history || []) {
+      const article = document.createElement('article');
+      article.style.cssText = 'border-top:1px solid #444;padding:12px 0;white-space:pre-wrap';
+      const heading = document.createElement('strong');
+      heading.textContent = `BlueTV ${release.version_name} • ${new Date(release.created_at).toLocaleString('pt-BR')}`;
+      const notes = document.createElement('pre');
+      notes.style.cssText = 'white-space:pre-wrap;font:inherit;margin:8px 0 0';
+      notes.textContent = release.notes;
+      article.append(heading, notes);
+      blueTvReleaseHistory.append(article);
+    }
+  } catch (error) {
+    blueTvReleaseStatus.textContent = error.message;
+  }
+}
+
+async function publishBlueTvRelease(apk, notesFile) {
+  const button = document.getElementById('blueTvPublish');
+  button.disabled = true;
+  try {
+    if (!apk.name.toLowerCase().endsWith('.apk') || !notesFile.name.toLowerCase().endsWith('.txt')) {
+      throw new Error('Selecione um APK e o TXT de melhorias gerado pelo BlueTV.');
+    }
+    const notes = await notesFile.text();
+    const version = notes.match(/^Vers[aã]o:\s*(1\.0\.\d{3,})\s*$/im)?.[1];
+    const code = Number(notes.match(/^(?:C[oó]digo|VersionCode):\s*(\d+)\s*$/im)?.[1]);
+    if (!version || !Number.isSafeInteger(code)) throw new Error('O TXT não contém a versão e o código gerados pelo app.');
+    if (!window.crypto?.subtle || !window.crypto?.randomUUID) throw new Error('Abra o painel em uma conexão HTTPS atualizada para publicar arquivos.');
+    blueTvReleaseStatus.textContent = 'Calculando integridade do APK…';
+    const hashBytes = await crypto.subtle.digest('SHA-256', await apk.arrayBuffer());
+    const sha256 = [...new Uint8Array(hashBytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    const uploadId = crypto.randomUUID();
+    blueTvReleaseStatus.textContent = 'Preparando o envio da versão ' + version + '…';
+    let response = await fetch('/admin/bluetv/update/upload/start', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ upload_id: uploadId, version_code: code, version_name: version, sha256, apk_size: apk.size, notes })
+    });
+    let data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Não foi possível iniciar o envio.');
+    blueTvReleaseStatus.textContent = 'Enviando APK e TXT…';
+    response = await fetch('/admin/bluetv/update/upload/' + encodeURIComponent(uploadId), {
+      method: 'PUT', headers: { 'Content-Type': 'application/octet-stream' }, body: apk
+    });
+    data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Não foi possível publicar a atualização.');
+    blueTvReleaseStatus.textContent = 'BlueTV ' + data.release.version_name + ' publicado com verificação SHA-256.';
+    blueTvReleaseForm.reset();
+    await loadBlueTvReleases();
+  } catch (error) {
+    blueTvReleaseStatus.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+blueTvReleaseForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const apk = document.getElementById('blueTvApkFile').files[0];
+  const notes = document.getElementById('blueTvNotesFile').files[0];
+  if (!apk || !notes) return;
+  publishBlueTvRelease(apk, notes);
+});
+
+loadBlueTvReleases();
 
 // ═══════════════ UTILS ═══════════════
 function fmt(ts) {
