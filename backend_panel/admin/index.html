@@ -204,9 +204,9 @@
     <div class="page-header"><h2>Jogos e Canais</h2></div>
     <div class="box">
       <form id="sportsCatalogForm" style="display:grid;gap:10px">
-        <label for="sportsCatalog">Canais de esporte disponíveis</label>
+        <label for="sportsCatalog"><strong>Canais de Jogos</strong></label>
         <textarea class="filter-input" id="sportsCatalog" rows="5" placeholder="Um canal por linha" aria-describedby="sportsCatalogHint"></textarea>
-        <small id="sportsCatalogHint">Esta lista define as opções ao configurar as transmissões de cada jogo.</small>
+        <small id="sportsCatalogHint">Cole um nome por linha, na ordem em que quer mostrar no app. O BlueTV exibe os canais encontrados no catálogo de cada aparelho. A lista também fica disponível no editor da agenda.</small>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" type="submit">Salvar canais</button>
           <button class="btn btn-sm btn-edit" id="sportsCatalogSuggestions" type="button" disabled>Adicionar canais sugeridos</button>
@@ -1272,6 +1272,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=3"></script>
+<script src="/admin/sports-settings.js?v=4"></script>
 </body>
 </html>

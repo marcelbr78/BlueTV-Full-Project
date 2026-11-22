@@ -231,7 +231,9 @@
         draft.forEach(renderMatch);
         showEmpty();
       }
-      catalogStatus.textContent = 'Canais salvos.';
+      catalogStatus.textContent = catalog.length
+        ? catalog.length + ' canal(is) salvo(s). Abra novamente Jogos → Canais de Jogos no app para atualizar.'
+        : 'Lista publicada sem canais. Adicione os nomes para preencher Canais de Jogos no app.';
     } catch (error) {
       catalogStatus.textContent = error.message;
     } finally {

@@ -1304,7 +1304,7 @@ async function publishedSportsAgenda(date) {
   return manual ?? await automaticSportsAgenda(date);
 }
 
-registerSportsAdmin(app, db, requireAuth, automaticSportsAgenda, todayStr, getAgendaDraft);
+registerSportsAdmin(app, db, requireAuth, requireApiKey, automaticSportsAgenda, todayStr, getAgendaDraft);
 
 // Endpoint app: agenda esportiva de hoje (@EsportesNaTV)
 app.get('/matches/today', requireApiKey, async (req, res) => {
