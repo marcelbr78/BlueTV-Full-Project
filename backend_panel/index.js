@@ -9,6 +9,7 @@ const { syncFootball, getCache, getCacheDate, _restoreCache } = require('./servi
 const { getEnrichedMatches } = require('./services/matcher');
 const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
 const { syncAgenda, getAgendaForDate, todayStr, tomorrowStr } = require('./services/agenda');
+const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
 
 // Cache enriquecido (com EPG resolvido) — servido direto ao app
 let _enrichedCache = [];
@@ -1310,17 +1311,29 @@ app.post('/app/register', requireApiKey, async (req, res) => {
 // FUTEBOL
 // =====================
 
+async function automaticSportsAgenda(date) {
+  const source = await getAgendaForDate(date);
+  return source.length || date !== todayStr() ? source : _enrichedCache;
+}
+
+async function publishedSportsAgenda(date) {
+  const manual = await readPublishedAgenda(db, date).catch(error => {
+    console.error('Erro ao ler agenda esportiva publicada:', error.code || error.name);
+    return null;
+  });
+  return manual ?? await automaticSportsAgenda(date);
+}
+
+registerSportsAdmin(app, db, requireAuth, automaticSportsAgenda, todayStr);
+
 // Endpoint app: agenda esportiva de hoje (@EsportesNaTV)
 app.get('/matches/today', requireApiKey, async (req, res) => {
-  const agenda = await getAgendaForDate(todayStr());
-  // Fallback: se agenda nova vazia, serve cache antigo
-  res.json(agenda.length > 0 ? agenda : _enrichedCache);
+  res.json(await publishedSportsAgenda(todayStr()));
 });
 
 // Endpoint app: agenda esportiva de amanhã
 app.get('/matches/tomorrow', requireApiKey, async (req, res) => {
-  const agenda = await getAgendaForDate(tomorrowStr());
-  res.json(agenda);
+  res.json(await publishedSportsAgenda(tomorrowStr()));
 });
 
 // Admin: força sync manual da agenda

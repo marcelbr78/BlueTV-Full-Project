@@ -318,14 +318,16 @@ async function getAgendaForDate(date) {
 }
 
 // ─── Helpers de data ──────────────────────────────────────────────────────────
+const calendarDate = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
+});
+
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  return calendarDate.format(new Date());
 }
 
 function tomorrowStr() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
+  return calendarDate.format(new Date(Date.now() + 86_400_000));
 }
 
 module.exports = { syncAgenda, getAgendaForDate, todayStr, tomorrowStr };

@@ -161,6 +161,15 @@ async function initDb() {
     created_at INTEGER NOT NULL
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS sports_channels (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    channels TEXT NOT NULL
+  )`);
+  await run(`CREATE TABLE IF NOT EXISTS sports_agenda_manual (
+    date TEXT PRIMARY KEY,
+    matches TEXT NOT NULL
+  )`);
+
   // Insere config padrão ou migra config antiga (sem leagueId) para a versão nova
   const defaultChannels = require('./config/channels.json');
   const fConfig = await get('SELECT channels FROM football_config WHERE id = 1');

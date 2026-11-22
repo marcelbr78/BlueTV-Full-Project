@@ -190,6 +190,8 @@
 
   <div class="nav-item" onclick="nav('marioUpdates',this)">Atualizações Mario TV</div>
 
+  <div class="nav-item" onclick="nav('sportsSettings',this)">Jogos e Canais</div>
+
   <div class="sidebar-footer">
     <button class="btn-logout" onclick="logout()">🚪 Sair</button>
   </div>
@@ -197,6 +199,37 @@
 
 <!-- MAIN CONTENT -->
 <div class="main">
+
+  <div id="sportsSettings" class="section">
+    <div class="page-header"><h2>Jogos e Canais</h2></div>
+    <div class="box">
+      <form id="sportsCatalogForm" style="display:grid;gap:10px">
+        <label for="sportsCatalog">Canais de esporte disponíveis</label>
+        <textarea class="filter-input" id="sportsCatalog" rows="5" placeholder="Um canal por linha" aria-describedby="sportsCatalogHint"></textarea>
+        <small id="sportsCatalogHint">Esta lista define as opções ao configurar as transmissões de cada jogo.</small>
+        <div><button class="btn btn-primary" type="submit">Salvar canais</button></div>
+        <p id="sportsCatalogStatus" role="status"></p>
+      </form>
+    </div>
+    <div class="box">
+      <div class="filters" style="align-items:center">
+        <label for="sportsDate">Calendário</label>
+        <input class="filter-input" type="date" id="sportsDate">
+        <button class="btn btn-sm btn-edit" id="sportsToday" type="button">Hoje</button>
+        <button class="btn btn-sm btn-edit" id="sportsTomorrow" type="button">Amanhã</button>
+      </div>
+      <p id="sportsSource"></p>
+      <form id="sportsGamesForm">
+        <div id="sportsGames"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn btn-sm btn-edit" id="sportsAdd" type="button" disabled>Adicionar jogo</button>
+          <button class="btn btn-primary" id="sportsPublish" type="submit" disabled>Publicar agenda do dia</button>
+          <button class="btn btn-sm btn-edit" id="sportsReset" type="button" hidden>Voltar à agenda automática</button>
+        </div>
+        <p id="sportsStatus" role="status"></p>
+      </form>
+    </div>
+  </div>
 
   <div id="marioUpdates" class="section">
     <div class="page-header"><h2>Atualizações Mario TV</h2></div>
@@ -566,6 +599,7 @@ function nav(id, el) {
   el.classList.add('active');
   if (id === 'clients')  loadClients();
   if (id === 'messages') loadMessages();
+  if (id === 'sportsSettings') openSportsSettings();
   if (id === 'xtream')   loadXtream();
   if (id === 'marioUpdates') manageMarioRelease();
 }
@@ -1226,5 +1260,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
+<script src="/admin/sports-settings.js"></script>
 </body>
 </html>
