@@ -28,7 +28,18 @@ async function readPublishedAgenda(db, date) {
   return row ? JSON.parse(row.matches) : null;
 }
 
-function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr) {
+function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr, getAgendaDraft) {
+  async function calendar(date, published, preferDraft = false) {
+    const draft = await getAgendaDraft(date);
+    if (published !== null && !(preferDraft && draft)) {
+      return { date, manual: true, draft_available: Boolean(draft), matches: published };
+    }
+    return {
+      date, manual: false, draft: Boolean(draft), source: draft?.source ?? null,
+      matches: draft?.matches ?? await getAutomaticAgenda(date)
+    };
+  }
+
   const route = (action) => async (req, res) => {
     res.set('Cache-Control', 'no-store');
     try {
@@ -55,7 +66,7 @@ function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr)
     const date = req.query.date || todayStr();
     if (!isCalendarDate(date)) return res.status(400).json({ error: 'Selecione uma data válida.' });
     const published = await readPublishedAgenda(db, date);
-    res.json({ date, manual: published !== null, matches: published ?? await getAutomaticAgenda(date) });
+    res.json(await calendar(date, published, req.query.draft === '1'));
   }));
 
   app.put('/admin/sports/calendar/:date', requireAuth, route(async (req, res) => {
@@ -64,7 +75,7 @@ function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr)
     if (!isCalendarDate(date) || !Array.isArray(values) || values.length > 120) {
       return res.status(400).json({ error: 'Informe uma data válida e até 120 jogos.' });
     }
-    const previous = await readPublishedAgenda(db, date) ?? await getAutomaticAgenda(date);
+    const previous = (await calendar(date, await readPublishedAgenda(db, date))).matches;
     const byMatch = new Map(previous.map(match => [match.time + '|' + match.match, match]));
     const keys = new Set();
     const ids = new Set();
@@ -91,14 +102,14 @@ function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr)
       'INSERT OR REPLACE INTO sports_agenda_manual (date, matches) VALUES (?, ?)',
       [date, JSON.stringify(matches)]
     );
-    res.json({ date, manual: true, matches });
+    res.json({ date, manual: true, draft_available: Boolean(await getAgendaDraft(date)), matches });
   }));
 
   app.delete('/admin/sports/calendar/:date', requireAuth, route(async (req, res) => {
     const { date } = req.params;
     if (!isCalendarDate(date)) return res.status(400).json({ error: 'Selecione uma data válida.' });
     await db.run('DELETE FROM sports_agenda_manual WHERE date = ?', [date]);
-    res.json({ date, manual: false, matches: await getAutomaticAgenda(date) });
+    res.json(await calendar(date, null));
   }));
 }
 

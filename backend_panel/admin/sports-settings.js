@@ -9,6 +9,7 @@
   const add = field('sportsAdd');
   const reset = field('sportsReset');
   const sync = field('sportsSync');
+  const viewDraft = field('sportsViewDraft');
   const suggest = field('sportsCatalogSuggestions');
   let catalog = [];
   let suggestions = [];
@@ -34,7 +35,7 @@
   function setBusy(value) {
     busy = value;
     for (const button of [dateInput, field('sportsToday'), field('sportsTomorrow')]) button.disabled = value;
-    for (const button of [add, publish, reset, sync]) button.disabled = value || !loaded;
+    for (const button of [add, publish, reset, sync, viewDraft]) button.disabled = value || !loaded;
   }
 
   function create(tag, text) {
@@ -101,6 +102,31 @@
       empty.className = 'empty';
       games.append(empty);
     }
+    renderByChannel();
+  }
+
+  function renderByChannel() {
+    const panel = field('sportsByChannel');
+    const byChannel = new Map();
+    for (const match of readMatches().sort((a, b) => a.time.localeCompare(b.time))) {
+      if (!match.match.trim()) continue;
+      const channels = match.channels.length ? match.channels : ['Canal a confirmar'];
+      for (const name of channels) {
+        if (!byChannel.has(name)) byChannel.set(name, []);
+        byChannel.get(name).push(match);
+      }
+    }
+    panel.replaceChildren();
+    for (const [name, matches] of [...byChannel].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR', { numeric: true }))) {
+      const group = create('div');
+      group.style.marginBottom = '8px';
+      const list = create('ul');
+      list.style.paddingLeft = '24px';
+      matches.forEach(match => list.append(create('li', [match.time, match.match].filter(Boolean).join(' · '))));
+      group.append(create('strong', name), list);
+      panel.append(group);
+    }
+    if (!byChannel.size) panel.textContent = 'Nenhum jogo nesta data.';
   }
 
   function readMatches() {
@@ -116,14 +142,25 @@
     loadedDate = data.date;
     dateInput.value = data.date;
     dirty = false;
-    field('sportsSource').textContent = data.manual ? 'Agenda manual publicada.' : 'Agenda automática.';
+    const source = field('sportsSource');
+    source.textContent = data.manual ? 'Agenda manual publicada.' :
+      data.draft ? 'Rascunho importado. Confira os jogos e canais antes de publicar. ' : 'Agenda automática.';
+    if (data.draft && data.source) {
+      const url = new URL(data.source);
+      if (url.protocol === 'https:' && url.hostname === 'setenosesportes.com.br') {
+        const link = create('a', 'Ver publicação original');
+        Object.assign(link, { href: url.href, target: '_blank', rel: 'noopener noreferrer' });
+        source.append(link);
+      }
+    }
     reset.hidden = !data.manual;
+    viewDraft.hidden = !data.draft_available;
     games.replaceChildren();
     data.matches.forEach(renderMatch);
     showEmpty();
   }
 
-  async function loadAgenda(date) {
+  async function loadAgenda(date, preferDraft = false) {
     if (!date || busy) return;
     if (dirty && !confirm('Descartar as alterações ainda não publicadas?')) {
       dateInput.value = loadedDate;
@@ -133,7 +170,7 @@
     setBusy(true);
     status.textContent = 'Carregando agenda…';
     try {
-      const data = await request('calendar?date=' + encodeURIComponent(date));
+      const data = await request('calendar?date=' + encodeURIComponent(date) + (preferDraft ? '&draft=1' : ''));
       renderAgenda(data);
       status.textContent = '';
     } catch (error) {
@@ -170,10 +207,8 @@
     status.textContent = 'Buscando a programação…';
     try {
       const data = await request('/admin/agenda-sync', 'POST', { date: loadedDate });
-      if (reset.hidden && !dirty) {
-        renderAgenda(await request('calendar?date=' + encodeURIComponent(loadedDate)));
-      }
-      status.textContent = data.count + ' jogos importados da fonte automática.';
+      if (!dirty) renderAgenda(await request('calendar?date=' + encodeURIComponent(loadedDate)));
+      status.textContent = data.count + ' jogos encontrados na fonte. Confira o calendário antes de publicar.';
     } catch (error) {
       status.textContent = error.message;
     } finally {
@@ -204,10 +239,11 @@
     }
   });
 
+  viewDraft.addEventListener('click', () => loadAgenda(loadedDate, true));
   dateInput.addEventListener('change', () => loadAgenda(dateInput.value));
   field('sportsToday').addEventListener('click', () => loadAgenda(day.format(new Date())));
   field('sportsTomorrow').addEventListener('click', () => loadAgenda(day.format(new Date(Date.now() + 86_400_000))));
-  games.addEventListener('input', () => { dirty = true; });
+  games.addEventListener('input', () => { dirty = true; renderByChannel(); });
 
   add.addEventListener('click', () => {
     renderMatch({});

@@ -8,6 +8,7 @@ const https = require('https');
 const http  = require('http');
 const db    = require('../db');
 const { findBroadcasts } = require('../sports-channels');
+const { findSeteAgenda, downloadSeteImage, validDate } = require('./sete-agenda');
 
 // ─── Nitter (instâncias fallback) ─────────────────────────────────────────────
 const NITTER_INSTANCES = [
@@ -106,9 +107,13 @@ async function ocrImage(imageBuffer) {
   const worker = await createWorker(['por', 'eng'], 1, {
     logger: () => {}, // silencia logs de progresso
   });
-  const { data: { text } } = await worker.recognize(imageBuffer);
-  await worker.terminate();
-  return text;
+  try {
+    await worker.setParameters({ tessedit_pageseg_mode: '6' });
+    const { data: { text } } = await worker.recognize(imageBuffer);
+    return text;
+  } finally {
+    await worker.terminate();
+  }
 }
 
 // ─── Parser OCR ───────────────────────────────────────────────────────────────
@@ -118,13 +123,14 @@ function parseOcrText(text) {
     .map(l => l.trim())
     .filter(l => l.length > 8);
 
-  const TIME_RE = /^(\d{2})[hH:](\d{2})\s*/;
+  const TIME_RE = /^([0-2Oo][0-9Oo])[hHnN:](\d{2})\s*/;
 
   for (const line of lines) {
     const tm = TIME_RE.exec(line);
     if (!tm) continue;
 
-    const time = `${tm[1]}:${tm[2]}`;
+    const time = `${tm[1].replace(/o/gi, '0')}:${tm[2]}`;
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) continue;
     const rest = line.slice(tm[0].length).trim();
 
     // Encontra " x " (separador do confronto)
@@ -173,10 +179,60 @@ function parseOcrText(text) {
   return results;
 }
 
+async function getAgendaDraft(date) {
+  const row = await db.get('SELECT matches, source_key, source_url FROM sports_agenda_draft WHERE date = ?', [date]);
+  return row ? { matches: JSON.parse(row.matches), key: row.source_key, source: row.source_url } : null;
+}
+
+const draftImports = new Map();
+async function importSeteDraft(date) {
+  const existing = draftImports.get(date);
+  if (existing) return existing;
+  const importing = (async () => {
+    const cached = await getAgendaDraft(date);
+    const post = await findSeteAgenda(date).catch(error => {
+      console.warn('Fonte Sete nos Esportes indisponível:', error.message);
+      return null;
+    });
+    if (!post || cached?.key === post.key) return cached;
+    const matches = [];
+    for (const image of post.imageUrls) {
+      const text = await ocrImage(await downloadSeteImage(image));
+      matches.push(...parseOcrText(text));
+    }
+    const seen = new Set();
+    const unique = matches.filter(match => {
+      const key = match.time + '|' + match.match.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).map((match, index) => ({ ...match, id: index + 1 }));
+    if (!unique.length) return cached;
+    await db.run(
+      'INSERT OR REPLACE INTO sports_agenda_draft (date, matches, source_key, source_url) VALUES (?, ?, ?, ?)',
+      [date, JSON.stringify(unique), post.key, post.url]
+    );
+    return { matches: unique, key: post.key, source: post.url };
+  })();
+  draftImports.set(date, importing);
+  try {
+    return await importing;
+  } finally {
+    draftImports.delete(date);
+  }
+}
+
 // ─── Sync principal ───────────────────────────────────────────────────────────
 async function syncAgenda(targetDate) {
   console.log(`📅 Sincronizando agenda: ${targetDate}`);
+  if (!validDate(targetDate)) return null;
   try {
+    const draft = await importSeteDraft(targetDate).catch(error => {
+      console.error('Falha ao preparar rascunho da agenda:', error.message);
+      return getAgendaDraft(targetDate).catch(() => null);
+    });
+    if (draft) return draft.matches;
+
     // Busca RSS
     const xml = await fetchNitterRss('EsportesNaTV');
 
@@ -261,4 +317,21 @@ function tomorrowStr() {
   return calendarDate.format(new Date(Date.now() + 86_400_000));
 }
 
-module.exports = { syncAgenda, getAgendaForDate, todayStr, tomorrowStr };
+let upcomingSync = false;
+async function syncUpcomingDrafts() {
+  if (upcomingSync) return;
+  upcomingSync = true;
+  try {
+    const start = new Date(todayStr());
+    for (let offset = 0; offset <= 2; offset++) {
+      const date = new Date(+start + offset * 86_400_000).toISOString().slice(0, 10);
+      await importSeteDraft(date).catch(error => {
+        console.error('Falha ao atualizar rascunho de ' + date + ':', error.message);
+      });
+    }
+  } finally {
+    upcomingSync = false;
+  }
+}
+
+module.exports = { syncAgenda, syncUpcomingDrafts, getAgendaForDate, getAgendaDraft, todayStr, tomorrowStr };

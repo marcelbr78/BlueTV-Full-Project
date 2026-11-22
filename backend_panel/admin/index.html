@@ -226,6 +226,11 @@
         <a href="https://www.instagram.com/esportesnatv/" target="_blank" rel="noopener noreferrer" style="color:#00d4ff">Instagram @esportesnatv</a>
       </div>
       <p id="sportsSource"></p>
+      <button class="btn btn-sm btn-edit" id="sportsViewDraft" type="button" hidden>Revisar rascunho importado</button>
+      <details style="margin:12px 0">
+        <summary style="cursor:pointer">Ver jogos por canal</summary>
+        <div id="sportsByChannel" style="margin-top:8px"></div>
+      </details>
       <form id="sportsGamesForm">
         <div id="sportsGames"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -1267,6 +1272,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=2"></script>
+<script src="/admin/sports-settings.js?v=3"></script>
 </body>
 </html>

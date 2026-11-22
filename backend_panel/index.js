@@ -8,7 +8,7 @@ const { isXtreamResponse, parseXtreamMessage, extractM3uUrl,
 const { syncFootball, getCache, getCacheDate, _restoreCache } = require('./services/football');
 const { getEnrichedMatches } = require('./services/matcher');
 const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
-const { syncAgenda, getAgendaForDate, todayStr, tomorrowStr } = require('./services/agenda');
+const { syncAgenda, syncUpcomingDrafts, getAgendaForDate, getAgendaDraft, todayStr, tomorrowStr } = require('./services/agenda');
 const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
 
 // Cache enriquecido (com EPG resolvido) — servido direto ao app
@@ -18,6 +18,9 @@ let _enrichedCache = [];
 db.initDb()
   .then(async () => {
     const today = new Date().toISOString().split('T')[0];
+
+    syncUpcomingDrafts();
+    setInterval(syncUpcomingDrafts, 60 * 60 * 1000);
 
     // Xtream sync (para admin status)
     syncXtream().catch(() => {});
@@ -36,31 +39,8 @@ db.initDb()
     // Enriquece cruzando JOGOS DO DIA × API-Football
     await enrichCache();
 
-    // Agenda: sincroniza hoje e amanhã na inicialização
-    syncAgenda(todayStr()).catch(e => console.error('📅 Init today:', e.message));
-    syncAgenda(tomorrowStr()).catch(e => console.error('📅 Init tomorrow:', e.message));
-
-    // Crons
-    setInterval(syncAndSave, 4 * 60 * 60 * 1000);  // futebol: 4h
-    setInterval(enrichCache, 20 * 60 * 1000);        // JOGOS DO DIA: 20min
-
-    // Agenda cron: verifica a cada 30min se é hora de sincronizar
-    const _agendaSynced = { today: '', tomorrow: '' };
-    setInterval(async () => {
-      const h    = new Date().getHours();
-      const tod  = todayStr();
-      const tom  = tomorrowStr();
-      // 07h00: confirma agenda de hoje
-      if (h === 7 && _agendaSynced.today !== tod) {
-        _agendaSynced.today = tod;
-        syncAgenda(tod).catch(e => console.error('📅 Cron today:', e.message));
-      }
-      // 23h00: busca agenda de amanhã (post já saiu à noite)
-      if (h === 23 && _agendaSynced.tomorrow !== tom) {
-        _agendaSynced.tomorrow = tom;
-        syncAgenda(tom).catch(e => console.error('📅 Cron tomorrow:', e.message));
-      }
-    }, 30 * 60 * 1000);
+    setInterval(syncAndSave, 4 * 60 * 60 * 1000);
+    setInterval(enrichCache, 20 * 60 * 1000);
   })
   .catch(err => console.error('Erro ao inicializar DB:', err));
 
@@ -1324,7 +1304,7 @@ async function publishedSportsAgenda(date) {
   return manual ?? await automaticSportsAgenda(date);
 }
 
-registerSportsAdmin(app, db, requireAuth, automaticSportsAgenda, todayStr);
+registerSportsAdmin(app, db, requireAuth, automaticSportsAgenda, todayStr, getAgendaDraft);
 
 // Endpoint app: agenda esportiva de hoje (@EsportesNaTV)
 app.get('/matches/today', requireApiKey, async (req, res) => {

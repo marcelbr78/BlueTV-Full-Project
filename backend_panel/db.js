@@ -161,6 +161,12 @@ async function initDb() {
     created_at INTEGER NOT NULL
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS sports_agenda_draft (
+    date TEXT PRIMARY KEY,
+    matches TEXT NOT NULL,
+    source_key TEXT NOT NULL,
+    source_url TEXT NOT NULL
+  )`);
   await run(`CREATE TABLE IF NOT EXISTS sports_channels (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     channels TEXT NOT NULL
