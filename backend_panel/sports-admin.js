@@ -28,7 +28,11 @@ async function readPublishedAgenda(db, date) {
   return row ? JSON.parse(row.matches) : null;
 }
 
-function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr, getAgendaDraft) {
+function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAgenda, todayStr, getAgendaDraft) {
+  async function savedChannels() {
+    const row = await db.get('SELECT channels FROM sports_channels WHERE id = 1');
+    return row ? JSON.parse(row.channels) : baseChannels;
+  }
   async function calendar(date, published, preferDraft = false) {
     const draft = await getAgendaDraft(date);
     if (published !== null && !(preferDraft && draft)) {
@@ -51,9 +55,12 @@ function registerSportsAdmin(app, db, requireAuth, getAutomaticAgenda, todayStr,
     }
   };
 
-  app.get('/admin/sports/channels', requireAuth, route(async (req, res) => {
-    const row = await db.get('SELECT channels FROM sports_channels WHERE id = 1');
-    res.json({ channels: row ? JSON.parse(row.channels) : baseChannels, suggestions: baseChannels });
+  app.get('/app/sports/channels', requireApiKey, route(async (_req, res) => {
+    res.json({ channels: await savedChannels() });
+  }));
+
+  app.get('/admin/sports/channels', requireAuth, route(async (_req, res) => {
+    res.json({ channels: await savedChannels(), suggestions: baseChannels });
   }));
 
   app.put('/admin/sports/channels', requireAuth, route(async (req, res) => {
