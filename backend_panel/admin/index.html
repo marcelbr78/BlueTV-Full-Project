@@ -280,7 +280,7 @@
     </div>
 
     <div class="filters">
-      <input class="filter-input" id="fSearch" placeholder="🔍 Código ou WhatsApp..." oninput="filterClients()">
+      <input class="filter-input" id="fSearch" placeholder="Código, nome ou telefone" oninput="filterClients()">
       <select class="filter-input" id="fStatus" onchange="filterClients()">
         <option value="">Todos os status</option>
         <option value="ok">✅ Ativo</option>
@@ -303,7 +303,8 @@
           <tr>
             <th></th>
             <th>Código</th>
-            <th>WhatsApp</th>
+            <th>Nome</th>
+            <th>Telefone</th>
             <th>Status</th>
             <th>Servidor</th>
             <th>Usuário</th>
@@ -313,7 +314,7 @@
             <th>Ações</th>
           </tr>
         </thead>
-        <tbody id="clientsTable"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
+        <tbody id="clientsTable"><tr><td colspan="11" class="empty">Carregando...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -388,6 +389,19 @@
 
       <hr class="divider">
 
+      <form id="mdProfile" style="display:grid;gap:8px;margin-bottom:18px">
+        <label for="mdName">Nome do cliente</label>
+        <input class="filter-input" id="mdName" maxlength="120" autocomplete="name">
+        <label for="mdPhone">Telefone com DDD</label>
+        <input class="filter-input" id="mdPhone" type="tel" maxlength="25" autocomplete="tel">
+        <label for="mdProfileDate">Validade do cliente</label>
+        <input class="filter-input" id="mdProfileDate" type="date">
+        <div>
+          <button class="btn btn-primary" type="submit">Salvar ficha</button>
+          <span id="mdProfileStatus" role="status"></span>
+        </div>
+      </form>
+
       <!-- Servidor -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <span style="font-size:13px;font-weight:600;color:#aaa">🖥️ Servidor IPTV</span>
@@ -411,11 +425,11 @@
 
       <!-- Eventos -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:#aaa">📋 Histórico de Eventos</span>
-        <span style="font-size:11px;color:#444">atualizado quando app enviar logs</span>
+        <span style="font-size:13px;font-weight:600;color:#aaa">Histórico de canais</span>
+        <span style="font-size:11px;color:#444">Últimos 80 registros</span>
       </div>
       <div class="timeline" id="mdTimeline">
-        <div class="tl-empty">📱 Sem eventos registados<br><span style="color:#333;font-size:11px">Os eventos aparecerão aqui após a próxima atualização do APK</span></div>
+        <div class="tl-empty">Nenhum canal registrado.</div>
       </div>
 
     </div>
@@ -606,8 +620,14 @@ function ago(ts) {
   return `${Math.floor(s/86400)}d atrás`;
 }
 
+function htmlText(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+}
+
 function isOnline(c) {
-  return c.status !== 'inativo' && c.last_seen && (Date.now() - c.last_seen) < 3 * 60 * 1000;
+  return c.status !== 'inativo' && c.is_online !== 0 && c.last_seen && (Date.now() - c.last_seen) < 3 * 60 * 1000;
 }
 
 function closeModal(id) {
@@ -663,6 +683,7 @@ function filterClients() {
 
   let list = allClients.filter(c => {
     if (search && !((c.client_code||'').toLowerCase().includes(search)) &&
+                 !((c.customer_name||'').toLowerCase().includes(search)) &&
                  !((c.whatsapp_number||'').includes(search))) return false;
     if (status && c.status !== status) return false;
     if (online === 'on' && !isOnline(c)) return false;
@@ -678,7 +699,7 @@ function filterClients() {
 
   const tbody = document.getElementById('clientsTable');
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhum cliente encontrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="empty">Nenhum cliente encontrado</td></tr>';
     return;
   }
 
@@ -696,13 +717,14 @@ function filterClients() {
     <tr class="data-row" onclick="openDetail('${c.client_code}')">
       <td>${dot}</td>
       <td class="mono">${c.client_code||'—'}</td>
-      <td>${c.whatsapp_number||'—'}</td>
+      <td>${htmlText(c.customer_name || '—')}</td>
+      <td>${htmlText(c.whatsapp_number || '—')}</td>
       <td>${statusBadge}</td>
       <td style="font-size:11px;color:#888;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.host||''}">${host}</td>
       <td>${c.username||'—'}</td>
       <td>${c.validade||'—'}</td>
       <td style="font-size:11px;color:${on?'#00c853':'#555'}">${ago(c.last_seen)}</td>
-      <td style="font-size:11px;color:#888;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.current_channel||'—'}</td>
+      <td style="font-size:11px;color:#888;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlText(on ? c.current_channel || '—' : '—')}</td>
       <td onclick="event.stopPropagation()">
         ${blocked ? '' : c.status==='ok'
           ? `<button class="btn-sm btn-edit" onclick="abrirCred('editar','${c.client_code}','${c.host||''}','${c.username||''}','${c.password||''}','${c.validade||''}')">✏️</button>`
@@ -809,6 +831,46 @@ async function salvarClienteManual() {
 // ═══════════════ DETALHE DO CLIENTE ═══════════════
 let currentDetailCode = '';
 
+function fillProfile(client) {
+  document.getElementById('mdName').value = client?.customer_name || '';
+  document.getElementById('mdPhone').value = client?.whatsapp_number || '';
+  document.getElementById('mdProfileDate').value = client?.customer_validade || '';
+}
+
+document.getElementById('mdProfile').addEventListener('submit', async event => {
+  event.preventDefault();
+  const code = currentDetailCode;
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  const status = document.getElementById('mdProfileStatus');
+  const profile = {
+    name: document.getElementById('mdName').value,
+    phone: document.getElementById('mdPhone').value,
+    validade: document.getElementById('mdProfileDate').value
+  };
+  button.disabled = true;
+  status.textContent = 'Salvando…';
+  try {
+    const response = await fetch('/admin/clients/' + encodeURIComponent(code) + '/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile)
+    });
+    if (response.status === 401) { logout(); return; }
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Falha ao salvar.');
+    await loadClients();
+    if (currentDetailCode === code) {
+      const client = allClients.find(c => c.client_code === code);
+      if (client) applyLocalDetail(client);
+      status.textContent = 'Ficha salva.';
+    }
+  } catch (error) {
+    if (currentDetailCode === code) status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
 async function openDetail(code) {
   currentDetailCode = code;
   document.getElementById('mdTitle').textContent = `🔍 ${code}`;
@@ -818,12 +880,15 @@ async function openDetail(code) {
   // Dados básicos da lista local enquanto carrega
   const local = allClients.find(c => c.client_code === code);
   if (local) applyLocalDetail(local);
+  fillProfile(local);
+  document.getElementById('mdProfileStatus').textContent = '';
+  document.getElementById('mdTimeline').textContent = 'Carregando…';
 
   try {
     const r = await fetch(`/admin/client-detail/${code}`);
     if (!r.ok) return;
     const d = await r.json();
-    applyFullDetail(d);
+    if (currentDetailCode === code) applyFullDetail(d);
   } catch(e) {}
 }
 
@@ -834,7 +899,7 @@ function applyLocalDetail(c) {
     ? 'linear-gradient(90deg,#00c853,#00e676)' : 'none';
   document.getElementById('mdStatus').style['-webkit-text-fill-color'] = on ? '' : '#888';
   document.getElementById('mdLastSeen').textContent = ago(c.last_seen);
-  document.getElementById('mdChannel').textContent  = c.current_channel || '—';
+  document.getElementById('mdChannel').textContent  = on ? c.current_channel || '—' : '—';
   document.getElementById('mdDevice').textContent   = c.device_model || '—';
   document.getElementById('mdApk').textContent      = c.apk_version ? `v${c.apk_version}` : '—';
   document.getElementById('mdHost').textContent     = c.host || '—';
@@ -847,11 +912,11 @@ function applyFullDetail(d) {
   if (!d.appReq) return;
   const c  = d.appReq;
   const xc = d.xtream;
-  const on = c.last_seen && (Date.now() - c.last_seen) < 3 * 60 * 1000;
+  const on = isOnline(c);
 
   document.getElementById('mdStatus').textContent  = on ? '🟢 Online' : '⚫ Offline';
   document.getElementById('mdLastSeen').textContent = ago(c.last_seen) + (c.last_seen ? `\n${fmt(c.last_seen)}` : '');
-  document.getElementById('mdChannel').textContent  = c.current_channel || '—';
+  document.getElementById('mdChannel').textContent  = on ? c.current_channel || '—' : '—';
   document.getElementById('mdDevice').textContent   = c.device_model || '—';
   document.getElementById('mdApk').textContent      = c.apk_version ? `v${c.apk_version}` : '—';
   document.getElementById('mdErrors').textContent   = d.errorCount24h > 0 ? `⚠️ ${d.errorCount24h} erros` : '✅ Sem erros';
@@ -860,40 +925,20 @@ function applyFullDetail(d) {
     document.getElementById('mdHost').textContent     = xc.host || '—';
     document.getElementById('mdUser').textContent     = xc.username || '—';
     document.getElementById('mdPass').textContent     = xc.password || '—';
-    document.getElementById('mdValidade').textContent = xc.validade || '—';
+
   }
 
-  // Timeline
-  const tl = document.getElementById('mdTimeline');
-  if (!d.events || d.events.length === 0) {
-    tl.innerHTML = `<div class="tl-empty">📱 Sem eventos registados<br><span style="color:#333;font-size:11px">Os eventos aparecerão aqui após a próxima atualização do APK</span></div>`;
-    return;
-  }
-
-  tl.innerHTML = d.events.map(ev => {
-    const dotClass = ev.event === 'PLAY_START' ? 'play'
-      : ev.event === 'PLAY_READY' ? 'ready'
-      : ev.event === 'PLAY_ERROR' ? 'error'
-      : ev.event === 'PLAY_RETRY' ? 'retry'
-      : ev.event === 'NET_ERROR'  ? 'net' : 'other';
-
-    const detail = [
-      ev.channel  ? `📺 ${ev.channel}` : '',
-      ev.quality  ? `🎯 ${ev.quality}` : '',
-      ev.server_ms ? `⚡ ${ev.server_ms}ms` : '',
-      ev.error_msg ? `❌ ${ev.error_msg}` : '',
-    ].filter(Boolean).join(' · ');
-
-    return `
-    <div class="tl-item">
-      <div class="tl-dot ${dotClass}"></div>
-      <div class="tl-info">
-        <div class="tl-event">${ev.event}</div>
-        ${detail ? `<div class="tl-detail">${detail}</div>` : ''}
-      </div>
-      <div class="tl-time">${ago(ev.ts)}</div>
-    </div>`;
-  }).join('');
+  document.getElementById('mdValidade').textContent = c.customer_validade || xc?.validade || '—';
+  const timeline = document.getElementById('mdTimeline');
+  const events = d.events || [];
+  timeline.innerHTML = events.length
+    ? events.map(ev => `
+      <div class="tl-item">
+        <div class="tl-dot play"></div>
+        <div class="tl-info"><div class="tl-event">${htmlText(ev.channel || 'Canal')}</div></div>
+        <div class="tl-time">${fmt(ev.ts)}</div>
+      </div>`).join('')
+    : '<div class="tl-empty">Nenhum canal registrado.</div>';
 }
 
 // Testar conexão com servidor do cliente

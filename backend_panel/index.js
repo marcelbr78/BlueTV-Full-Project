@@ -469,11 +469,11 @@ app.get("/api/clients", requireAuth, async (req, res) => {
   try {
     const rows = await db.all(`
       SELECT
-        ar.id, ar.client_code, ar.whatsapp_number, ar.status,
+        ar.id, ar.client_code, ar.whatsapp_number, ar.customer_name, ar.customer_validade, ar.status,
         ar.created_at, ar.updated_at, ar.xtream_id,
         ar.device_model, ar.apk_version, ar.last_seen,
         ar.current_channel, ar.is_online,
-        xc.host, xc.username, xc.password, xc.validade, xc.m3u_url, xc.plano
+        xc.host, xc.username, xc.password, COALESCE(ar.customer_validade, xc.validade) AS validade, xc.m3u_url, xc.plano
       FROM app_requests ar
       LEFT JOIN xtream_credentials xc ON ar.xtream_id = xc.id
       ORDER BY ar.last_seen DESC NULLS LAST, ar.updated_at DESC
@@ -550,6 +550,34 @@ app.post('/admin/clients/manual', requireAuth, async (req, res) => {
 // =====================
 // ADMIN: DETALHE COMPLETO DO CLIENTE
 // =====================
+app.put('/admin/clients/:code/profile', requireAuth, async (req, res) => {
+  const code = req.params.code.trim().toUpperCase();
+  const name = String(req.body?.name ?? '').trim();
+  const inputPhone = String(req.body?.phone ?? '').trim();
+  const phone = inputPhone.replace(/\D/g, '');
+  const date = String(req.body?.validade ?? '').trim();
+  let validDate = !date;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const parsed = new Date(date);
+    validDate = Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date;
+  }
+  if (!/^BLUETV-[A-Z0-9]{5}$/.test(code) || name.length > 120 ||
+      (inputPhone && (!/^[+\d() .-]+$/.test(inputPhone) || !/^\d{10,15}$/.test(phone))) || !validDate) {
+    return res.status(400).json({ error: 'Confira o nome, o telefone com DDD e a data de validade.' });
+  }
+  try {
+    const result = await db.run(
+      'UPDATE app_requests SET customer_name = ?, whatsapp_number = ?, customer_validade = ?, updated_at = ? WHERE client_code = ?',
+      [name || null, phone || null, date || null, Date.now(), code]
+    );
+    if (!result.rowsAffected) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao salvar ficha de cliente:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível salvar a ficha.' });
+  }
+});
+
 app.get('/admin/client-detail/:code', requireAuth, async (req, res) => {
   try {
     const code = req.params.code.toUpperCase();
@@ -561,7 +589,7 @@ app.get('/admin/client-detail/:code', requireAuth, async (req, res) => {
       : null;
 
     const events = await db.all(
-      'SELECT * FROM client_events WHERE client_code = ? ORDER BY ts DESC LIMIT 80',
+      "SELECT * FROM client_events WHERE client_code = ? AND event = 'PLAY_START' ORDER BY ts DESC, id DESC LIMIT 80",
       [code]
     ).catch(() => []);
 
@@ -652,7 +680,9 @@ app.post('/admin/client-reativar', requireAuth, async (req, res) => {
     // Restaura para 'ok' se tinha credenciais, ou 'pending'
     const novoStatus = row.xtream_id ? 'ok' : 'pending';
     await db.run(
-      `UPDATE app_requests SET status = ?, updated_at = ? WHERE client_code = ?`,
+      `UPDATE app_requests SET status = ?, updated_at = ?,
+         current_channel = CASE WHEN status = 'inativo' THEN NULL ELSE current_channel END
+       WHERE client_code = ?`,
       [novoStatus, now, code]
     );
     console.log(`♻️  Cliente reativado: ${code} → ${novoStatus}`);
@@ -1143,7 +1173,7 @@ app.get('/app/status/bluetv/:clientId', async (req, res) => {
             host: resolvedHost,
             username: resolvedUser,
             password: resolvedPass,
-            validade: xtream.validade || null,
+            validade: appRequest.customer_validade || xtream.validade || null,
             m3u_url: xtream.m3u_url || `${resolvedHost}/get.php?username=${resolvedUser}&password=${resolvedPass}&type=m3u_plus&output=mpegts`,
             plano: xtream.plano
           }
@@ -1440,7 +1470,8 @@ app.post('/webhook/botbot', async (req, res) => {
 // Heartbeat — APK envia a cada 30s para dizer que está online
 app.post('/app/heartbeat', requireApiKey, async (req, res) => {
   try {
-    const { client_code, device_model, apk_version, current_channel } = req.body;
+    const { client_code, device_model, apk_version, current_channel, watching } = req.body;
+    const channel = typeof current_channel === 'string' ? current_channel.trim().slice(0, 200) : null;
     if (!client_code) return res.status(400).json({ success: false });
 
     const now = Date.now();
@@ -1450,10 +1481,10 @@ app.post('/app/heartbeat', requireApiKey, async (req, res) => {
         last_seen = ?,
         device_model = COALESCE(?, device_model),
         apk_version = COALESCE(?, apk_version),
-        current_channel = COALESCE(?, current_channel),
+        current_channel = CASE WHEN ? = 1 THEN NULL ELSE COALESCE(?, current_channel) END,
         updated_at = ?
        WHERE client_code = ? AND status <> 'inativo'`,
-      [now, device_model || null, apk_version || null, current_channel || null, now, client_code.toUpperCase()]
+      [now, device_model || null, apk_version || null, watching === false ? 1 : 0, channel || null, now, client_code.toUpperCase()]
     );
 
     return res.json({ success: true, timestamp: now });

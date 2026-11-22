@@ -94,7 +94,9 @@ async function initDb() {
     "ALTER TABLE app_requests ADD COLUMN apk_version TEXT",
     "ALTER TABLE app_requests ADD COLUMN last_seen INTEGER",
     "ALTER TABLE app_requests ADD COLUMN current_channel TEXT",
-    "ALTER TABLE app_requests ADD COLUMN is_online INTEGER DEFAULT 0"
+    "ALTER TABLE app_requests ADD COLUMN is_online INTEGER DEFAULT 0",
+    "ALTER TABLE app_requests ADD COLUMN customer_name TEXT",
+    "ALTER TABLE app_requests ADD COLUMN customer_validade TEXT"
   ];
   for (const sql of colsToAdd) {
     await run(sql).catch(() => {}); // ignora se já existe
@@ -124,6 +126,16 @@ async function initDb() {
   )`);
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_code ON client_events(client_code)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_ts ON client_events(ts)`);
+  await run(`CREATE TRIGGER IF NOT EXISTS record_watched_channel
+    AFTER UPDATE OF current_channel ON app_requests
+    WHEN NEW.status = 'ok' AND NEW.current_channel IS NOT NULL
+         AND NEW.current_channel <> '' AND NEW.current_channel IS NOT OLD.current_channel
+    BEGIN
+      INSERT INTO client_events (client_code, event, channel, apk_version, ts)
+      VALUES (NEW.client_code, 'PLAY_START', NEW.current_channel, NEW.apk_version, COALESCE(NEW.last_seen, NEW.updated_at, 0));
+    END
+  `);
+
 
   // ── FUTEBOL ──────────────────────────────────────────────
   await run(`CREATE TABLE IF NOT EXISTS football_matches (
