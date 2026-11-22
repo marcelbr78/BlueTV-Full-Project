@@ -1,3 +1,5 @@
+const { normalizePremiereAgenda } = require('../sports-channels');
+
 const league = 'Brasileirão Série A';
 const saoPaulo = 'America/Sao_Paulo';
 const dateFormatter = new Intl.DateTimeFormat('sv-SE', {
@@ -96,7 +98,7 @@ function completeSerieA(date, original, feed = [], preserveExisting = false) {
       });
     }
   }
-  if (!fixtures.size) return original;
+  if (!fixtures.size) return normalizePremiereAgenda(original);
 
   const merged = [...original];
   for (const [key, fixture] of fixtures) {
@@ -105,7 +107,8 @@ function completeSerieA(date, original, feed = [], preserveExisting = false) {
     else if (!preserveExisting) merged[existing] = { ...merged[existing], ...fixture };
   }
 
-  return merged.sort((left, right) => String(left.time ?? '').localeCompare(String(right.time ?? '')));
+  merged.sort((left, right) => String(left.time ?? '').localeCompare(String(right.time ?? '')));
+  return normalizePremiereAgenda(merged);
 }
 
 function completePublishedSerieA(date, matches) {

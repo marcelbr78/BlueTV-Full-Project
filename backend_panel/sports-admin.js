@@ -1,4 +1,4 @@
-const { baseChannels } = require('./sports-channels');
+const { baseChannels, normalizePremiereChannels } = require('./sports-channels');
 const { completePublishedSerieA } = require('./services/brasileirao-agenda');
 
 function isCalendarDate(value) {
@@ -21,7 +21,7 @@ function normalizeChannels(values) {
     const name = value.trim();
     if (!unique.has(name.toLowerCase())) unique.set(name.toLowerCase(), name);
   }
-  return [...unique.values()];
+  return normalizePremiereChannels([...unique.values()]);
 }
 
 async function readPublishedAgenda(db, date) {
@@ -32,7 +32,7 @@ async function readPublishedAgenda(db, date) {
 function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAgenda, todayStr, getAgendaDraft) {
   async function savedChannels() {
     const row = await db.get('SELECT channels FROM sports_channels WHERE id = 1');
-    return row ? JSON.parse(row.channels) : baseChannels;
+    return row ? normalizePremiereChannels(JSON.parse(row.channels)) : baseChannels;
   }
   async function calendar(date, published, preferDraft = false) {
     const draft = await getAgendaDraft(date);
