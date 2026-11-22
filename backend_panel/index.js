@@ -453,7 +453,7 @@ app.delete("/api/deletar/:id", requireAuth, async (req, res) => {
 // =====================
 // DEBUG - VER MENSAGENS DO BOTBOT
 // =====================
-app.get("/api/debug/botbot", async (req, res) => {
+app.get("/api/debug/botbot", requireAuth, async (req, res) => {
   try {
     const rows = await db.all("SELECT id, phone, message, received_at FROM botbot_messages ORDER BY id DESC", []);
     res.json(rows);
@@ -462,6 +462,62 @@ app.get("/api/debug/botbot", async (req, res) => {
     return res.status(500).json({ error: "Erro ao buscar dados" });
   }
 });
+app.get('/admin/whatsapp/conversations', requireAuth, async (req, res) => {
+  try {
+    const conversations = await db.all(`
+      WITH threads AS (
+        SELECT phone, MAX(id) AS latest_id, COUNT(*) AS message_count
+        FROM botbot_messages
+        GROUP BY phone
+      )
+      SELECT threads.*, latest.received_at, SUBSTR(latest.message, 1, 160) AS preview,
+        (SELECT customer_name FROM app_requests
+          WHERE whatsapp_number = threads.phone AND customer_name IS NOT NULL
+          ORDER BY updated_at DESC LIMIT 1) AS customer_name
+      FROM threads JOIN botbot_messages latest ON latest.id = threads.latest_id
+      ORDER BY threads.latest_id DESC
+    `);
+    res.json({ conversations });
+  } catch (error) {
+    console.error('Erro ao listar conversas:', error.code || error.name);
+    res.status(500).json({ error: 'Não foi possível carregar as conversas.' });
+  }
+});
+
+app.get('/admin/whatsapp/conversations/:id', requireAuth, async (req, res) => {
+  try {
+    const thread = await db.get('SELECT phone FROM botbot_messages WHERE id = ?', [req.params.id]);
+    if (!thread) return res.status(404).json({ error: 'Conversa não encontrada. Atualize a lista.' });
+    const before = Number(req.query.before || Number(req.params.id) + 1);
+    if (!Number.isSafeInteger(before) || before < 1) return res.status(400).json({ error: 'Página inválida.' });
+    const rows = await db.all(`
+      SELECT id, message, received_at FROM botbot_messages
+      WHERE phone IS ? AND id < ? ORDER BY id DESC LIMIT 51
+    `, [thread.phone, before]);
+    res.json({ messages: rows.slice(0, 50), has_more: rows.length > 50 });
+  } catch (error) {
+    console.error('Erro ao carregar conversa:', error.code || error.name);
+    res.status(500).json({ error: 'Não foi possível abrir a conversa.' });
+  }
+});
+
+app.delete('/admin/whatsapp/conversations/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ error: 'Conversa inválida.' });
+  try {
+    const result = await db.run(`
+      WITH target AS MATERIALIZED (SELECT phone FROM botbot_messages WHERE id = ?)
+      DELETE FROM botbot_messages
+      WHERE id <= ? AND EXISTS (SELECT 1 FROM target WHERE phone IS botbot_messages.phone)
+    `, [id, id]);
+    if (!result.rowsAffected) return res.status(404).json({ error: 'Conversa não encontrada. Atualize a lista.' });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao excluir conversa:', error.code || error.name);
+    res.status(500).json({ error: 'Não foi possível excluir o histórico.' });
+  }
+});
+
 // =====================
 // API: LISTAR CLIENTES (DO BANCO)
 // =====================

@@ -304,7 +304,7 @@
             <th></th>
             <th>Código</th>
             <th>Nome</th>
-            <th>Telefone</th>
+            <th>WhatsApp</th>
             <th>Status</th>
             <th>Servidor</th>
             <th>Usuário</th>
@@ -325,12 +325,11 @@
       <h2>💬 Mensagens WhatsApp</h2>
       <button class="refresh-btn" onclick="loadMessages()">🔄 Atualizar</button>
     </div>
-    <div class="box" style="padding:0;overflow:hidden">
-      <table>
-        <thead><tr><th>ID</th><th>Telefone</th><th>Mensagem</th><th>Recebido em</th></tr></thead>
-        <tbody id="messagesTable"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
-      </table>
+    <div class="filters">
+      <input class="filter-input" id="whatsappSearch" type="search" aria-label="Buscar conversa" placeholder="Buscar por nome ou telefone">
     </div>
+    <div id="whatsappStatus" role="status"></div>
+    <div id="whatsappThreads" class="box" style="padding:0"></div>
   </div>
 
   <!-- ═══════════════ XTREAM ═══════════════ -->
@@ -394,6 +393,16 @@
         <input class="filter-input" id="mdName" maxlength="120" autocomplete="name">
         <label for="mdPhone">Telefone com DDD</label>
         <input class="filter-input" id="mdPhone" type="tel" maxlength="25" autocomplete="tel">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-sm btn-edit" id="mdCopyPhone" type="button">Copiar número</button>
+          <select class="filter-input" id="mdWhatsappTemplate" aria-label="Mensagem pronta">
+            <option value="">Conversa sem mensagem pronta</option>
+            <option value="activation">Ativação</option>
+            <option value="expiry">Validade</option>
+            <option value="renewal">Renovação</option>
+          </select>
+          <button class="btn-sm btn-edit" id="mdOpenWhatsapp" type="button">Abrir WhatsApp</button>
+        </div>
         <label for="mdProfileDate">Validade do cliente</label>
         <input class="filter-input" id="mdProfileDate" type="date">
         <div>
@@ -718,7 +727,7 @@ function filterClients() {
       <td>${dot}</td>
       <td class="mono">${c.client_code||'—'}</td>
       <td>${htmlText(c.customer_name || '—')}</td>
-      <td>${htmlText(c.whatsapp_number || '—')}</td>
+      <td>${whatsappUrl(c.whatsapp_number) ? `<a class="btn-sm btn-edit" href="${htmlText(whatsappUrl(c.whatsapp_number))}" onclick="event.stopPropagation()" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : '—'}</td>
       <td>${statusBadge}</td>
       <td style="font-size:11px;color:#888;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.host||''}">${host}</td>
       <td>${c.username||'—'}</td>
@@ -837,6 +846,35 @@ function fillProfile(client) {
   document.getElementById('mdProfileDate').value = client?.customer_validade || '';
 }
 
+document.getElementById('mdCopyPhone').addEventListener('click', async () => {
+  const phone = document.getElementById('mdPhone');
+  if (!phone.value.trim()) return;
+  const status = document.getElementById('mdProfileStatus');
+  try {
+    await navigator.clipboard.writeText(phone.value.trim());
+    status.textContent = 'Número copiado.';
+  } catch {
+    phone.select();
+    status.textContent = 'Selecione Copiar para guardar o número.';
+  }
+});
+
+document.getElementById('mdOpenWhatsapp').addEventListener('click', () => {
+  const name = document.getElementById('mdName').value.trim();
+  const greeting = name ? 'Olá, ' + name + '!' : 'Olá!';
+  const date = document.getElementById('mdProfileDate').value.split('-').reverse().join('/') ||
+    allClients.find(client => client.client_code === currentDetailCode)?.validade;
+  const templates = {
+    activation: greeting + ' Vamos ativar sua TV Box. O código do aparelho é ' + currentDetailCode + '.',
+    expiry: greeting + (date ? ' Sua assinatura é válida até ' + date + '.' : ' Entre em contato para consultar a validade da sua assinatura.'),
+    renewal: greeting + ' Vamos renovar sua assinatura? Responda esta mensagem para combinar a renovação.'
+  };
+  const link = whatsappUrl(document.getElementById('mdPhone').value,
+    templates[document.getElementById('mdWhatsappTemplate').value]);
+  if (link) window.open(link, '_blank', 'noopener,noreferrer');
+  else document.getElementById('mdProfileStatus').textContent = 'Informe um telefone válido com DDD.';
+});
+
 document.getElementById('mdProfile').addEventListener('submit', async event => {
   event.preventDefault();
   const code = currentDetailCode;
@@ -881,6 +919,7 @@ async function openDetail(code) {
   const local = allClients.find(c => c.client_code === code);
   if (local) applyLocalDetail(local);
   fillProfile(local);
+  document.getElementById('mdWhatsappTemplate').value = '';
   document.getElementById('mdProfileStatus').textContent = '';
   document.getElementById('mdTimeline').textContent = 'Carregando…';
 
@@ -1027,21 +1066,111 @@ async function salvarCredenciais() {
 }
 
 // ═══════════════ MENSAGENS ═══════════════
+let whatsappThreads = [];
+const whatsappSearch = document.getElementById('whatsappSearch');
+const whatsappStatus = document.getElementById('whatsappStatus');
+whatsappSearch.addEventListener('input', renderMessages);
+
+function whatsappUrl(value, text = '') {
+  const digits = String(value || '').replace(/\D/g, '');
+  const phone = digits.length === 10 || digits.length === 11 ? '55' + digits : digits;
+  if (!/^\d{10,15}$/.test(phone)) return '';
+  return 'https://wa.me/' + phone + (text ? '?text=' + encodeURIComponent(text) : '');
+}
+
+async function whatsappRequest(path = '', options) {
+  const response = await fetch('/admin/whatsapp/conversations' + path, options);
+  if (response.status === 401) logout();
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Falha ao acessar o histórico.');
+  return data;
+}
+
 async function loadMessages() {
+  whatsappStatus.textContent = '';
   try {
-    const r = await fetch('/api/debug/botbot');
-    const data = await r.json();
-    document.getElementById('badgeMessages').textContent = data.length;
-    const tbody = document.getElementById('messagesTable');
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhuma mensagem</td></tr>'; return; }
-    tbody.innerHTML = data.map(m => `
-      <tr>
-        <td>${m.id}</td>
-        <td>${m.phone||'—'}</td>
-        <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#888;font-size:12px" title="${(m.message||'').replace(/"/g,'&quot;')}">${m.message||'—'}</td>
-        <td style="font-size:12px">${fmt(m.received_at)}</td>
-      </tr>`).join('');
-  } catch(e) {}
+    const data = await whatsappRequest();
+    whatsappThreads = data.conversations;
+    document.getElementById('badgeMessages').textContent = whatsappThreads.length;
+    renderMessages();
+    return true;
+  } catch (error) {
+    whatsappStatus.textContent = error.message;
+    return false;
+  }
+}
+
+function renderMessages() {
+  const search = whatsappSearch.value.trim().toLowerCase();
+  const digits = search.replace(/\D/g, '');
+  const list = whatsappThreads.filter(thread =>
+    !search || (thread.customer_name || '').toLowerCase().includes(search) ||
+    (digits && String(thread.phone || '').includes(digits)));
+  const container = document.getElementById('whatsappThreads');
+  container.innerHTML = list.length ? list.map(thread => {
+    const link = whatsappUrl(thread.phone);
+    return `<details data-thread="${Number(thread.latest_id)}" style="padding:14px 16px;border-bottom:1px solid #ffffff16">
+      <summary style="cursor:pointer">
+        <strong>${htmlText(thread.customer_name || thread.phone || 'Telefone indisponível')}</strong>
+        <span style="margin-left:8px;color:#aaa">${htmlText(fmt(thread.received_at))} · ${Number(thread.message_count)} mensagens</span>
+        <div style="color:#aaa;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlText(thread.preview || '')}</div>
+      </summary>
+      <div style="margin:12px 0;display:flex;gap:8px">
+        ${link ? `<a class="btn btn-sm btn-edit" href="${htmlText(link)}" target="_blank" rel="noopener noreferrer">Abrir no WhatsApp</a>` : ''}
+        <button class="btn btn-sm btn-edit" type="button" data-delete>Excluir histórico</button>
+      </div>
+      <div data-history style="max-height:400px;overflow:auto"></div>
+      <button class="btn-sm btn-edit" type="button" data-more hidden>Ver mensagens anteriores</button>
+      <p data-error role="status"></p>
+    </details>`;
+  }).join('') : '<div class="empty">Nenhuma conversa encontrada.</div>';
+  container.querySelectorAll('details').forEach(thread => {
+    const id = thread.dataset.thread;
+    const history = thread.querySelector('[data-history]');
+    const more = thread.querySelector('[data-more]');
+    const message = thread.querySelector('[data-error]');
+    const remove = thread.querySelector('[data-delete]');
+    let before, loading = false, loaded = false;
+    async function loadHistory() {
+      if (loading) return;
+      loading = true;
+      more.disabled = true;
+      message.textContent = 'Carregando…';
+      try {
+        const data = await whatsappRequest('/' + id + (before ? '?before=' + before : ''));
+        history.insertAdjacentHTML('beforeend', data.messages.map(item => `
+          <article style="padding:8px 0;border-bottom:1px solid #ffffff16">
+            <small>${htmlText(fmt(item.received_at))}</small>
+            <div style="white-space:pre-wrap;overflow-wrap:anywhere">${htmlText(item.message || '—')}</div>
+          </article>`).join(''));
+        before = data.messages.at(-1)?.id;
+        more.hidden = !data.has_more;
+        loaded = true;
+        message.textContent = '';
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        more.disabled = false;
+        loading = false;
+      }
+    }
+    thread.addEventListener('toggle', () => { if (thread.open && !loaded) loadHistory(); });
+    more.addEventListener('click', loadHistory);
+    remove.addEventListener('click', async () => {
+      if (!confirm('Excluir as mensagens desta conversa do painel? As mensagens no WhatsApp serão preservadas.')) return;
+      remove.disabled = true;
+      try {
+        await whatsappRequest('/' + id, { method: 'DELETE' });
+        const refreshed = await loadMessages();
+        whatsappStatus.textContent = refreshed ? 'Histórico excluído do painel.' :
+          'Histórico excluído. Atualize a lista para conferir.';
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        remove.disabled = false;
+      }
+    });
+  });
 }
 
 // ═══════════════ XTREAM ═══════════════

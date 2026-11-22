@@ -57,6 +57,7 @@ async function initDb() {
     message TEXT,
     received_at INTEGER
   )`);
+  await run("CREATE INDEX IF NOT EXISTS idx_botbot_phone_id ON botbot_messages(phone, id)");
   await run(`CREATE TABLE IF NOT EXISTS xtream_credentials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     request_id TEXT,
