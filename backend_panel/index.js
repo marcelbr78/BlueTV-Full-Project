@@ -1342,7 +1342,8 @@ app.post('/admin/agenda-sync', requireAuth, async (req, res) => {
   const target = date || todayStr();
   try {
     const result = await syncAgenda(target);
-    res.json({ ok: true, date: target, count: result ? result.length : 0 });
+    if (!result) return res.status(502).json({ error: 'Não foi possível importar a programação para esta data. A agenda salva foi preservada.' });
+    res.json({ ok: true, date: target, count: result.length });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

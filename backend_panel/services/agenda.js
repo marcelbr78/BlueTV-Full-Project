@@ -7,41 +7,13 @@
 const https = require('https');
 const http  = require('http');
 const db    = require('../db');
+const { findBroadcasts } = require('../sports-channels');
 
 // ─── Nitter (instâncias fallback) ─────────────────────────────────────────────
 const NITTER_INSTANCES = [
   'https://nitter.net',
   'https://nitter.privacydev.net',
   'https://nitter.poast.org',
-];
-
-// ─── Canais IPTV conhecidos (ordem importa: mais específico primeiro) ─────────
-const IPTV_CHANNELS = [
-  'ESPN 5', 'ESPN5',
-  'ESPN 4', 'ESPN4',
-  'ESPN 3', 'ESPN3',
-  'ESPN 2', 'ESPN2',
-  'ESPN',
-  'SPORTV 3', 'SPORTV3',
-  'SPORTV 2', 'SPORTV2',
-  'SPORTV',
-  'BANDSPORTS', 'BAND SPORTS',
-  'BAND',
-  'XSPORTS',
-  'PREMIERE',
-  'COMBATE',
-  'TNT', 'MAX',
-  'RECORD',
-  'SBT',
-  'GLOBO',
-  'SPACE',
-];
-
-// ─── Streaming (filtrar — não estão no IPTV) ──────────────────────────────────
-const STREAMING_KEYWORDS = [
-  'youtube', 'prime video', 'disney+', 'globoplay', 'dazn',
-  'cazé', 'uol esporte', 'metrópoles', 'paulistão',
-  'sportynet', 'goat', 'espn brasil', 'nbc', 'canal goat',
 ];
 
 // ─── Fetch HTTP/HTTPS ─────────────────────────────────────────────────────────
@@ -66,28 +38,6 @@ function fetchUrl(url) {
     req.on('error', reject);
     req.setTimeout(25000, () => { req.destroy(); reject(new Error('timeout')); });
   });
-}
-
-// ─── Normalização de canais ───────────────────────────────────────────────────
-function normalizeChannel(raw) {
-  let name = raw.trim();
-  // Remove indicadores de qualidade
-  name = name.replace(/\s*(FHD²?|HD²?|SD²?|4K)\s*/gi, '').trim();
-  // ESPN2 → ESPN 2, SPORTV2 → SPORTV 2
-  name = name.replace(/^(ESPN|SPORTV)(\d+)$/i, (_, a, b) => `${a.toUpperCase()} ${b}`);
-  return name.trim();
-}
-
-function isStreaming(channel) {
-  const lower = channel.toLowerCase();
-  return STREAMING_KEYWORDS.some(kw => lower.includes(kw));
-}
-
-function extractChannels(raw) {
-  if (!raw || !raw.trim()) return [];
-  return raw.split(',')
-    .map(p => normalizeChannel(p.trim()))
-    .filter(p => p.length > 0 && !isStreaming(p));
 }
 
 // ─── Nitter RSS ───────────────────────────────────────────────────────────────
@@ -185,30 +135,9 @@ function parseOcrText(text) {
     const afterX  = rest.slice(xMatch.index + xMatch[0].length).trim();
 
     // ── Detecta canal no final de afterX ─────────────────────────────────────
-    let teamB     = afterX;
-    let channelRaw = '';
-
-    // Procura pelo primeiro canal IPTV conhecido em afterX
-    for (const ch of IPTV_CHANNELS) {
-      const re = new RegExp(`\\b${ch.replace(/\s+/g, '\\s+')}\\b`, 'i');
-      const idx = afterX.search(re);
-      if (idx !== -1) {
-        teamB      = afterX.slice(0, idx).trim().replace(/[,;.\s]+$/, '');
-        channelRaw = afterX.slice(idx).trim();
-        break;
-      }
-    }
-
-    // Se não achou canal IPTV, pelo menos remove streaming do teamB
-    if (!channelRaw) {
-      for (const kw of STREAMING_KEYWORDS) {
-        const idx = teamB.toLowerCase().indexOf(kw);
-        if (idx !== -1) {
-          teamB = teamB.slice(0, idx).trim().replace(/[,;.\s]+$/, '');
-          break;
-        }
-      }
-    }
+    const broadcast = findBroadcasts(afterX);
+    let teamB = broadcast.start < 0 ? afterX : afterX.slice(0, broadcast.start);
+    teamB = teamB.trim().replace(/[,;.\s]+$/, '');
 
     // ── Separa liga e time A em beforeX ──────────────────────────────────────
     const words = beforeX.split(/\s+/).filter(Boolean);
@@ -229,7 +158,7 @@ function parseOcrText(text) {
 
     if (!teamA || !teamB) continue;
 
-    const channels = extractChannels(channelRaw);
+    const channels = broadcast.channels;
 
     results.push({
       id:         results.length + 1,
@@ -288,6 +217,8 @@ async function syncAgenda(targetDate) {
         console.error(`📅 Erro OCR imagem ${i + 1}:`, e.message);
       }
     }
+
+    if (allMatches.length === 0) return null;
 
     // Re-numera IDs
     allMatches.forEach((m, i) => { m.id = i + 1; });
