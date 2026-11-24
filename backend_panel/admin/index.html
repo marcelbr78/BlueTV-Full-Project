@@ -281,8 +281,10 @@
       </form>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <p id="blueTvReleaseStatus" role="status"></p>
-        <a class="btn btn-primary" id="blueTvDownload" href="/admin/bluetv/apk/latest" download hidden style="text-decoration:none">Baixar APK da versão atual</a>
+        <button class="btn btn-primary" id="blueTvDownload" type="button" hidden>Baixar APK da versão atual</button>
+        <a id="blueTvDownloadDirect" href="/admin/bluetv/apk/latest" hidden style="color:#00d4ff">Link direto do APK</a>
       </div>
+      <div id="blueTvDownloadStatus" role="status"></div>
     </div>
     <div class="box" style="padding:16px">
       <h3>Histórico de atualizações</h3>
@@ -690,6 +692,43 @@ const blueTvReleaseForm = document.getElementById('blueTvReleaseForm');
 const blueTvReleaseStatus = document.getElementById('blueTvReleaseStatus');
 const blueTvReleaseHistory = document.getElementById('blueTvReleaseHistory');
 const blueTvDownload = document.getElementById('blueTvDownload');
+const blueTvDownloadDirect = document.getElementById('blueTvDownloadDirect');
+const blueTvDownloadStatus = document.getElementById('blueTvDownloadStatus');
+
+blueTvDownload.addEventListener('click', async () => {
+  blueTvDownload.disabled = true;
+  blueTvDownloadStatus.textContent = 'Baixando o APK…';
+  const fetchApk = async () => {
+    const response = await fetch(blueTvDownloadDirect.href, { cache: 'no-store' });
+    if (response.status >= 500) throw new Error('Download indisponível');
+    return { response, apk: response.ok ? await response.blob() : null };
+  };
+  try {
+    const { response, apk } = await fetchApk().catch(fetchApk);
+    if (response.status === 401) {
+      blueTvDownloadStatus.textContent = 'Sua sessão expirou. Entre novamente no painel para baixar o APK.';
+      return;
+    }
+    if (!apk || !apk.size) {
+      blueTvDownloadStatus.textContent = 'O painel não encontrou um APK publicado.';
+      return;
+    }
+    const url = URL.createObjectURL(apk);
+    const link = document.createElement('a');
+    const disposition = response.headers.get('Content-Disposition');
+    link.href = url;
+    link.download = disposition?.match(/filename="(BlueTV-[0-9.]+\.apk)"/)?.[1] || 'BlueTV.apk';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    blueTvDownloadStatus.textContent = 'APK enviado para os downloads do navegador.';
+  } catch {
+    blueTvDownloadStatus.textContent = 'O download foi interrompido. Tente baixar novamente.';
+  } finally {
+    blueTvDownload.disabled = false;
+  }
+});
 
 async function loadBlueTvReleases() {
   try {
@@ -699,7 +738,7 @@ async function loadBlueTvReleases() {
     blueTvReleaseStatus.textContent = data.release
       ? 'Versão atual: ' + data.release.version_name + ' (código ' + data.release.version_code + ')'
       : 'Nenhuma versão publicada ainda.';
-    blueTvDownload.hidden = !data.release;
+    blueTvDownload.hidden = blueTvDownloadDirect.hidden = !data.release;
     blueTvReleaseHistory.replaceChildren();
     for (const release of data.history || []) {
       const article = document.createElement('article');
@@ -713,7 +752,7 @@ async function loadBlueTvReleases() {
       blueTvReleaseHistory.append(article);
     }
   } catch (error) {
-    blueTvDownload.hidden = true;
+    blueTvDownload.hidden = blueTvDownloadDirect.hidden = true;
     blueTvReleaseStatus.textContent = error.message;
   }
 }
