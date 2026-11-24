@@ -279,7 +279,10 @@
           <button class="btn btn-primary" id="blueTvPublish" type="submit">Enviar e publicar</button>
         </div>
       </form>
-      <p id="blueTvReleaseStatus" role="status"></p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <p id="blueTvReleaseStatus" role="status"></p>
+        <a class="btn btn-primary" id="blueTvDownload" href="/admin/bluetv/apk/latest" download hidden style="text-decoration:none">Baixar APK da versão atual</a>
+      </div>
     </div>
     <div class="box" style="padding:16px">
       <h3>Histórico de atualizações</h3>
@@ -686,6 +689,7 @@ marioUnpublish.addEventListener('click', () => {
 const blueTvReleaseForm = document.getElementById('blueTvReleaseForm');
 const blueTvReleaseStatus = document.getElementById('blueTvReleaseStatus');
 const blueTvReleaseHistory = document.getElementById('blueTvReleaseHistory');
+const blueTvDownload = document.getElementById('blueTvDownload');
 
 async function loadBlueTvReleases() {
   try {
@@ -695,6 +699,7 @@ async function loadBlueTvReleases() {
     blueTvReleaseStatus.textContent = data.release
       ? 'Versão atual: ' + data.release.version_name + ' (código ' + data.release.version_code + ')'
       : 'Nenhuma versão publicada ainda.';
+    blueTvDownload.hidden = !data.release;
     blueTvReleaseHistory.replaceChildren();
     for (const release of data.history || []) {
       const article = document.createElement('article');
@@ -708,6 +713,7 @@ async function loadBlueTvReleases() {
       blueTvReleaseHistory.append(article);
     }
   } catch (error) {
+    blueTvDownload.hidden = true;
     blueTvReleaseStatus.textContent = error.message;
   }
 }
