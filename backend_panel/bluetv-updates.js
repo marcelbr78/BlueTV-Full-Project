@@ -21,6 +21,25 @@ module.exports = function registerBlueTvUpdates(app, db, requireAuth, requireApi
     }
   };
 
+  const sendApk = async (res, versionCode) => {
+    const rows = await db.all(
+      `SELECT release.version_name, release.apk_size, chunk.data
+       FROM bluetv_releases AS release
+       LEFT JOIN bluetv_update_chunks AS chunk ON chunk.version_code = release.version_code
+       WHERE release.version_code = COALESCE(?, (SELECT MAX(version_code) FROM bluetv_releases))
+       ORDER BY chunk.chunk_index`,
+      [versionCode]
+    );
+    const release = rows[0];
+    if (!release) return res.status(404).json({ error: 'APK não encontrado.' });
+    if (release.data === null) return res.status(404).json({ error: 'APK não disponível.' });
+    res.attachment(`BlueTV-${release.version_name}.apk`);
+    res.set('Content-Type', 'application/vnd.android.package-archive');
+    res.set('Content-Length', String(release.apk_size));
+    for (const row of rows) res.write(Buffer.from(row.data));
+    res.end();
+  };
+
   const readReleaseNotes = notes => {
     if (typeof notes !== 'string' || !notes.trim() || notes.length > MAX_NOTES_CHARS) return null;
     const version = notes.match(/^Vers[aã]o:\s*(1\.0\.\d{3,})\s*$/im)?.[1];
@@ -39,19 +58,11 @@ module.exports = function registerBlueTvUpdates(app, db, requireAuth, requireApi
 
   app.get('/app/bluetv/apk/:versionCode', requireApiKey, (req, res) => respond(req, res, async () => {
     const code = Number(req.params.versionCode);
-    const release = await db.get('SELECT version_code, version_name, apk_size FROM bluetv_releases WHERE version_code = ?', [code]);
-    if (!release) return res.status(404).json({ error: 'APK não encontrado.' });
-    const chunks = await db.all(
-      'SELECT data FROM bluetv_update_chunks WHERE version_code = ? ORDER BY chunk_index', [code]
-    );
-    if (!chunks.length) return res.status(404).json({ error: 'APK não disponível.' });
-    res.status(200);
-    res.set('Content-Type', 'application/vnd.android.package-archive');
-    res.set('Content-Length', String(release.apk_size));
-    res.set('Content-Disposition', `attachment; filename="BlueTV-${release.version_name}.apk"`);
-    for (const chunk of chunks) res.write(Buffer.from(chunk.data));
-    res.end();
+    if (!Number.isSafeInteger(code)) return res.status(404).json({ error: 'APK não encontrado.' });
+    await sendApk(res, code);
   }));
+
+  app.get('/admin/bluetv/apk/latest', requireAuth, (req, res) => respond(req, res, () => sendApk(res, null)));
 
   app.get('/admin/bluetv/update', requireAuth, (req, res) => respond(req, res, async () => {
     const release = await latest();
