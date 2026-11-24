@@ -457,9 +457,9 @@
 
       <form id="mdProfile" style="display:grid;gap:8px;margin-bottom:18px">
         <label for="mdName">Nome do cliente</label>
-        <input class="filter-input" id="mdName" maxlength="120" autocomplete="name">
+        <input class="filter-input" id="mdName" maxlength="120" autocomplete="name" placeholder="Nome não cadastrado">
         <label for="mdPhone">Telefone com DDD</label>
-        <input class="filter-input" id="mdPhone" type="tel" maxlength="25" autocomplete="tel">
+        <input class="filter-input" id="mdPhone" type="tel" maxlength="25" autocomplete="tel" placeholder="Telefone não cadastrado">
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-sm btn-edit" id="mdCopyPhone" type="button">Copiar número</button>
           <select class="filter-input" id="mdWhatsappTemplate" aria-label="Mensagem pronta">
@@ -470,7 +470,7 @@
           </select>
           <button class="btn-sm btn-edit" id="mdOpenWhatsapp" type="button">Abrir WhatsApp</button>
         </div>
-        <label for="mdProfileDate">Validade do cliente</label>
+        <label for="mdProfileDate">Validade cadastrada do cliente</label>
         <input class="filter-input" id="mdProfileDate" type="date">
         <div>
           <button class="btn btn-primary" type="submit">Salvar ficha</button>
@@ -483,14 +483,14 @@
         <span style="font-size:13px;font-weight:600;color:#aaa">🖥️ Servidor IPTV</span>
         <div style="display:flex;align-items:center;gap:8px">
           <button class="btn-test" id="btnTest" onclick="testConnection()">🔌 Testar Conexão</button>
-          <span id="testResult"></span>
+          <span id="testResult" role="status"></span>
         </div>
       </div>
       <div class="server-info">
         <div class="server-row"><span class="sr-label">Host</span><span class="sr-value" id="mdHost">—</span></div>
         <div class="server-row"><span class="sr-label">Usuário</span><span class="sr-value" id="mdUser">—</span></div>
         <div class="server-row"><span class="sr-label">Senha</span><span class="sr-value" id="mdPass">—</span></div>
-        <div class="server-row"><span class="sr-label">Validade</span><span class="sr-value" id="mdValidade">—</span></div>
+        <div class="server-row"><span class="sr-label">Validade</span><span class="sr-value" id="mdValidade" aria-live="polite">Não informada</span></div>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:20px">
@@ -986,6 +986,16 @@ async function salvarClienteManual() {
 
 // ═══════════════ DETALHE DO CLIENTE ═══════════════
 let currentDetailCode = '';
+let detailValidity = {};
+
+function renderDetailValidity() {
+  document.getElementById('mdValidade').textContent =
+    detailValidity.stored || detailValidity.provider || detailValidity.message || 'Não informada';
+}
+
+function isCurrentDetail(state) {
+  return detailValidity === state && document.getElementById('modalDetail').classList.contains('open');
+}
 
 function fillProfile(client) {
   document.getElementById('mdName').value = client?.customer_name || '';
@@ -1010,7 +1020,7 @@ document.getElementById('mdOpenWhatsapp').addEventListener('click', () => {
   const name = document.getElementById('mdName').value.trim();
   const greeting = name ? 'Olá, ' + name + '!' : 'Olá!';
   const date = document.getElementById('mdProfileDate').value.split('-').reverse().join('/') ||
-    allClients.find(client => client.client_code === currentDetailCode)?.validade;
+    detailValidity.stored || detailValidity.provider;
   const templates = {
     activation: greeting + ' Vamos ativar sua TV Box. O código do aparelho é ' + currentDetailCode + '.',
     expiry: greeting + (date ? ' Sua assinatura é válida até ' + date + '.' : ' Entre em contato para consultar a validade da sua assinatura.'),
@@ -1058,24 +1068,39 @@ document.getElementById('mdProfile').addEventListener('submit', async event => {
 
 async function openDetail(code) {
   currentDetailCode = code;
+  const state = detailValidity = {};
   document.getElementById('mdTitle').textContent = `🔍 ${code}`;
-  document.getElementById('testResult').innerHTML = '';
+  document.getElementById('testResult').textContent = '';
+  document.getElementById('btnTest').disabled = false;
+  document.getElementById('btnTest').textContent = '🔌 Testar Conexão';
   document.getElementById('modalDetail').classList.add('open');
 
   // Dados básicos da lista local enquanto carrega
   const local = allClients.find(c => c.client_code === code);
-  if (local) applyLocalDetail(local);
+  applyLocalDetail(local || {});
   fillProfile(local);
   document.getElementById('mdWhatsappTemplate').value = '';
   document.getElementById('mdProfileStatus').textContent = '';
+  document.getElementById('mdErrors').textContent = 'Carregando…';
   document.getElementById('mdTimeline').textContent = 'Carregando…';
 
   try {
-    const r = await fetch(`/admin/client-detail/${code}`);
-    if (!r.ok) return;
+    const r = await fetch('/admin/client-detail/' + encodeURIComponent(code));
+    if (r.status === 401) { logout(); return; }
+    if (!r.ok) throw new Error('Falha ao carregar detalhes');
     const d = await r.json();
-    if (currentDetailCode === code) applyFullDetail(d);
-  } catch(e) {}
+    if (!isCurrentDetail(state)) return;
+    applyFullDetail(d);
+    const server = d.xtream;
+    if (!state.stored && server?.host && server.username && server.password &&
+        !document.getElementById('btnTest').disabled) {
+      void testConnection(true);
+    }
+  } catch {
+    if (!isCurrentDetail(state)) return;
+    document.getElementById('mdErrors').textContent = 'Indisponível';
+    document.getElementById('mdTimeline').textContent = 'Não foi possível carregar os detalhes do cliente.';
+  }
 }
 
 function applyLocalDetail(c) {
@@ -1084,37 +1109,28 @@ function applyLocalDetail(c) {
   document.getElementById('mdStatus').style.background = on
     ? 'linear-gradient(90deg,#00c853,#00e676)' : 'none';
   document.getElementById('mdStatus').style['-webkit-text-fill-color'] = on ? '' : '#888';
-  document.getElementById('mdLastSeen').textContent = ago(c.last_seen);
-  document.getElementById('mdChannel').textContent  = on ? c.current_channel || '—' : '—';
-  document.getElementById('mdDevice').textContent   = c.device_model || '—';
-  document.getElementById('mdApk').textContent      = c.apk_version ? `v${c.apk_version}` : '—';
-  document.getElementById('mdHost').textContent     = c.host || '—';
-  document.getElementById('mdUser').textContent     = c.username || '—';
-  document.getElementById('mdPass').textContent     = c.password || '—';
-  document.getElementById('mdValidade').textContent = c.validade || '—';
+  document.getElementById('mdLastSeen').textContent = c.last_seen ? ago(c.last_seen) : 'Sem acesso registrado';
+  document.getElementById('mdChannel').textContent  = (on && c.current_channel) || 'Nenhum canal informado';
+  document.getElementById('mdDevice').textContent   = c.device_model || 'Não informado pelo app';
+  document.getElementById('mdApk').textContent      = c.apk_version ? `v${c.apk_version}` : 'Não informada';
+  document.getElementById('mdHost').textContent     = c.host || 'Não configurado';
+  document.getElementById('mdUser').textContent     = c.username || 'Não configurado';
+  document.getElementById('mdPass').textContent     = c.password || 'Não configurada';
+  detailValidity.stored = c.validade;
+  renderDetailValidity();
 }
 
 function applyFullDetail(d) {
   if (!d.appReq) return;
   const c  = d.appReq;
   const xc = d.xtream;
-  const on = isOnline(c);
-
-  document.getElementById('mdStatus').textContent  = on ? '🟢 Online' : '⚫ Offline';
-  document.getElementById('mdLastSeen').textContent = ago(c.last_seen) + (c.last_seen ? `\n${fmt(c.last_seen)}` : '');
-  document.getElementById('mdChannel').textContent  = on ? c.current_channel || '—' : '—';
-  document.getElementById('mdDevice').textContent   = c.device_model || '—';
-  document.getElementById('mdApk').textContent      = c.apk_version ? `v${c.apk_version}` : '—';
+  applyLocalDetail({
+    ...c, host: xc?.host, username: xc?.username, password: xc?.password,
+    validade: c.customer_validade || xc?.validade
+  });
+  if (c.last_seen) document.getElementById('mdLastSeen').textContent = `${ago(c.last_seen)}\n${fmt(c.last_seen)}`;
   document.getElementById('mdErrors').textContent   = d.errorCount24h > 0 ? `⚠️ ${d.errorCount24h} erros` : '✅ Sem erros';
 
-  if (xc) {
-    document.getElementById('mdHost').textContent     = xc.host || '—';
-    document.getElementById('mdUser').textContent     = xc.username || '—';
-    document.getElementById('mdPass').textContent     = xc.password || '—';
-
-  }
-
-  document.getElementById('mdValidade').textContent = c.customer_validade || xc?.validade || '—';
   const timeline = document.getElementById('mdTimeline');
   const events = d.events || [];
   timeline.innerHTML = events.length
@@ -1128,31 +1144,52 @@ function applyFullDetail(d) {
 }
 
 // Testar conexão com servidor do cliente
-async function testConnection() {
+async function testConnection(automatic = false) {
+  const state = detailValidity;
+  const code = currentDetailCode;
   const btn = document.getElementById('btnTest');
   const res = document.getElementById('testResult');
   btn.disabled = true;
-  btn.textContent = '⏳ Testando...';
-  res.innerHTML = '';
+  btn.textContent = '⏳ Consultando…';
+  res.textContent = '';
+  state.provider = '';
+  state.message = 'Consultando o provedor…';
+  renderDetailValidity();
 
   try {
     const r = await fetch('/admin/test-connection', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_code: currentDetailCode })
+      body: JSON.stringify({ client_code: code })
     });
+    if (r.status === 401) { logout(); return; }
     const d = await r.json();
-    if (d.ok) {
-      res.innerHTML = `<span class="test-result ok">✅ Online &nbsp;${d.ms}ms</span>`;
-    } else {
-      res.innerHTML = `<span class="test-result fail">❌ ${d.error || 'Offline'}</span>`;
+    if (!isCurrentDetail(state)) return;
+    if (!r.ok || !d.ok) throw new Error(d.error || 'Não foi possível consultar o provedor');
+    state.provider = d.validade;
+    state.message = 'O provedor não informou a validade';
+    if (!automatic) {
+      const badge = document.createElement('span');
+      badge.className = 'test-result ok';
+      badge.textContent = '✅ Online ' + d.ms + ' ms';
+      res.replaceChildren(badge);
     }
-  } catch(e) {
-    res.innerHTML = `<span class="test-result fail">❌ Erro de rede</span>`;
+  } catch (error) {
+    if (!isCurrentDetail(state)) return;
+    state.message = error.message === 'Failed to fetch' ? 'Não foi possível consultar o provedor' : error.message;
+    if (!automatic) {
+      const badge = document.createElement('span');
+      badge.className = 'test-result fail';
+      badge.textContent = '❌ ' + state.message;
+      res.replaceChildren(badge);
+    }
+  } finally {
+    if (isCurrentDetail(state)) {
+      renderDetailValidity();
+      btn.disabled = false;
+      btn.textContent = '🔌 Testar Conexão';
+    }
   }
-
-  btn.disabled = false;
-  btn.textContent = '🔌 Testar Conexão';
 }
 
 function editarDoCurrent() {
