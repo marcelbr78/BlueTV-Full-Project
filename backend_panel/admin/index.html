@@ -148,6 +148,7 @@
     .cred-field{margin-bottom:14px}
     .cred-field label{display:block;font-size:12px;color:#888;margin-bottom:5px}
     .cred-field input{width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;outline:none;transition:.2s}
+    .cred-field select{width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;outline:none}
     .cred-field input:focus{border-color:#00d4ff}
     .error-msg{color:#e94560;font-size:12px;margin-bottom:12px;display:none}
     .modal-actions{display:flex;gap:10px;margin-top:4px}
@@ -365,14 +366,28 @@
         <option value="on">🟢 Online agora</option>
         <option value="today">📅 Ativo hoje</option>
       </select>
+      <select class="filter-input" id="fDns" onchange="filterClients()" aria-label="Filtrar por DNS atual">
+        <option value="">Todos os DNS</option>
+      </select>
       <button class="btn-filter-clear" onclick="clearFilters()">✕ Limpar</button>
       <span style="font-size:12px;color:#555;margin-left:auto" id="clientFilterCount"></span>
+    </div>
+
+    <div id="bulkDnsBar" class="box" style="display:none;padding:12px 16px;align-items:center;gap:10px;flex-wrap:wrap">
+      <strong id="bulkDnsCount">0 selecionados</strong>
+      <select class="filter-input" id="bulkDnsPreset" aria-label="Novo DNS para clientes selecionados">
+        <option value="">Escolha o novo DNS salvo</option>
+      </select>
+      <button class="btn btn-primary" id="bulkDnsApply" type="button" onclick="applyDnsToSelectedClients()">Trocar DNS dos selecionados</button>
+      <button class="btn" type="button" onclick="clearClientSelection()">Limpar seleção</button>
+      <span id="bulkDnsStatus" role="status"></span>
     </div>
 
     <div class="box" style="padding:0;overflow:hidden">
       <table>
         <thead>
           <tr>
+            <th><input id="selectVisibleClients" type="checkbox" aria-label="Selecionar clientes visíveis" onchange="selectVisibleClients(this.checked)"></th>
             <th></th>
             <th>Código</th>
             <th>Nome</th>
@@ -386,7 +401,7 @@
             <th>Ações</th>
           </tr>
         </thead>
-        <tbody id="clientsTable"><tr><td colspan="11" class="empty">Carregando...</td></tr></tbody>
+        <tbody id="clientsTable"><tr><td colspan="12" class="empty">Carregando...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -421,6 +436,23 @@
   <!-- ═══════════════ CONFIG ═══════════════ -->
   <div id="config" class="section">
     <div class="page-header"><h2>⚙️ API & Config</h2></div>
+    <div class="box">
+      <div class="box-title" style="margin-bottom:8px">🌐 DNS salvos</div>
+      <p style="color:#888;font-size:12px;margin:0 0 14px">Cadastre aqui os endereços dos servidores. Eles ficam disponíveis no cadastro de clientes, na edição e na troca em lote.</p>
+      <form id="dnsPresetForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;max-width:920px">
+        <input type="hidden" id="dnsPresetId">
+        <label class="cred-field" style="margin:0">Nome do DNS
+          <input id="dnsPresetName" type="text" maxlength="60" placeholder="Ex.: Servidor principal" required>
+        </label>
+        <label class="cred-field" style="margin:0">Endereço
+          <input id="dnsPresetHost" type="text" maxlength="255" placeholder="http://servidor.com:8080" required>
+        </label>
+        <button class="btn btn-primary" id="dnsPresetSave" type="submit">Salvar DNS</button>
+        <button class="btn" id="dnsPresetCancel" type="button" hidden>Cancelar</button>
+      </form>
+      <p id="dnsPresetStatus" role="status" style="font-size:12px"></p>
+      <div id="dnsPresetsList" style="display:grid;gap:8px;max-width:920px"></div>
+    </div>
     <div class="box">
       <div class="box-title" style="margin-bottom:14px">🔐 Endpoints do App</div>
       <div style="font-family:monospace;font-size:12px;color:#888;line-height:2">
@@ -537,7 +569,8 @@
       </div>
       <div class="cred-field">
         <label>Host / DNS *</label>
-        <input id="credHost" type="text" placeholder="http://servidor.com">
+        <select id="credDns" required><option value="">Carregando DNS salvos...</option></select>
+        <small style="display:block;color:#777;margin-top:5px">Os endereços são cadastrados em Configurações → DNS salvos.</small>
       </div>
       <div class="cred-field">
         <label>Usuário *</label>
@@ -583,7 +616,8 @@
       </div>
       <div class="cred-field">
         <label>Host / DNS *</label>
-        <input id="manualClientHost" type="text" placeholder="http://servidor.com">
+        <select id="manualClientDns" required><option value="">Carregando DNS salvos...</option></select>
+        <small style="display:block;color:#777;margin-top:5px">Cadastre os endereços em Configurações → DNS salvos.</small>
       </div>
       <div class="cred-field">
         <label>Usuário Xtream *</label>
@@ -865,6 +899,215 @@ async function loadDashStats() {
 
 // ═══════════════ CLIENTES ═══════════════
 let allClients = [];
+let dnsPresets = [];
+let selectedClientCodes = new Set();
+let visibleClientCodes = [];
+
+function dnsSelectOptions(selectId, selectedHost = '') {
+  const select = document.getElementById(selectId);
+  let current = String(selectedHost || '').trim();
+  current = dnsPresets.find(preset => preset.host.toLowerCase() === current.toLowerCase())?.host || current;
+  select.innerHTML = '<option value="">Escolha um DNS salvo</option>' +
+    dnsPresets.map(preset => `<option value="${htmlText(preset.host)}">${htmlText(preset.name)} — ${htmlText(preset.host)}</option>`).join('');
+  if (current && !dnsPresets.some(preset => preset.host.toLowerCase() === current.toLowerCase())) {
+    select.insertAdjacentHTML('beforeend', `<option value="${htmlText(current)}">DNS atual (ainda não salvo) — ${htmlText(current)}</option>`);
+  }
+  select.value = current;
+}
+
+async function loadDnsPresets() {
+  const status = document.getElementById('dnsPresetStatus');
+  try {
+    const response = await fetch('/admin/dns-presets');
+    if (response.status === 401) { logout(); return; }
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data)) throw new Error(data.error || 'Não foi possível carregar os DNS.');
+    dnsPresets = data;
+    renderDnsPresets();
+    refreshDnsSelects();
+    status.textContent = '';
+  } catch (error) {
+    status.textContent = error.message;
+    status.style.color = '#e94560';
+  }
+}
+
+function refreshDnsSelects() {
+  const hosts = ['credDns', 'manualClientDns', 'bulkDnsPreset'];
+  hosts.forEach(id => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const selected = id === 'credDns' ? select.value : '';
+    const placeholder = id === 'bulkDnsPreset' ? 'Escolha o novo DNS salvo' : 'Escolha um DNS salvo';
+    select.innerHTML = `<option value="">${placeholder}</option>` +
+      dnsPresets.map(preset => `<option value="${id === 'bulkDnsPreset' ? preset.id : htmlText(preset.host)}">${htmlText(preset.name)} — ${htmlText(preset.host)}</option>`).join('');
+    if (id === 'credDns' && selected) dnsSelectOptions(id, selected);
+  });
+  const filter = document.getElementById('fDns');
+  if (filter) {
+    const selected = filter.value;
+    filter.innerHTML = '<option value="">Todos os DNS</option>' +
+      dnsPresets.map(preset => `<option value="${htmlText(preset.host)}">${htmlText(preset.name)}</option>`).join('');
+    filter.value = selected;
+  }
+  updateBulkDnsUI();
+}
+
+function renderDnsPresets() {
+  const container = document.getElementById('dnsPresetsList');
+  if (!dnsPresets.length) {
+    container.innerHTML = '<div class="empty">Nenhum DNS salvo ainda.</div>';
+    return;
+  }
+  container.innerHTML = dnsPresets.map(preset => `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;background:#0d0d1a;border:1px solid rgba(255,255,255,.08);border-radius:8px">
+      <strong>${htmlText(preset.name)}</strong><span style="color:#888;flex:1">${htmlText(preset.host)}</span>
+      <button class="btn-sm btn-edit" type="button" onclick="editDnsPreset(${Number(preset.id)})">Editar</button>
+      <button class="btn-sm btn-inativar" type="button" onclick="deleteDnsPreset(${Number(preset.id)})">Remover</button>
+    </div>`).join('');
+}
+
+function resetDnsPresetForm() {
+  document.getElementById('dnsPresetForm').reset();
+  document.getElementById('dnsPresetId').value = '';
+  document.getElementById('dnsPresetSave').textContent = 'Salvar DNS';
+  document.getElementById('dnsPresetCancel').hidden = true;
+}
+
+function editDnsPreset(id) {
+  const preset = dnsPresets.find(item => Number(item.id) === Number(id));
+  if (!preset) return;
+  document.getElementById('dnsPresetId').value = preset.id;
+  document.getElementById('dnsPresetName').value = preset.name;
+  document.getElementById('dnsPresetHost').value = preset.host;
+  document.getElementById('dnsPresetSave').textContent = 'Salvar alteração';
+  document.getElementById('dnsPresetCancel').hidden = false;
+  document.getElementById('dnsPresetName').focus();
+}
+
+document.getElementById('dnsPresetForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const id = document.getElementById('dnsPresetId').value;
+  const payload = {
+    name: document.getElementById('dnsPresetName').value.trim(),
+    host: document.getElementById('dnsPresetHost').value.trim()
+  };
+  const status = document.getElementById('dnsPresetStatus');
+  status.textContent = 'Salvando…';
+  status.style.color = '#888';
+  try {
+    const response = await fetch(id ? `/admin/dns-presets/${encodeURIComponent(id)}` : '/admin/dns-presets', {
+      method: id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (response.status === 401) { logout(); return; }
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || 'Não foi possível salvar o DNS.');
+    resetDnsPresetForm();
+    status.textContent = 'DNS salvo.';
+    status.style.color = '#00c853';
+    await loadDnsPresets();
+  } catch (error) {
+    status.textContent = error.message;
+    status.style.color = '#e94560';
+  }
+});
+
+document.getElementById('dnsPresetCancel').addEventListener('click', resetDnsPresetForm);
+
+async function deleteDnsPreset(id) {
+  const preset = dnsPresets.find(item => Number(item.id) === Number(id));
+  if (!preset || !confirm(`Remover “${preset.name}” da lista? Os clientes que já usam esse DNS não serão alterados.`)) return;
+  const status = document.getElementById('dnsPresetStatus');
+  try {
+    const response = await fetch(`/admin/dns-presets/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (response.status === 401) { logout(); return; }
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || 'Não foi possível remover o DNS.');
+    status.textContent = 'DNS removido da lista. Os clientes existentes mantêm o endereço.';
+    status.style.color = '#00c853';
+    await loadDnsPresets();
+    filterClients();
+  } catch (error) {
+    status.textContent = error.message;
+    status.style.color = '#e94560';
+  }
+}
+
+function updateBulkDnsUI() {
+  const eligible = allClients.filter(client => client.xtream_id && selectedClientCodes.has(client.client_code));
+  const visibleEligible = visibleClientCodes.filter(code => {
+    const client = allClients.find(item => item.client_code === code);
+    return client?.xtream_id;
+  });
+  const bar = document.getElementById('bulkDnsBar');
+  if (!bar) return;
+  bar.style.display = eligible.length ? 'flex' : 'none';
+  document.getElementById('bulkDnsCount').textContent = `${eligible.length} cliente${eligible.length === 1 ? '' : 's'} selecionado${eligible.length === 1 ? '' : 's'}`;
+  const apply = document.getElementById('bulkDnsApply');
+  apply.disabled = !dnsPresets.length || eligible.length > 200;
+  document.getElementById('bulkDnsStatus').textContent = eligible.length > 200
+    ? 'Selecione no máximo 200 clientes por vez.' : '';
+  document.getElementById('selectVisibleClients').checked = visibleEligible.length > 0 &&
+    visibleEligible.every(code => selectedClientCodes.has(code));
+}
+
+function toggleClientSelection(code, checked) {
+  if (!code) return;
+  if (checked) selectedClientCodes.add(code);
+  else selectedClientCodes.delete(code);
+  updateBulkDnsUI();
+}
+
+function selectVisibleClients(checked) {
+  visibleClientCodes.forEach(code => {
+    const client = allClients.find(item => item.client_code === code);
+    if (!client?.xtream_id) return;
+    if (checked) selectedClientCodes.add(code);
+    else selectedClientCodes.delete(code);
+  });
+  filterClients();
+}
+
+function clearClientSelection() {
+  selectedClientCodes.clear();
+  filterClients();
+  document.getElementById('bulkDnsStatus').textContent = '';
+}
+
+async function applyDnsToSelectedClients() {
+  const codes = allClients.filter(client => client.xtream_id && selectedClientCodes.has(client.client_code))
+    .map(client => client.client_code);
+  const presetId = document.getElementById('bulkDnsPreset').value;
+  const preset = dnsPresets.find(item => String(item.id) === presetId);
+  if (!codes.length || !preset) {
+    document.getElementById('bulkDnsStatus').textContent = 'Selecione clientes e um DNS salvo.';
+    return;
+  }
+  if (!confirm(`Trocar o DNS de ${codes.length} cliente${codes.length === 1 ? '' : 's'} para “${preset.name}” (${preset.host})? Os logins e senhas serão preservados.`)) return;
+  const button = document.getElementById('bulkDnsApply');
+  const status = document.getElementById('bulkDnsStatus');
+  button.disabled = true;
+  status.textContent = 'Atualizando…';
+  try {
+    const response = await fetch('/admin/clients/dns-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_codes: codes, dns_preset_id: Number(presetId) })
+    });
+    if (response.status === 401) { logout(); return; }
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.error || 'Não foi possível trocar o DNS.');
+    selectedClientCodes.clear();
+    status.textContent = `${result.updated} atualizado(s)${result.skipped ? ` · ${result.skipped} sem credenciais` : ''}.`;
+    await loadClients();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = !dnsPresets.length;
+  }
+}
 
 async function loadClients() {
   try {
@@ -881,12 +1124,14 @@ function filterClients() {
   const search = (document.getElementById('fSearch').value || '').toLowerCase();
   const status = document.getElementById('fStatus').value;
   const online = document.getElementById('fOnline').value;
+  const dns = document.getElementById('fDns').value.toLowerCase();
 
   let list = allClients.filter(c => {
     if (search && !((c.client_code||'').toLowerCase().includes(search)) &&
                  !((c.customer_name||'').toLowerCase().includes(search)) &&
                  !((c.whatsapp_number||'').includes(search))) return false;
     if (status && c.status !== status) return false;
+    if (dns && String(c.host || '').toLowerCase() !== dns) return false;
     if (online === 'on' && !isOnline(c)) return false;
     if (online === 'today') {
       const tod = new Date(); tod.setHours(0,0,0,0);
@@ -899,8 +1144,10 @@ function filterClients() {
     list.length !== allClients.length ? `${list.length} de ${allClients.length}` : `${allClients.length} clientes`;
 
   const tbody = document.getElementById('clientsTable');
+  visibleClientCodes = list.map(client => client.client_code).filter(Boolean);
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="11" class="empty">Nenhum cliente encontrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Nenhum cliente encontrado</td></tr>';
+    updateBulkDnsUI();
     return;
   }
 
@@ -916,6 +1163,7 @@ function filterClients() {
     const host = c.host ? c.host.replace(/^https?:\/\//,'').split('/')[0].split(':')[0] : '—';
     return `
     <tr class="data-row" onclick="openDetail('${c.client_code}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" aria-label="Selecionar ${htmlText(c.client_code)}" ${c.xtream_id ? '' : 'disabled title="Cliente sem credenciais de servidor"'} ${selectedClientCodes.has(c.client_code) ? 'checked' : ''} onchange="toggleClientSelection('${htmlText(c.client_code)}',this.checked)"></td>
       <td>${dot}</td>
       <td class="mono">${c.client_code||'—'}</td>
       <td>${htmlText(c.customer_name || '—')}</td>
@@ -935,6 +1183,7 @@ function filterClients() {
       </td>
     </tr>`;
   }).join('');
+  updateBulkDnsUI();
 }
 
 async function changeDevice(action, code) {
@@ -970,12 +1219,14 @@ function clearFilters() {
   document.getElementById('fSearch').value = '';
   document.getElementById('fStatus').value = '';
   document.getElementById('fOnline').value = '';
+  document.getElementById('fDns').value = '';
   filterClients();
 }
 
 function abrirCadastroManual() {
-  ['manualClientCode', 'manualClientPhone', 'manualClientHost', 'manualClientUser', 'manualClientPass', 'manualClientValidity']
+  ['manualClientCode', 'manualClientPhone', 'manualClientUser', 'manualClientPass', 'manualClientValidity']
     .forEach(id => { document.getElementById(id).value = ''; });
+  dnsSelectOptions('manualClientDns');
   const error = document.getElementById('manualClientError');
   error.textContent = '';
   error.style.display = 'none';
@@ -989,7 +1240,7 @@ async function salvarClienteManual() {
   const payload = {
     client_code: document.getElementById('manualClientCode').value.trim().toUpperCase(),
     whatsapp_number: document.getElementById('manualClientPhone').value.trim(),
-    host: document.getElementById('manualClientHost').value.trim(),
+    host: document.getElementById('manualClientDns').value.trim(),
     username: document.getElementById('manualClientUser').value.trim(),
     password: document.getElementById('manualClientPass').value.trim(),
     validade: document.getElementById('manualClientValidity').value.trim()
@@ -997,7 +1248,7 @@ async function salvarClienteManual() {
 
   error.style.display = 'none';
   if (!payload.client_code || !payload.host || !payload.username || !payload.password) {
-    error.textContent = 'Preencha o código do app, Host, usuário e senha.';
+    error.textContent = 'Preencha o código do app, escolha um DNS e informe usuário e senha.';
     error.style.display = 'block';
     return;
   }
@@ -1250,7 +1501,7 @@ function abrirCred(modo, code, host, user, pass, val) {
   document.getElementById('credCode').value    = code;
   document.getElementById('credDisplay').value = code;
   document.getElementById('credTitle').textContent = modo === 'editar' ? '✏️ Editar Servidor' : '✅ Ativar Cliente';
-  document.getElementById('credHost').value    = host;
+  dnsSelectOptions('credDns', host);
   document.getElementById('credUser').value    = user;
   document.getElementById('credPass').value    = pass;
   document.getElementById('credValidade').value= val;
@@ -1261,14 +1512,14 @@ function abrirCred(modo, code, host, user, pass, val) {
 async function salvarCredenciais() {
   const modo = document.getElementById('credModo').value;
   const code = document.getElementById('credCode').value;
-  const host = document.getElementById('credHost').value.trim();
+  const host = document.getElementById('credDns').value.trim();
   const user = document.getElementById('credUser').value.trim();
   const pass = document.getElementById('credPass').value.trim();
   const val  = document.getElementById('credValidade').value.trim();
   const errEl= document.getElementById('credError');
 
   if (!host || !user || !pass) {
-    errEl.textContent = 'Host, Usuário e Senha são obrigatórios.';
+    errEl.textContent = 'Escolha um DNS e informe usuário e senha.';
     errEl.style.display = 'block';
     return;
   }
@@ -1438,7 +1689,7 @@ async function loadXtream() {
 
 // ═══════════════ REFRESH ALL ═══════════════
 async function refreshAll() {
-  await Promise.all([loadDashStats(), loadClients(), loadXtream(), loadMessages()]);
+  await Promise.all([loadDashStats(), loadClients(), loadXtream(), loadMessages(), loadDnsPresets()]);
 }
 
 // Fechar modal clicando fora

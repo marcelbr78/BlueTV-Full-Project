@@ -19,7 +19,8 @@ const { getStandings } = require('./services/cbf-standings');
 let _enrichedCache = [];
 
 // Inicializa DB → Futebol → JOGOS DO DIA
-db.initDb()
+const dbReady = db.initDb();
+dbReady
   .then(async () => {
     const today = todayStr();
 
@@ -668,6 +669,145 @@ app.post('/admin/test-connection', requireAuth, async (req, res) => {
     return res.json(await checkXtreamAccount(xtream));
   } catch {
     return res.status(500).json({ ok: false, error: 'Não foi possível carregar o servidor do cliente' });
+  }
+});
+
+// =====================
+// ADMIN: DNS SALVOS
+// =====================
+function normalizeDnsHost(value) {
+  if (typeof value !== 'string') return null;
+  let host = value.trim();
+  if (!host || host.length > 255) return null;
+  if (!/^https?:\/\//i.test(host)) host = `http://${host}`;
+  try {
+    const parsed = new URL(host);
+    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname ||
+        parsed.username || parsed.password || parsed.search || parsed.hash ||
+        (parsed.pathname && parsed.pathname !== '/')) return null;
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return null;
+  }
+}
+
+app.get('/admin/dns-presets', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const rows = await db.all('SELECT id, name, host, created_at, updated_at FROM admin_dns_presets ORDER BY name COLLATE NOCASE, id');
+    return res.json(rows);
+  } catch (error) {
+    console.error('Erro ao listar DNS salvos:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível carregar os DNS salvos.' });
+  }
+});
+
+app.post('/admin/dns-presets', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const host = normalizeDnsHost(req.body?.host);
+    if (!name || name.length > 60 || !host) {
+      return res.status(400).json({ error: 'Informe um nome de até 60 caracteres e um endereço HTTP ou HTTPS válido.' });
+    }
+    const duplicate = await db.get('SELECT id FROM admin_dns_presets WHERE lower(host) = lower(?)', [host]);
+    if (duplicate) return res.status(409).json({ error: 'Esse endereço já está salvo.' });
+    const now = Date.now();
+    const result = await db.run(
+      'INSERT INTO admin_dns_presets (name, host, created_at, updated_at) VALUES (?, ?, ?, ?)',
+      [name, host, now, now]
+    );
+    return res.status(201).json({ success: true, id: Number(result.lastInsertRowid), name, host });
+  } catch (error) {
+    console.error('Erro ao salvar DNS:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível salvar esse DNS.' });
+  }
+});
+
+app.put('/admin/dns-presets/:id', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const id = Number(req.params.id);
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const host = normalizeDnsHost(req.body?.host);
+    if (!Number.isSafeInteger(id) || id < 1 || !name || name.length > 60 || !host) {
+      return res.status(400).json({ error: 'Confira o nome e o endereço DNS.' });
+    }
+    const existing = await db.get('SELECT id FROM admin_dns_presets WHERE id = ?', [id]);
+    if (!existing) return res.status(404).json({ error: 'DNS salvo não encontrado.' });
+    const duplicate = await db.get('SELECT id FROM admin_dns_presets WHERE lower(host) = lower(?) AND id <> ?', [host, id]);
+    if (duplicate) return res.status(409).json({ error: 'Esse endereço já está salvo em outro item.' });
+    await db.run('UPDATE admin_dns_presets SET name = ?, host = ?, updated_at = ? WHERE id = ?', [name, host, Date.now(), id]);
+    return res.json({ success: true, id, name, host });
+  } catch (error) {
+    console.error('Erro ao editar DNS:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível editar esse DNS.' });
+  }
+});
+
+app.delete('/admin/dns-presets/:id', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id < 1) return res.status(400).json({ error: 'DNS inválido.' });
+    const result = await db.run('DELETE FROM admin_dns_presets WHERE id = ?', [id]);
+    if (!result.rowsAffected) return res.status(404).json({ error: 'DNS salvo não encontrado.' });
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao remover DNS:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível remover esse DNS.' });
+  }
+});
+
+app.post('/admin/clients/dns-bulk', requireAuth, async (req, res) => {
+  try {
+    await dbReady;
+    const requested = req.body?.client_codes;
+    const presetId = Number(req.body?.dns_preset_id);
+    if (!Array.isArray(requested) || requested.length < 1 || requested.length > 200 ||
+        requested.some(code => typeof code !== 'string')) {
+      return res.status(400).json({ error: 'Selecione de 1 a 200 clientes.' });
+    }
+    if (!Number.isSafeInteger(presetId) || presetId < 1) {
+      return res.status(400).json({ error: 'Escolha um DNS salvo.' });
+    }
+    const codes = [...new Set(requested.map(code => code.trim().toUpperCase()))];
+    if (codes.some(code => !/^[A-Z0-9+().\-\s]{1,40}$/.test(code))) {
+      return res.status(400).json({ error: 'A seleção contém um código de cliente inválido.' });
+    }
+    const preset = await db.get('SELECT id, name, host FROM admin_dns_presets WHERE id = ?', [presetId]);
+    if (!preset) return res.status(404).json({ error: 'O DNS escolhido não está mais salvo.' });
+    const marks = codes.map(() => '?').join(', ');
+    const clients = await db.all(
+      `SELECT ar.client_code, ar.xtream_id, xc.username, xc.password, xc.m3u_url
+       FROM app_requests ar JOIN xtream_credentials xc ON xc.id = ar.xtream_id
+       WHERE ar.client_code IN (${marks})`, codes
+    );
+    if (!clients.length) {
+      return res.json({ success: true, updated: 0, skipped: codes.length, host: preset.host });
+    }
+    const now = Date.now();
+    const statements = clients.flatMap(client => {
+      let m3uUrl;
+      try {
+        const playlist = new URL(client.m3u_url);
+        const target = new URL(preset.host);
+        playlist.protocol = target.protocol;
+        playlist.host = target.host;
+        m3uUrl = playlist.toString();
+      } catch {
+        m3uUrl = `${preset.host}/get.php?username=${client.username}&password=${client.password}&type=m3u`;
+      }
+      return [
+        { sql: 'UPDATE xtream_credentials SET host = ?, m3u_url = ?, extracted_at = ? WHERE id = ?', args: [preset.host, m3uUrl, now, client.xtream_id] },
+        { sql: 'UPDATE app_requests SET updated_at = ? WHERE client_code = ?', args: [now, client.client_code] }
+      ];
+    });
+    await db.batch(statements);
+    return res.json({ success: true, updated: clients.length, skipped: codes.length - clients.length, host: preset.host });
+  } catch (error) {
+    console.error('Erro ao trocar DNS em lote:', error.code || error.name);
+    return res.status(500).json({ error: 'Não foi possível concluir a troca em lote.' });
   }
 });
 
