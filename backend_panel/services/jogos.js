@@ -13,7 +13,8 @@ const http   = require('http');
 const https  = require('https');
 const config = require('../config');
 
-// Categorias JOGOS DO DIA e JOGOS DO DIA²
+// IDs antigos continuam como fallback. Como provedores podem recriar as
+// categorias, também descobrimos os IDs atuais pelo nome antes de buscar.
 const CATEGORY_IDS = ['253', '433'];
 
 // Canais sem jogo real
@@ -29,8 +30,12 @@ function fetchJson(url) {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
         try { resolve(JSON.parse(data)); }
-        catch (e) { resolve([]); }
+        catch (e) { reject(new Error('Resposta JSON inválida')); }
       });
     });
     req.on('error', reject);
@@ -48,10 +53,34 @@ async function fetchJogosDodia() {
   const pass = config.XTREAM_REF_PASS;
   if (!host || !user || !pass) return [];
 
+  const makeUrl = (action, categoryId) => {
+    const url = new URL(`${host.replace(/\/$/, '')}/player_api.php`);
+    url.searchParams.set('username', user);
+    url.searchParams.set('password', pass);
+    url.searchParams.set('action', action);
+    if (categoryId) url.searchParams.set('category_id', categoryId);
+    return url.toString();
+  };
+
+  const categoryIds = new Set(CATEGORY_IDS);
+  try {
+    const categories = await fetchJson(makeUrl('get_live_categories'));
+    if (Array.isArray(categories)) {
+      for (const category of categories) {
+        const name = String(category.category_name || category.name || '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const id = String(category.category_id || category.id || '').trim();
+        if (id && /jogos?\s+do\s+dia/.test(name)) categoryIds.add(id);
+      }
+    }
+  } catch (e) {
+    console.warn('⚽ Não foi possível descobrir as categorias de jogos; usando IDs antigos:', e.message);
+  }
+
   const raw = [];
 
-  for (const catId of CATEGORY_IDS) {
-    const url = `${host}/player_api.php?username=${user}&password=${pass}&action=get_live_streams&category_id=${catId}`;
+  for (const catId of categoryIds) {
+    const url = makeUrl('get_live_streams', catId);
     try {
       const data = await fetchJson(url);
       if (Array.isArray(data)) raw.push(...data);
@@ -63,6 +92,7 @@ async function fetchJogosDodia() {
   // Agrupa por "home x away time" → channels[]
   const groups = {}; // key → { home, away, time, channels[] }
 
+  const seenStreams = new Set();
   for (const ch of raw) {
     const name = (ch.name || '').trim();
     if (!name || SKIP_RE.test(name)) continue;
@@ -75,7 +105,8 @@ async function fetchJogosDodia() {
     const time     = m[3];
     const slot     = parseInt(m[4], 10);
     const streamId = String(ch.stream_id || '');
-    if (!streamId) continue;
+    if (!streamId || seenStreams.has(streamId)) continue;
+    seenStreams.add(streamId);
 
     const key = `${home.toLowerCase()}__${away.toLowerCase()}__${time}`;
     if (!groups[key]) {
