@@ -7,6 +7,7 @@ const { isXtreamResponse, parseXtreamMessage, extractM3uUrl,
         parseAtivarTesteCommand, parseClientIdFromMessage } = require('./parser');
 const { syncFootball, getCache, getCacheDate, _restoreCache } = require('./services/football');
 const { getEnrichedMatches } = require('./services/matcher');
+const { checkXtreamAccount } = require('./services/xtream-account');
 const { syncXtream, isReady: xtreamReady, getSyncedAt } = require('./services/xtream');
 const { syncAgenda, syncUpcomingDrafts, getAgendaForDate, getAgendaDraft, todayStr, tomorrowStr } = require('./services/agenda');
 const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
@@ -650,30 +651,23 @@ app.get('/admin/client-detail/:code', requireAuth, async (req, res) => {
 // =====================
 app.post('/admin/test-connection', requireAuth, async (req, res) => {
   try {
-    const { client_code } = req.body;
-    if (!client_code) return res.status(400).json({ error: 'client_code obrigatório' });
+    const { client_code } = req.body || {};
+    if (typeof client_code !== 'string' || !client_code.trim()) {
+      return res.status(400).json({ ok: false, error: 'Informe o código do cliente' });
+    }
 
-    const code = client_code.toUpperCase();
+    const code = client_code.trim().toUpperCase();
     const appReq = await db.get('SELECT * FROM app_requests WHERE client_code = ?', [code]);
     if (!appReq || !appReq.xtream_id)
       return res.json({ ok: false, error: 'Sem servidor configurado para este cliente' });
 
-    const xtream = await db.get('SELECT * FROM xtream_credentials WHERE id = ?', [appReq.xtream_id]);
-    if (!xtream || !xtream.host) return res.json({ ok: false, error: 'Host não encontrado' });
-
-    const host = xtream.host.startsWith('http') ? xtream.host.trimEnd('/') : `http://${xtream.host.trimEnd('/')}`;
-    const url  = `${host}/player_api.php?username=${xtream.username}&password=${xtream.password}&action=get_server_info`;
-
-    const start = Date.now();
-    const statusCode = await new Promise((resolve, reject) => {
-      const mod = url.startsWith('https') ? require('https') : require('http');
-      const req2 = mod.get(url, { timeout: 8000 }, (r) => { r.resume(); resolve(r.statusCode); });
-      req2.on('timeout', () => { req2.destroy(); reject(new Error('timeout após 8s')); });
-      req2.on('error', reject);
-    });
-    return res.json({ ok: true, ms: Date.now() - start, statusCode, host: xtream.host });
-  } catch (err) {
-    return res.json({ ok: false, ms: null, error: err.message });
+    const xtream = await db.get('SELECT host, username, password FROM xtream_credentials WHERE id = ?', [appReq.xtream_id]);
+    if (!xtream?.host || !xtream.username || !xtream.password) {
+      return res.json({ ok: false, error: 'Dados do servidor incompletos' });
+    }
+    return res.json(await checkXtreamAccount(xtream));
+  } catch {
+    return res.status(500).json({ ok: false, error: 'Não foi possível carregar o servidor do cliente' });
   }
 });
 
