@@ -26,7 +26,7 @@ module.exports = function registerBlueTvUpdates(app, db, requireAuth, requireApi
       `SELECT release.version_name, release.apk_size, chunk.data
        FROM bluetv_releases AS release
        LEFT JOIN bluetv_update_chunks AS chunk ON chunk.version_code = release.version_code
-       WHERE release.version_code = COALESCE(?, (SELECT MAX(version_code) FROM bluetv_releases))
+       WHERE release.version_code = ?
        ORDER BY chunk.chunk_index`,
       [versionCode]
     );
@@ -37,6 +37,47 @@ module.exports = function registerBlueTvUpdates(app, db, requireAuth, requireApi
     res.set('Content-Type', 'application/vnd.android.package-archive');
     res.set('Content-Length', String(release.apk_size));
     for (const row of rows) res.write(Buffer.from(row.data));
+    res.end();
+  };
+
+  const sendCurrentApk = async (req, res) => {
+    const release = await latest();
+    if (!release) return res.status(404).json({ error: 'Nenhuma versão publicada.' });
+
+    const size = release.apk_size;
+    const etag = `"${release.sha256}"`;
+    const ifRange = req.get('If-Range');
+    const requested = !ifRange || ifRange === etag ? req.range(size) : undefined;
+    res.set('Accept-Ranges', 'bytes');
+    res.set('ETag', etag);
+    if (requested === -1) {
+      return res.set('Content-Range', `bytes */${size}`).status(416).end();
+    }
+
+    const range = requested?.type === 'bytes' && requested.length === 1 ? requested[0] : null;
+    const { start, end } = range || { start: 0, end: size - 1 };
+    const length = end - start + 1;
+    const parts = [];
+    if (req.method !== 'HEAD') {
+      const chunks = await db.all(
+        `SELECT chunk_index, data FROM bluetv_update_chunks
+         WHERE version_code = ? AND chunk_index BETWEEN ? AND ? ORDER BY chunk_index`,
+        [release.version_code, Math.floor(start / APK_CHUNK_BYTES), Math.floor(end / APK_CHUNK_BYTES)]
+      );
+      for (const chunk of chunks) {
+        const offset = chunk.chunk_index * APK_CHUNK_BYTES;
+        parts.push(Buffer.from(chunk.data).subarray(Math.max(0, start - offset), end - offset + 1));
+      }
+      if (parts.reduce((total, part) => total + part.length, 0) !== length) {
+        return res.status(503).json({ error: 'APK temporariamente indisponível. Tente baixar novamente.' });
+      }
+    }
+
+    res.attachment(`BlueTV-${release.version_name}.apk`);
+    res.set('Content-Type', 'application/vnd.android.package-archive');
+    res.set('Content-Length', String(length));
+    if (range) res.set('Content-Range', `bytes ${start}-${end}/${size}`).status(206);
+    for (const part of parts) res.write(part);
     res.end();
   };
 
@@ -62,7 +103,7 @@ module.exports = function registerBlueTvUpdates(app, db, requireAuth, requireApi
     await sendApk(res, code);
   }));
 
-  app.get('/admin/bluetv/apk/latest', requireAuth, (req, res) => respond(req, res, () => sendApk(res, null)));
+  app.get('/admin/bluetv/apk/latest', requireAuth, (req, res) => respond(req, res, () => sendCurrentApk(req, res)));
 
   app.get('/admin/bluetv/update', requireAuth, (req, res) => respond(req, res, async () => {
     const release = await latest();
