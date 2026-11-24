@@ -98,6 +98,14 @@ async function initDb() {
     plano TEXT
   )`);
 
+  await run(`CREATE TABLE IF NOT EXISTS admin_dns_presets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    host TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`);
+
   // Adicionar coluna plano se não existir
   await run("ALTER TABLE xtream_credentials ADD COLUMN plano TEXT").catch(() => {});
   await run(`CREATE TABLE IF NOT EXISTS app_requests (
@@ -230,4 +238,8 @@ async function initDb() {
   console.log('✅ Turso DB inicializado');
 }
 
-module.exports = { run, get, all, initDb };
+async function batch(statements) {
+  return await db.batch(statements, 'write');
+}
+
+module.exports = { run, get, all, batch, initDb };
