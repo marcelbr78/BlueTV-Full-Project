@@ -187,6 +187,7 @@
   </div>
 
   <div class="nav-section-title">Configurações</div>
+  <div class="nav-item" id="navDnsSettings" onclick="nav('dnsSettings',this)">🌐 DNS salvos</div>
   <div class="nav-item" onclick="nav('config',this)">⚙️ API & Config</div>
 
   <div class="nav-item" onclick="nav('marioUpdates',this)">Atualizações Mario TV</div>
@@ -433,11 +434,10 @@
     </div>
   </div>
 
-  <!-- ═══════════════ CONFIG ═══════════════ -->
-  <div id="config" class="section">
-    <div class="page-header"><h2>⚙️ API & Config</h2></div>
+  <!-- ═══════════════ DNS SALVOS ═══════════════ -->
+  <div id="dnsSettings" class="section">
+    <div class="page-header"><h2>🌐 DNS salvos</h2></div>
     <div class="box">
-      <div class="box-title" style="margin-bottom:8px">🌐 DNS salvos</div>
       <p style="color:#888;font-size:12px;margin:0 0 14px">Cadastre aqui os endereços dos servidores. Eles ficam disponíveis no cadastro de clientes, na edição e na troca em lote.</p>
       <form id="dnsPresetForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;max-width:920px">
         <input type="hidden" id="dnsPresetId">
@@ -453,6 +453,11 @@
       <p id="dnsPresetStatus" role="status" style="font-size:12px"></p>
       <div id="dnsPresetsList" style="display:grid;gap:8px;max-width:920px"></div>
     </div>
+  </div>
+
+  <!-- ═══════════════ CONFIG ═══════════════ -->
+  <div id="config" class="section">
+    <div class="page-header"><h2>⚙️ API & Config</h2></div>
     <div class="box">
       <div class="box-title" style="margin-bottom:14px">🔐 Endpoints do App</div>
       <div style="font-family:monospace;font-size:12px;color:#888;line-height:2">
@@ -570,7 +575,7 @@
       <div class="cred-field">
         <label>Host / DNS *</label>
         <select id="credDns" required><option value="">Carregando DNS salvos...</option></select>
-        <small style="display:block;color:#777;margin-top:5px">Os endereços são cadastrados em Configurações → DNS salvos.</small>
+        <small style="display:block;color:#777;margin-top:5px"><button class="btn-sm btn-edit" type="button" onclick="openDnsSettings()">⚙️ Gerenciar DNS salvos</button></small>
       </div>
       <div class="cred-field">
         <label>Usuário *</label>
@@ -617,7 +622,7 @@
       <div class="cred-field">
         <label>Host / DNS *</label>
         <select id="manualClientDns" required><option value="">Carregando DNS salvos...</option></select>
-        <small style="display:block;color:#777;margin-top:5px">Cadastre os endereços em Configurações → DNS salvos.</small>
+        <small style="display:block;color:#777;margin-top:5px"><button class="btn-sm btn-edit" type="button" onclick="openDnsSettings()">⚙️ Gerenciar DNS salvos</button></small>
       </div>
       <div class="cred-field">
         <label>Usuário Xtream *</label>
@@ -676,6 +681,13 @@ function nav(id, el) {
   if (id === 'xtream')   loadXtream();
   if (id === 'marioUpdates') manageMarioRelease();
   if (id === 'blueTvUpdates') loadBlueTvReleases();
+  if (id === 'dnsSettings') loadDnsPresets();
+}
+
+function openDnsSettings() {
+  const target = new URL('/admin/', window.location.origin);
+  target.searchParams.set('section', 'dnsSettings');
+  window.open(target.toString(), '_blank', 'noopener');
 }
 
 const marioReleaseForm = document.getElementById('marioReleaseForm');
@@ -1699,6 +1711,9 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
 
 // ═══════════════ INIT ═══════════════
 refreshAll();
+if (new URLSearchParams(window.location.search).get('section') === 'dnsSettings') {
+  nav('dnsSettings', document.getElementById('navDnsSettings'));
+}
 
 // Auto-refresh a cada 30s
 setInterval(() => {
