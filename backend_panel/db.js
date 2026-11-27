@@ -164,6 +164,15 @@ async function initDb() {
   )`);
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_code ON client_events(client_code)`);
   await run(`CREATE INDEX IF NOT EXISTS idx_client_events_ts ON client_events(ts)`);
+  await run(`CREATE TABLE IF NOT EXISTS client_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_code TEXT NOT NULL,
+    category TEXT NOT NULL,
+    event TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_client_history_code_time ON client_history(client_code, created_at)`);
   await run(`CREATE TRIGGER IF NOT EXISTS record_watched_channel
     AFTER UPDATE OF current_channel ON app_requests
     WHEN NEW.status = 'ok' AND NEW.current_channel IS NOT NULL
