@@ -1031,12 +1031,16 @@ app.post('/webhook/evolution', async (req, res) => {
         [senderPhone]
       ) : null;
       const messageClientCode = parseClientIdFromMessage(message);
-      const senderLink = !appRequestByPhone && !messageClientCode && senderJid ? await db.get(
+      const appRequestByMessageCode = !appRequestByPhone && messageClientCode ? await db.get(
+        'SELECT * FROM app_requests WHERE client_code = ?',
+        [messageClientCode]
+      ) : null;
+      const senderLink = !appRequestByPhone && !appRequestByMessageCode && senderJid ? await db.get(
         'SELECT client_code FROM evolution_sender_links WHERE sender_jid = ?',
         [senderJid]
       ) : null;
       let legacyLidRequest = null;
-      const oldLidNumber = !appRequestByPhone && !messageClientCode && !senderLink
+      const oldLidNumber = !appRequestByPhone && !appRequestByMessageCode && !senderLink
         ? legacyLidDigits(senderJid)
         : null;
       if (oldLidNumber) {
@@ -1045,12 +1049,11 @@ app.post('/webhook/evolution', async (req, res) => {
           [oldLidNumber]
         );
       }
-      const linkedClientCode = messageClientCode || senderLink?.client_code || legacyLidRequest?.client_code;
-      const appRequestByCode = !appRequestByPhone && linkedClientCode ? await db.get(
-        "SELECT * FROM app_requests WHERE client_code = ?",
-        [linkedClientCode]
+      const appRequestBySenderLink = senderLink ? await db.get(
+        'SELECT * FROM app_requests WHERE client_code = ?',
+        [senderLink.client_code]
       ) : null;
-      const appRequest = appRequestByPhone || appRequestByCode || legacyLidRequest;
+      const appRequest = appRequestByPhone || appRequestByMessageCode || appRequestBySenderLink || legacyLidRequest;
 
       if (legacyLidRequest && senderJid) {
         await db.run(
