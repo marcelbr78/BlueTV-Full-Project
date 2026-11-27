@@ -119,8 +119,8 @@
     .sports-source{min-height:22px;color:#9b99b0;font-size:12px;line-height:1.5}
     .sports-source a{color:#8cddff;margin-left:7px}
     .sports-games{display:grid;gap:12px;margin-top:14px}
-    .sports-match{overflow:hidden;border:1px solid #8d54d733;border-radius:14px;background:#0f0e1b;box-shadow:0 10px 24px #0003}
-    .sports-match-preview{position:relative;padding:16px;background:radial-gradient(ellipse at 10% 0%,#8d35d44a,transparent 52%),linear-gradient(120deg,#1e1730,#13121e 65%,#24133c);border-bottom:1px solid #ffffff12}
+    .sports-match{position:relative;overflow:visible;border:1px solid #8d54d733;border-radius:14px;background:#0f0e1b;box-shadow:0 10px 24px #0003}
+    .sports-match-preview{position:relative;padding:16px;background:radial-gradient(ellipse at 10% 0%,#8d35d44a,transparent 52%),linear-gradient(120deg,#1e1730,#13121e 65%,#24133c);border-bottom:1px solid #ffffff12;border-radius:13px 13px 0 0}
     .sports-match-preview:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#d54bff,#7d45ff,#00d4ff)}
     .sports-preview-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
     .sports-preview-time{font:800 20px/1 'Segoe UI',sans-serif;color:#fff;letter-spacing:.03em}
@@ -143,6 +143,19 @@
     .sports-search-wrap{position:relative;display:block;margin-top:5px}
     .sports-search-wrap:before{content:"⌕";position:absolute;left:10px;top:50%;transform:translateY(-55%);color:#9d8bb7;font-size:19px;pointer-events:none}
     .sports-search-wrap input{margin-top:0!important;padding-left:32px}
+    .sports-team-field>label,.sports-field-league>label{font-size:11px;color:#a9a6ba}
+    .sports-team-search{position:relative;margin-top:5px}
+    .sports-team-search input{margin-top:0!important;padding-right:38px}
+    .sports-team-toggle{position:absolute;right:4px;top:4px;bottom:4px;width:30px;border:0;border-radius:6px;background:#ffffff0d;color:#d2c8e2;font-size:17px;cursor:pointer}
+    .sports-team-picker{position:relative}
+    .sports-team-list{position:absolute;z-index:40;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow-y:auto;overscroll-behavior:contain;background:#211d32;border:1px solid #a855f766;border-radius:9px;box-shadow:0 12px 28px #0009;padding:5px}
+    .sports-team-list[hidden]{display:none}
+    .sports-team-option{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:#f1edf8;text-align:left;font:inherit;font-size:12px;cursor:pointer}
+    .sports-team-option:hover,.sports-team-option:focus{background:#704097;color:#fff;outline:none}
+    .sports-team-list p{padding:10px;color:#aaa3b8;font-size:11px;line-height:1.45}
+    .sports-field-league select{margin-top:5px}
+    .sports-field-league input{margin-top:7px}
+    .sports-team-catalog-status{grid-column:1/-1;color:#8f899f;font-size:10px;line-height:1.4}
     .sports-channel-editor{padding:0 14px 12px}
     .sports-channel-title{color:#c4bed2;font-size:11px;font-weight:700;margin-bottom:8px}
     .sports-channel-options{display:flex;flex-wrap:wrap;gap:7px}
@@ -176,6 +189,7 @@
       .sports-match-fields{grid-template-columns:1fr 1fr}
       .sports-match-fields .sports-field-league{grid-column:1/-1}
       .sports-match-fields .sports-field-time{grid-column:1/-1;max-width:180px}
+      .sports-match-fields .sports-team-field{min-width:0}
       .sports-preview-team{font-size:12px;gap:6px}
       .sports-team-logo,.sports-team-fallback{width:32px;height:32px;flex-basis:32px}
       .sports-preview-time{font-size:18px}
@@ -1902,6 +1916,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=7"></script>
+<script src="/admin/sports-settings.js?v=8"></script>
 </body>
 </html>
