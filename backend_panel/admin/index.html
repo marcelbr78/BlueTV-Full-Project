@@ -135,10 +135,14 @@
     .sports-preview-channels{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
     .sports-channel-chip{padding:5px 9px;border-radius:999px;background:#f5c928;color:#211a04;font-size:10px;font-weight:800;letter-spacing:.02em}
     .sports-channel-empty{color:#9994a8;font-size:11px;font-style:italic}
-    .sports-match-fields{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(140px,.8fr) 130px;gap:10px;padding:14px 14px 10px}
+    .sports-match-fields{display:grid;grid-template-columns:130px minmax(0,1fr) minmax(0,1fr);gap:10px;padding:14px 14px 10px}
+    .sports-match-fields .sports-field-league{grid-column:1/-1}
     .sports-field{display:grid;gap:4px}
     .sports-match-fields label{font-size:11px;color:#a9a6ba}
-    .sports-match-fields input{width:100%;margin-top:5px}
+    .sports-match-fields input,.sports-match-fields select{width:100%;margin-top:5px}
+    .sports-search-wrap{position:relative;display:block;margin-top:5px}
+    .sports-search-wrap:before{content:"⌕";position:absolute;left:10px;top:50%;transform:translateY(-55%);color:#9d8bb7;font-size:19px;pointer-events:none}
+    .sports-search-wrap input{margin-top:0!important;padding-left:32px}
     .sports-channel-editor{padding:0 14px 12px}
     .sports-channel-title{color:#c4bed2;font-size:11px;font-weight:700;margin-bottom:8px}
     .sports-channel-options{display:flex;flex-wrap:wrap;gap:7px}
@@ -170,7 +174,8 @@
       .sports-steps{grid-template-columns:1fr}
       .sports-step{padding:9px 11px}
       .sports-match-fields{grid-template-columns:1fr 1fr}
-      .sports-match-fields label:first-child{grid-column:1/-1}
+      .sports-match-fields .sports-field-league{grid-column:1/-1}
+      .sports-match-fields .sports-field-time{grid-column:1/-1;max-width:180px}
       .sports-preview-team{font-size:12px;gap:6px}
       .sports-team-logo,.sports-team-fallback{width:32px;height:32px;flex-basis:32px}
       .sports-preview-time{font-size:18px}
@@ -1897,6 +1902,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=6"></script>
+<script src="/admin/sports-settings.js?v=7"></script>
 </body>
 </html>
