@@ -78,6 +78,12 @@ sequenceDiagram
 ### Webhook Evolution
 - `POST /webhook/evolution`: Recebe o comando `ATIVAR_TESTE` enviado pelo cliente.
 
+### Aba Evolution no painel administrativo
+
+Configure no backend BlueTV as variáveis `EVOLUTION_API_URL` (endereço HTTPS da API), `EVOLUTION_API_KEY` (chave do serviço Evolution) e, opcionalmente, `EVOLUTION_INSTANCE` (nome da instância que o painel deve exibir).
+
+Abra **Evolution** no menu do painel para consultar a instância existente e parear por QR Code ou por número de telefone. A confirmação é feita no WhatsApp do celular.
+
 ### App Android
 - `POST /app/request`: Inicia o processo pelo lado do App (gera QR Code/Link).
 - `GET /app/status`: Verifica se o teste foi ativado.

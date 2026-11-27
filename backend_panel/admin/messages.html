@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlueTV — Monitor</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',sans-serif; background:#0a0f1a; color:#e0e0e0; min-height:100vh; }
+.topbar { background:#111927; border-bottom:2px solid #0066ff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; }
+.topbar h1 { font-size:1.1rem; color:#0099ff; letter-spacing:2px; font-weight:700; }
+.nav a { color:#7799bb; text-decoration:none; margin-left:20px; font-size:0.88rem; }
+.nav a:hover { color:#0099ff; }
+.container { max-width:1300px; margin:28px auto; padding:0 20px; }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.stat { background:#111927; border:1px solid #1a3050; border-radius:12px; padding:20px; position:relative; overflow:hidden; }
+.stat::after { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:#0066ff; }
+.stat .label { font-size:0.72rem; color:#5577aa; text-transform:uppercase; letter-spacing:1.5px; }
+.stat .value { font-size:2.2rem; font-weight:800; color:#0099ff; margin-top:8px; }
+.stat .sub { font-size:0.75rem; color:#334; margin-top:4px; }
+.card { background:#111927; border:1px solid #1a3050; border-radius:14px; overflow:hidden; margin-bottom:20px; }
+.card-head { padding:16px 22px; border-bottom:1px solid #1a3050; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.card-head h2 { font-size:0.95rem; color:#0099ff; font-weight:600; }
+.toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn { padding:7px 16px; border-radius:8px; border:none; cursor:pointer; font-size:0.82rem; font-weight:600; transition:all 0.2s; }
+.btn-blue { background:#0066ff; color:#fff; }
+.btn-blue:hover { background:#0055dd; }
+.btn-green { background:#00aa44; color:#fff; }
+.search { padding:7px 14px; border-radius:8px; border:1px solid #1a3050; background:#0a0f1a; color:#e0e0e0; font-size:0.82rem; width:200px; }
+.search:focus { outline:none; border-color:#0066ff; }
+.tabs { display:flex; border-bottom:1px solid #1a3050; }
+.tab { padding:11px 22px; cursor:pointer; font-size:0.85rem; color:#5577aa; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; }
+.tab.active { color:#0099ff; border-bottom-color:#0099ff; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+table { width:100%; border-collapse:collapse; }
+th { background:#0a0f1a; color:#445566; font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; padding:12px 16px; text-align:left; }
+td { padding:12px 16px; border-bottom:1px solid #1a305020; font-size:0.85rem; vertical-align:middle; }
+tr:hover td { background:#1a305015; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+.badge-ok { background:#00aa4422; color:#00cc66; border:1px solid #00aa4444; }
+.badge-pending { background:#f59e0b22; color:#f59e0b; border:1px solid #f59e0b44; }
+.badge-xtream { background:#0066ff22; color:#0099ff; border:1px solid #0066ff44; }
+.badge-unknown { background:#44444422; color:#667; border:1px solid #44444444; }
+.client-id { font-family:monospace; font-weight:700; color:#0099ff; font-size:0.88rem; background:#0066ff11; padding:3px 8px; border-radius:6px; }
+.phone { color:#aabbcc; font-size:0.85rem; }
+.host { font-family:monospace; color:#00cc66; font-size:0.8rem; }
+.cred { font-family:monospace; font-size:0.82rem; }
+.time { color:#445566; font-size:0.78rem; }
+.msg-text { max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#7799bb; font-size:0.8rem; cursor:pointer; }
+.msg-full { display:none; white-space:pre-wrap; font-size:0.78rem; color:#7799bb; background:#0a0f1a; padding:10px; border-radius:6px; margin-top:6px; max-height:180px; overflow-y:auto; border:1px solid #1a3050; }
+.empty { text-align:center; padding:48px; color:#334; }
+.pulse { display:inline-block; width:7px; height:7px; border-radius:50%; background:#00cc66; animation:pulse 2s infinite; margin-right:6px; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
+.refresh-info { font-size:0.78rem; color:#445566; display:flex; align-items:center; }
+#toast { position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:8px; font-size:0.85rem; font-weight:600; display:none; z-index:9999; }
+.m3u-copy { background:none; border:1px solid #0066ff44; color:#0099ff; padding:2px 8px; border-radius:4px; font-size:0.72rem; cursor:pointer; }
+.m3u-copy:hover { background:#0066ff22; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🔵 BLUETV MONITOR</h1>
+  <nav class="nav">
+    <a href="/admin">⬡ Dashboard</a>
+    <a href="/admin/messages.html">📨 Mensagens</a>
+    <a href="#" onclick="doLogout()">Sair →</a>
+  </nav>
+</div>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Mensagens Recebidas</div>
+      <div class="value" id="s-total">—</div>
+      <div class="sub">total via WhatsApp</div>
+    </div>
+    <div class="stat">
+      <div class="label">Xtream Extraídos</div>
+      <div class="value" id="s-xtream">—</div>
+      <div class="sub">credenciais capturadas</div>
+    </div>
+    <div class="stat">
+      <div class="label">Clientes Pendentes</div>
+      <div class="value" id="s-pending">—</div>
+      <div class="sub">aguardando activação</div>
+    </div>
+    <div class="stat">
+      <div class="label">Activações OK</div>
+      <div class="value" id="s-ok">—</div>
+      <div class="sub">configurados com sucesso</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>📊 Painel de Controlo</h2>
+      <div class="toolbar">
+        <input class="search" id="search-input" placeholder="Buscar ID, número, host..." oninput="doFilter()">
+        <button class="btn btn-blue" onclick="loadAll()">↻ Actualizar</button>
+        <div class="refresh-info"><span class="pulse"></span> Auto-refresh 10s</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('clients')">👥 Clientes</div>
+      <div class="tab" onclick="switchTab('xtream')">🔑 Xtream Extraído</div>
+      <div class="tab" onclick="switchTab('messages')">💬 Mensagens Raw</div>
+    </div>
+
+    <div id="tab-clients" class="tab-content active">
+      <table>
+        <thead>
+          <tr>
+            <th>Client ID</th>
+            <th>WhatsApp</th>
+            <th>Estado</th>
+            <th>Host</th>
+            <th>Usuário</th>
+            <th>Validade</th>
+            <th>Dispositivo</th>
+            <th>Canal Actual</th>
+            <th>Último Acesso</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-clients"></tbody>
+      </table>
+      <div class="empty" id="empty-clients" style="display:none">
+        Nenhum cliente registado ainda
+      </div>
+    </div>
+
+    <div id="tab-xtream" class="tab-content">
+      <table>
+        <thead>
+          <tr>
+            <th>Client ID</th>
+            <th>Número</th>
+            <th>Host</th>
+            <th>Usuário</th>
+            <th>Senha</th>
+            <th>Plano</th>
+            <th>Validade</th>
+            <th>M3U</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-xtream"></tbody>
+      </table>
+      <div class="empty" id="empty-xtream" style="display:none">
+        Nenhuma credencial extraída ainda
+      </div>
+    </div>
+
+    <div id="tab-messages" class="tab-content">
+      <table>
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Client ID detectado</th>
+            <th>Mensagem</th>
+            <th>Tipo</th>
+            <th>Recebido em</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-messages"></tbody>
+      </table>
+      <div class="empty" id="empty-messages" style="display:none">
+        Nenhuma mensagem recebida ainda
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let currentTab = 'clients';
+
+function toast(msg, color='#00aa44') {
+  const t = document.getElementById('toast');
+  t.style.background = color;
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display='none', 2500);
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(Number(ts)).toLocaleString('pt-BR');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['clients','xtream','messages'][i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function toggleMsg(id) {
+  const el = document.getElementById('raw-'+id);
+  if (el) el.style.display = el.style.display==='none'?'block':'none';
+}
+
+function copyM3u(url) {
+  navigator.clipboard.writeText(url);
+  toast('M3U copiada! ✅');
+}
+
+function doFilter() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  ['clients','xtream','messages'].forEach(tab => {
+    const tbody = document.getElementById('tbody-'+tab);
+    if (tbody) {
+      Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+        tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+  });
+}
+
+async function apiFetch(url) {
+  try {
+    const r = await fetch(url, { credentials:'include' });
+    if (r.status === 401) { window.location.href='/admin/login.html'; return null; }
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function loadClients() {
+  const data = await apiFetch('/api/debug/clients');
+  if (!data) return;
+
+  const pending = (data || []).filter(r => r.status === 'pending').length;
+  const ok = (data || []).filter(r => r.status === 'ok').length;
+  document.getElementById('s-pending').textContent = pending;
+  document.getElementById('s-ok').textContent = ok + (data.filter(r => r.is_online === 1 && r.last_seen && (Date.now() - r.last_seen) < 120000).length > 0 ? ' 🟢' : '');
+
+  const tbody = document.getElementById('tbody-clients');
+  tbody.innerHTML = '';
+  if (!data.length) { 
+    document.getElementById('empty-clients').style.display = 'block'; 
+    return; 
+  }
+  document.getElementById('empty-clients').style.display = 'none';
+
+  // Actualizar contador de online no stat card
+  const okCard = document.getElementById('s-ok');
+  if (okCard) okCard.textContent = ok + (online > 0 ? ' ('+online+' 🟢)' : '');
+
+  const now = Date.now();
+
+  data.forEach(r => {
+    // Estado online/offline (considera offline se last_seen > 2 minutos)
+    const isOnline = r.is_online === 1 && r.last_seen && (now - r.last_seen) < 120000;
+    const onlineBadge = isOnline
+      ? '<span style="display:inline-flex;align-items:center;gap:4px"><span class="pulse"></span><span style="color:#00cc66;font-size:0.75rem">Online</span></span>'
+      : r.last_seen 
+        ? '<span style="color:#445566;font-size:0.75rem">⚫ Offline</span>'
+        : '<span style="color:#334;font-size:0.75rem">—</span>';
+
+    // Estado activação
+    const badge = r.status === 'ok'
+      ? '<span class="badge badge-ok">✅ Activo</span>'
+      : '<span class="badge badge-pending">⏳ Pendente</span>';
+
+    // Last seen
+    const lastSeenText = r.last_seen
+      ? new Date(Number(r.last_seen)).toLocaleString('pt-BR')
+      : '—';
+
+    // Canal actual
+    const channelText = r.current_channel
+      ? '<span style="color:#f59e0b;font-size:0.78rem">▶ ' + r.current_channel.substring(0,30) + '</span>'
+      : '<span style="color:#334;font-size:0.75rem">—</span>';
+
+    tbody.innerHTML += `<tr>
+      <td><span class="client-id">${r.client_code || '—'}</span></td>
+      <td><span class="phone">${r.whatsapp_number || '—'}</span></td>
+      <td>
+        ${badge}
+        <div style="margin-top:4px">${onlineBadge}</div>
+      </td>
+      <td><span class="host">${r.host || '—'}</span></td>
+      <td><span class="cred">${r.username || '—'}</span></td>
+      <td><span style="color:#f59e0b;font-size:0.8rem">${r.validade || '—'}</span></td>
+      <td>
+        <div style="font-size:0.78rem;color:#7799bb">${r.device_model || '—'}</div>
+        <div style="font-size:0.72rem;color:#445566">v${r.apk_version || '—'}</div>
+      </td>
+      <td>${channelText}</td>
+      <td><div class="time">${lastSeenText}</div></td>
+    </tr>`;
+  });
+}
+
+async function loadXtream() {
+  const data = await apiFetch('/api/debug/xtream');
+  if (!data) return;
+  document.getElementById('s-xtream').textContent = data.length;
+
+  const tbody = document.getElementById('tbody-xtream');
+  tbody.innerHTML = '';
+  if (!data.length) { document.getElementById('empty-xtream').style.display='block'; return; }
+  document.getElementById('empty-xtream').style.display='none';
+
+  data.forEach(x => {
+    tbody.innerHTML += `<tr>
+      <td><span class="client-id">${x.client_id||'—'}</span></td>
+      <td><span class="phone">${x.whatsapp_number||'—'}</span></td>
+      <td><span class="host">${x.host||'—'}</span></td>
+      <td><span class="cred">${x.username||'—'}</span></td>
+      <td><span class="cred">${x.password||'—'}</span></td>
+      <td><span style="color:#aabbcc;font-size:0.8rem">${x.plano||'—'}</span></td>
+      <td><span style="color:#f59e0b;font-size:0.8rem">${x.validade||'—'}</span></td>
+      <td>${x.m3u_url ? `<button class="m3u-copy" onclick="copyM3u('${x.m3u_url}')">📋 Copiar</button>` : '—'}</td>
+    </tr>`;
+  });
+}
+
+async function loadMessages() {
+  const data = await apiFetch('/api/debug/botbot');
+  if (!data) return;
+  document.getElementById('s-total').textContent = data.length;
+
+  const tbody = document.getElementById('tbody-messages');
+  tbody.innerHTML = '';
+  if (!data.length) { document.getElementById('empty-messages').style.display='block'; return; }
+  document.getElementById('empty-messages').style.display='none';
+
+  data.forEach(m => {
+    const msg = m.message || '';
+    const clientMatch = msg.match(/BLUETV-([A-Z0-9]{5})/i);
+    const clientId = clientMatch ? clientMatch[0].toUpperCase() : null;
+    const isXtream = msg.includes('USUÁRIO') || msg.includes('Dns/Url') || msg.includes('m3u');
+    const badge = isXtream
+      ? '<span class="badge badge-xtream">🔑 Xtream</span>'
+      : clientId
+        ? '<span class="badge badge-ok">👤 Cliente</span>'
+        : '<span class="badge badge-unknown">💬 Outro</span>';
+
+    tbody.innerHTML += `<tr>
+      <td><span class="phone">${m.phone||'—'}</span></td>
+      <td>${clientId ? `<span class="client-id">${clientId}</span>` : '<span style="color:#334">—</span>'}</td>
+      <td>
+        <div class="msg-text" onclick="toggleMsg(${m.id})">${msg.substring(0,70)}...</div>
+        <div class="msg-full" id="raw-${m.id}">${msg}</div>
+      </td>
+      <td>${badge}</td>
+      <td><span class="time">${fmtDate(m.received_at)}</span></td>
+    </tr>`;
+  });
+}
+
+async function doLogout() {
+  await fetch('/api/logout', { method:'POST', credentials:'include' });
+  window.location.href = '/admin/login.html';
+}
+
+async function loadAll() {
+  await Promise.all([loadClients(), loadXtream(), loadMessages()]);
+  toast('↻ Actualizado');
+}
+
+loadAll();
+setInterval(loadAll, 10000);
+</script>
+</body>
+</html>

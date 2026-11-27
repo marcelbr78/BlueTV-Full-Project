@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Quando está focado (pelo controle remoto) -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <!-- Quando está selecionado (aba ativa) mas não focado -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#1565C0" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    <!-- Estado padrão -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#1A1A3A" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</selector>

@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_item_tab.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/item_tab.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_activity_splash.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/drawable_ic_channel_placeholder.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/drawable/ic_channel_placeholder.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_item_channel.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/item_channel.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_activity_player.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/activity_player.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_activity_home.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/activity_home.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/layout_activity_activation.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/layout/activity_activation.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/drawable_ic_launcher.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/drawable/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.bluetv.app-debug-38:/drawable_channel_item_bg.xml.flat",
+        "source": "com.example.bluetv.app-main-40:/drawable/channel_item_bg.xml"
+    }
+]

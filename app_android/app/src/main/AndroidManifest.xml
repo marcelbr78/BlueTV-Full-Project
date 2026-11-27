@@ -1,23 +1,62 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.bluetv">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+    <uses-feature android:name="android.software.leanback" android:required="false"/>
 
     <application
         android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
         android:label="BlueTV"
-        android:theme="@style/Theme.BlueTV">
-        <activity android:name=".AdminActivity" />
-        <activity android:name=".QRActivity" />
-        <activity android:name=".FormActivity" />
-        <activity android:name=".PlansActivity" />
-        <activity android:name=".PlayerActivity" />
-        <activity android:name=".MainActivity">
+        android:theme="@style/Theme.BlueTV"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:screenOrientation="landscape">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
             </intent-filter>
         </activity>
-    </application>
 
+        <activity
+            android:name=".ActivationActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".HomeActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".DetailActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".EpisodesActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"/>
+
+        <activity
+            android:name=".PlayerActivity"
+            android:screenOrientation="landscape"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden"/>
+
+    </application>
 </manifest>

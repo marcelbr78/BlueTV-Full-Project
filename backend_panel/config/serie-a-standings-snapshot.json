@@ -1,0 +1,27 @@
+{
+  "season": "2026",
+  "source": "https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-a/2026",
+  "updatedAt": "2026-11-22T21:14:10.344Z",
+  "teams": [
+    {"position":1,"club":"Flamengo","logo":"https://conteudo.cbf.com.br/clubes/20016/escudo.jpg","points":80,"played":36,"won":24,"drawn":8,"lost":4,"difference":43},
+    {"position":2,"club":"Palmeiras","logo":"https://conteudo.cbf.com.br/clubes/20002/escudo.jpg","points":74,"played":36,"won":21,"drawn":11,"lost":4,"difference":38},
+    {"position":3,"club":"Cruzeiro","logo":"https://conteudo.cbf.com.br/clubes/59849/escudo.jpg","points":66,"played":36,"won":20,"drawn":6,"lost":10,"difference":9},
+    {"position":4,"club":"Fluminense","logo":"https://conteudo.cbf.com.br/clubes/20014/escudo.jpg","points":60,"played":35,"won":17,"drawn":9,"lost":9,"difference":14},
+    {"position":5,"club":"Athletico Paranaense","logo":"https://conteudo.cbf.com.br/clubes/20052/escudo.jpg","points":54,"played":35,"won":15,"drawn":9,"lost":11,"difference":7},
+    {"position":6,"club":"Bahia","logo":"https://conteudo.cbf.com.br/clubes/61377/escudo.jpg","points":54,"played":36,"won":14,"drawn":12,"lost":10,"difference":4},
+    {"position":7,"club":"Atlético Mineiro","logo":"https://conteudo.cbf.com.br/clubes/62194/escudo.jpg","points":51,"played":35,"won":14,"drawn":9,"lost":12,"difference":4},
+    {"position":8,"club":"Santos FC","logo":"https://conteudo.cbf.com.br/clubes/20008/escudo.jpg","points":50,"played":35,"won":13,"drawn":11,"lost":11,"difference":2},
+    {"position":9,"club":"Red Bull Bragantino","logo":"https://conteudo.cbf.com.br/clubes/20007/escudo.jpg","points":47,"played":35,"won":13,"drawn":8,"lost":14,"difference":4},
+    {"position":10,"club":"Vasco da Gama Saf","logo":"https://conteudo.cbf.com.br/clubes/60646/escudo.jpg","points":47,"played":35,"won":13,"drawn":8,"lost":14,"difference":-4},
+    {"position":11,"club":"Coritiba SAF","logo":"https://conteudo.cbf.com.br/clubes/61590/escudo.jpg","points":45,"played":36,"won":12,"drawn":9,"lost":15,"difference":-11},
+    {"position":12,"club":"São Paulo","logo":"https://conteudo.cbf.com.br/clubes/20005/escudo.jpg","points":44,"played":35,"won":12,"drawn":8,"lost":15,"difference":-1},
+    {"position":13,"club":"Botafogo","logo":"https://conteudo.cbf.com.br/clubes/60175/escudo.jpg","points":42,"played":35,"won":11,"drawn":9,"lost":15,"difference":-11},
+    {"position":14,"club":"Vitória","logo":"https://conteudo.cbf.com.br/clubes/20018/escudo.jpg","points":41,"played":35,"won":11,"drawn":8,"lost":16,"difference":-15},
+    {"position":15,"club":"Mirassol","logo":"https://conteudo.cbf.com.br/clubes/20385/escudo.jpg","points":41,"played":35,"won":10,"drawn":11,"lost":14,"difference":-9},
+    {"position":16,"club":"Corinthians","logo":"https://conteudo.cbf.com.br/clubes/20001/escudo.jpg","points":40,"played":35,"won":10,"drawn":10,"lost":15,"difference":-2},
+    {"position":17,"club":"Internacional","logo":"https://conteudo.cbf.com.br/clubes/20011/escudo.jpg","points":38,"played":35,"won":9,"drawn":11,"lost":15,"difference":-5},
+    {"position":18,"club":"Grêmio","logo":"https://conteudo.cbf.com.br/clubes/20013/escudo.jpg","points":38,"played":35,"won":9,"drawn":11,"lost":15,"difference":-9},
+    {"position":19,"club":"Remo","logo":"https://conteudo.cbf.com.br/clubes/20022/escudo.jpg","points":32,"played":35,"won":7,"drawn":11,"lost":17,"difference":-18},
+    {"position":20,"club":"Chapecoense","logo":"https://conteudo.cbf.com.br/clubes/20086/escudo.jpg","points":21,"played":36,"won":4,"drawn":9,"lost":23,"difference":-40}
+  ]
+}
