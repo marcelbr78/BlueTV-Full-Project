@@ -25,7 +25,6 @@ const standingsSlugs = new Map([
   ['ligue 1', 'french-ligue-1'],
   ['ligue 2', 'french-ligue-2'],
   ['eredivisie', 'netherlands-eredivisie'],
-  ['primeira liga', 'portuguese-primera-liga'],
   ['champions league', 'uefa-champions-league'],
   ['europa league', 'uefa-europa-league'],
   ['conference league', 'uefa-europa-conference-league'],
