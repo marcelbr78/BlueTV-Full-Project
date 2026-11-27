@@ -1721,14 +1721,27 @@ function extractEvolutionSenderPhone(key, data, body) {
   const jidCandidates = [
     key.remoteJid,
     key.remoteJidAlt,
+    key.senderPn,
+    key.sender_pn,
     key.participantAlt,
+    key.participantPn,
+    key.participant_pn,
     key.participant,
     data.remoteJid,
     data.remoteJidAlt,
+    data.senderPn,
+    data.sender_pn,
     data.participantAlt,
+    data.participantPn,
+    data.participant_pn,
     data.participant,
     body.remoteJid,
-    body.remoteJidAlt
+    body.remoteJidAlt,
+    body.senderPn,
+    body.sender_pn,
+    body.participantAlt,
+    body.participantPn,
+    body.participant_pn
   ];
   for (const candidate of jidCandidates) {
     const phone = phoneFromWhatsappJid(candidate);
