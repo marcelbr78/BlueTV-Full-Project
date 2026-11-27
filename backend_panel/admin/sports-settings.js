@@ -23,42 +23,17 @@
   const day = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
   });
-  let suggestionListId = 0;
-  const competitionSuggestions = [
-    'Brasileirão Série A', 'Brasileirão Série B', 'Copa do Brasil', 'Campeonato Paulista',
-    'Campeonato Carioca', 'Campeonato Mineiro', 'Campeonato Gaúcho', 'Premier League',
-    'EFL Championship', 'FA Cup', 'La Liga', 'Serie A (Itália)', 'Bundesliga', 'Ligue 1',
-    'Eredivisie', 'Primeira Liga', 'Champions League', 'Europa League', 'Conference League',
-    'Copa Libertadores', 'Copa Sul-Americana', 'Mundial de Clubes'
-  ];
-  const teamsByRegion = {
-    brazil: ['América-MG', 'Athletico-PR', 'Atlético-MG', 'Athletic Club', 'Amazonas', 'Avaí', 'Bahia',
-      'Botafogo', 'Botafogo-SP', 'Bragantino', 'Ceará', 'Chapecoense', 'Corinthians', 'Coritiba',
-      'CRB', 'Cruzeiro', 'Cuiabá', 'Ferroviária', 'Flamengo', 'Fluminense', 'Fortaleza', 'Goiás',
-      'Grêmio', 'Guarani', 'Internacional', 'Juventude', 'Mirassol', 'Náutico', 'Novorizontino',
-      'Operário-PR', 'Palmeiras', 'Paysandu', 'Ponte Preta', 'Remo', 'Sampaio Corrêa', 'Santos',
-      'São Paulo', 'Sport', 'Vasco', 'Vila Nova', 'Vitória'],
-    england: ['Arsenal', 'Aston Villa', 'Birmingham City', 'Blackburn Rovers', 'Bournemouth', 'Brentford',
-      'Brighton', 'Bristol City', 'Burnley', 'Cardiff City', 'Chelsea', 'Coventry City', 'Crystal Palace',
-      'Derby County', 'Everton', 'Fulham', 'Leeds United', 'Leicester City', 'Liverpool', 'Manchester City',
-      'Manchester United', 'Middlesbrough', 'Newcastle United', 'Norwich City', 'Nottingham Forest',
-      'Oxford United', 'Portsmouth', 'Preston North End', 'Queens Park Rangers', 'Sheffield United',
-      'Southampton', 'Stoke City', 'Sunderland', 'Swansea City', 'Tottenham', 'Watford', 'West Bromwich',
-      'West Ham', 'Wolverhampton'],
-    europe: ['Ajax', 'Atalanta', 'Atlético de Madrid', 'Barcelona', 'Bayern de Munique', 'Benfica',
-      'Borussia Dortmund', 'Celtic', 'Club Brugge', 'Fenerbahçe', 'Inter de Milão', 'Juventus',
-      'Lazio', 'Lille', 'Liverpool', 'Manchester City', 'Milan', 'Monaco', 'Napoli', 'Newcastle United',
-      'Nottingham Forest', 'Olympique de Marseille', 'Paris Saint-Germain', 'Porto', 'Real Madrid',
-      'Roma', 'Sporting', 'Stade Brestois 29', 'Sevilla', 'Venezia', 'Bologna', 'Chelsea']
-  };
-  const allTeamSuggestions = [...new Set(Object.values(teamsByRegion).flat())].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-  function teamSuggestionsFor(league) {
-    const value = (league || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    if (/brasileir|serie\s*b|copa do brasil|paulista|carioca|mineiro|gaucho/.test(value)) return teamsByRegion.brazil;
-    if (/england|inglaterra|premier|championship|fa cup|efl/.test(value)) return teamsByRegion.england;
-    if (/la liga|italia|serie\s*a|bundesliga|ligue|eredivisie|primeira liga|champions|europa league|conference league|libertadores|sul-americana|mundial/.test(value)) return teamsByRegion.europe;
-    return allTeamSuggestions;
+  let competitionCatalog = [];
+  let dynamicTeamCatalog = false;
+  const teamCatalogPromises = new Map();
+  function normalizeLabel(value) {
+    return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function findCompetition(value) {
+    const key = normalizeLabel(value);
+    return competitionCatalog.find(item => normalizeLabel(item.name) === key) ||
+      (key.startsWith('premier league') ? competitionCatalog.find(item => item.name === 'Premier League') : null) ||
+      (key === 'serie a' ? competitionCatalog.find(item => item.name === 'Serie A (Itália)') : null);
   }
 
   async function request(path, method = 'GET', data) {
@@ -97,32 +72,116 @@
     return row;
   }
 
-  function searchableInput(label, value, maxLength, required, dataField, suggestions, placeholder) {
-    const row = create('label', label);
-    row.className = 'sports-field';
-    const listId = 'sports-suggestions-' + (++suggestionListId);
-    const wrap = create('span');
-    wrap.className = 'sports-search-wrap';
-    const control = create('input');
-    Object.assign(control, { type: 'text', value: value || '', required, className: 'filter-input', placeholder });
-    Object.assign(control.dataset, { field: dataField, listId });
-    control.maxLength = maxLength;
-    control.setAttribute('list', listId);
-    const list = create('datalist');
-    list.id = listId;
-    setSuggestions(list, suggestions);
-    wrap.append(control);
-    row.append(wrap, list);
+  function competitionField(value) {
+    const row = create('div');
+    row.className = 'sports-field sports-field-league';
+    const select = create('select');
+    select.className = 'filter-input';
+    select.dataset.field = 'league-choice';
+    select.id = 'sports-competition-' + Math.random().toString(36).slice(2);
+    const placeholder = create('option', 'Selecione um campeonato');
+    placeholder.value = '';
+    select.append(placeholder);
+    const groups = new Map();
+    for (const competition of competitionCatalog) {
+      if (!groups.has(competition.group)) {
+        const group = create('optgroup');
+        group.label = competition.group;
+        groups.set(competition.group, group);
+        select.append(group);
+      }
+      const option = create('option', competition.name);
+      option.value = competition.name;
+      groups.get(competition.group).append(option);
+    }
+    const other = create('option', 'Outro campeonato (digitar)');
+    other.value = '__custom__';
+    select.append(other);
+
+    const label = create('label', 'Campeonato');
+    label.htmlFor = select.id;
+    const custom = create('input');
+    Object.assign(custom, { type: 'text', value: '', className: 'filter-input', maxLength: 120,
+      placeholder: 'Digite o nome do campeonato' });
+    custom.dataset.field = 'league-custom';
+    custom.setAttribute('aria-label', 'Nome do campeonato personalizado');
+    const match = findCompetition(value);
+    if (match) select.value = match.name;
+    else if (value) {
+      select.value = '__custom__';
+      custom.value = value;
+    }
+    custom.hidden = select.value !== '__custom__';
+    row.append(label, select, custom);
     return row;
   }
 
-  function setSuggestions(list, values) {
-    list.replaceChildren(...[...new Set(values)].map(value => {
-      const option = create('option');
-      option.value = value;
-      return option;
-    }));
+  function leagueForCard(card) {
+    const choice = card.querySelector('[data-field="league-choice"]');
+    return choice.value === '__custom__' ? card.querySelector('[data-field="league-custom"]').value.trim() : choice.value;
   }
+
+  function teamPickerField(labelText, value, dataField) {
+    const row = create('div');
+    row.className = 'sports-field sports-team-field';
+    const controlId = 'sports-team-' + Math.random().toString(36).slice(2);
+    const label = create('label', labelText);
+    label.htmlFor = controlId;
+    const picker = create('div');
+    picker.className = 'sports-team-picker';
+    picker.dataset.picker = dataField;
+    const toolbar = create('div');
+    toolbar.className = 'sports-team-search';
+    const control = create('input');
+    Object.assign(control, { type: 'text', value: value || '', required: true, maxLength: 90,
+      className: 'filter-input', placeholder: '⌕  Pesquise ou digite o time' });
+    Object.assign(control.dataset, { field: dataField, role: 'team-search' });
+    control.id = controlId;
+    control.autocomplete = 'off';
+    const toggle = create('button', '▾');
+    Object.assign(toggle, { type: 'button', className: 'sports-team-toggle' });
+    toggle.setAttribute('aria-label', 'Abrir lista de times');
+    const list = create('div');
+    Object.assign(list, { className: 'sports-team-list', hidden: true, role: 'listbox' });
+    toolbar.append(control, toggle);
+    picker.append(toolbar, list);
+    row.append(label, picker);
+
+    const drawList = (term = '') => {
+      const card = picker.closest('.sports-match');
+      const needle = normalizeLabel(term);
+      const teams = card?.teamOptions || [];
+      const filtered = teams.filter(team => !needle || normalizeLabel(team.name).includes(needle));
+      list.replaceChildren();
+      if (!filtered.length) {
+        list.append(create('p', term ? 'Nenhum resultado. Você pode manter o nome digitado.' : 'Nenhum time carregado. Digite o nome manualmente.'));
+      } else {
+        for (const team of filtered) {
+          const option = create('button', team.name);
+          Object.assign(option, { type: 'button', className: 'sports-team-option', role: 'option' });
+          option.addEventListener('click', () => {
+            control.value = team.name;
+            control.dispatchEvent(new Event('input', { bubbles: true }));
+            list.hidden = true;
+          });
+          list.append(option);
+        }
+      }
+      list.hidden = false;
+    };
+    control.addEventListener('focus', () => drawList(''));
+    control.addEventListener('click', () => { if (list.hidden) drawList(''); });
+    control.addEventListener('input', () => drawList(control.value));
+    toggle.addEventListener('click', () => list.hidden ? drawList('') : (list.hidden = true));
+    picker.drawList = drawList;
+    return row;
+  }
+
+  document.addEventListener('pointerdown', event => {
+    if (!event.target.closest('.sports-team-picker')) {
+      document.querySelectorAll('.sports-team-list:not([hidden])').forEach(list => { list.hidden = true; });
+    }
+  });
 
   function validLogo(value) {
     try {
@@ -154,7 +213,6 @@
   function renderMatchPreview(card) {
     const homeField = card.querySelector('[data-field="home"]');
     const awayField = card.querySelector('[data-field="away"]');
-    const leagueField = card.querySelector('[data-field="league"]');
     const timeField = card.querySelector('[data-field="time"]');
     const home = homeField.value.trim() || 'Time da casa';
     const away = awayField.value.trim() || 'Adversário';
@@ -166,7 +224,7 @@
     meta.className = 'sports-preview-meta';
     meta.append(create('span', timeField.value || '--:--'));
     meta.firstElementChild.className = 'sports-preview-time';
-    meta.append(create('span', leagueField.value.trim() || 'Campeonato não informado'));
+    meta.append(create('span', leagueForCard(card) || 'Campeonato não informado'));
     meta.lastElementChild.className = 'sports-preview-league';
 
     const teams = create('div');
@@ -214,17 +272,19 @@
     const home = match.home || sides[0] || '';
     const away = match.away || sides[1] || '';
     const league = match.league || '';
-    const leagueField = searchableInput('Campeonato', league, 120, false, 'league', competitionSuggestions,
-      'Digite ou pesquise um campeonato');
-    leagueField.classList.add('sports-field-league');
+    const leagueField = competitionField(league);
     const timeField = input('Horário de Brasília', 'time', match.time, null, true, 'time');
     timeField.classList.add('sports-field-time');
     details.append(
       leagueField,
       timeField,
-      searchableInput('Time da casa', home, 90, true, 'home', teamSuggestionsFor(league), 'Buscar ou digitar o time'),
-      searchableInput('Time visitante', away, 90, true, 'away', teamSuggestionsFor(league), 'Buscar ou digitar o time')
+      teamPickerField('Time da casa', home, 'home'),
+      teamPickerField('Time visitante', away, 'away')
     );
+    const teamStatus = create('p');
+    teamStatus.className = 'sports-team-catalog-status';
+    teamStatus.setAttribute('role', 'status');
+    details.append(teamStatus);
 
     const options = create('div');
     options.className = 'sports-channel-options';
@@ -253,18 +313,53 @@
     channelEditor.append(create('p', 'Canais de transmissão'), options);
     channelEditor.firstElementChild.className = 'sports-channel-title';
     card.append(preview, details, channelEditor, remove);
-    refreshTeamSuggestions(card);
+    loadTeamCatalog(card);
     renderMatchPreview(card);
     games.append(card);
   }
 
-  function refreshTeamSuggestions(card) {
-    const league = card.querySelector('[data-field="league"]').value;
-    for (const side of ['home', 'away']) {
-      const field = card.querySelector('[data-field="' + side + '"]');
-      const list = field && document.getElementById(field.dataset.listId);
-      if (list) setSuggestions(list, [field.value, ...teamSuggestionsFor(league)].filter(Boolean));
+  function refreshTeamPickers(card) {
+    for (const picker of card.querySelectorAll('.sports-team-picker')) {
+      if (!picker.classList.contains('sports-team-picker')) continue;
+      if (!picker.querySelector('.sports-team-list').hidden) picker.drawList(picker.querySelector('[data-role="team-search"]').value);
     }
+  }
+
+  async function loadTeamCatalog(card) {
+    const competitionName = leagueForCard(card);
+    const competition = findCompetition(competitionName);
+    const status = card.querySelector('.sports-team-catalog-status');
+    const requestId = Number(card.dataset.teamRequest || 0) + 1;
+    card.dataset.teamRequest = String(requestId);
+    card.dataset.loadedCompetition = competition?.name || '';
+    card.teamOptions = (competition?.fallback || []).map(name => ({ id: null, name, logo: '' }));
+    refreshTeamPickers(card);
+    if (!competition) {
+      status.textContent = competitionName
+        ? 'Para esse campeonato, digite os times manualmente.'
+        : 'Selecione um campeonato para carregar os clubes correspondentes.';
+      return;
+    }
+    status.textContent = 'Carregando a lista de times de ' + competition.name + '…';
+    let pending = teamCatalogPromises.get(competition.name);
+    if (!pending) {
+      pending = request('/admin/sports/teams?competition=' + encodeURIComponent(competition.name))
+        .catch(() => null);
+      teamCatalogPromises.set(competition.name, pending);
+    }
+    const result = await pending;
+    if (card.dataset.teamRequest !== String(requestId) || normalizeLabel(leagueForCard(card)) !== normalizeLabel(competition.name)) return;
+    if (result?.teams?.length) {
+      card.teamOptions = result.teams;
+      status.textContent = result.source === 'api-football'
+        ? result.teams.length + ' clubes carregados do catálogo atualizado.'
+        : dynamicTeamCatalog
+          ? result.teams.length + ' sugestões locais; o catálogo online não respondeu. Você também pode digitar outro time.'
+          : result.teams.length + ' sugestões locais. Para carregar todos os clubes atuais, configure FOOTBALL_API_KEY no serviço BlueTV no Render.';
+    } else {
+      status.textContent = 'Não foi possível carregar a lista. Você pode digitar o nome do time.';
+    }
+    refreshTeamPickers(card);
   }
 
   function showEmpty() {
@@ -306,7 +401,7 @@
     return [...games.querySelectorAll('article')].map(card => {
       const home = card.querySelector('[data-field="home"]').value.trim();
       const away = card.querySelector('[data-field="away"]').value.trim();
-      const league = card.querySelector('[data-field="league"]').value.trim();
+      const league = leagueForCard(card);
       const time = card.querySelector('[data-field="time"]').value;
       const channels = [...card.querySelectorAll('input:checked')].map(control => control.value);
       return { match: [home, away].filter(Boolean).join(' x '), league, time, channels };
@@ -364,6 +459,9 @@
       suggestions = data.suggestions;
       suggest.disabled = !suggestions.length;
       catalogInput.value = catalog.join('\n');
+      const sports = await request('/admin/sports/competitions');
+      competitionCatalog = sports.competitions || [];
+      dynamicTeamCatalog = Boolean(sports.dynamicAvailable);
     } catch (error) {
       catalogStatus.textContent = error.message;
     }
@@ -470,7 +568,11 @@
     dirty = true;
     const card = event.target.closest('.sports-match');
     if (card) {
-      if (event.target.matches('[data-field="league"]')) refreshTeamSuggestions(card);
+      if (event.target.matches('[data-field="league-choice"]')) {
+        const custom = card.querySelector('[data-field="league-custom"]');
+        custom.hidden = event.target.value !== '__custom__';
+        loadTeamCatalog(card);
+      } else if (event.target.matches('[data-field="league-custom"]')) loadTeamCatalog(card);
       renderMatchPreview(card);
     }
     renderByChannel();
@@ -479,7 +581,11 @@
     const card = event.target.closest('.sports-match');
     if (!card) return;
     dirty = true;
-    if (event.target.matches('[data-field="league"]')) refreshTeamSuggestions(card);
+    if (event.target.matches('[data-field="league-choice"]')) {
+      const custom = card.querySelector('[data-field="league-custom"]');
+      custom.hidden = event.target.value !== '__custom__';
+      loadTeamCatalog(card);
+    } else if (event.target.matches('[data-field="league-custom"]')) loadTeamCatalog(card);
     renderMatchPreview(card);
     renderByChannel();
   });

@@ -2,6 +2,7 @@ const express = require('express');
 const { baseChannels, normalizePremiereChannels } = require('./sports-channels');
 const { completePublishedSerieA } = require('./services/brasileirao-agenda');
 const { extractAgendaPhoto, supportedImage } = require('./services/agenda-photo');
+const sportsCatalog = require('./services/sports-catalog');
 
 function isCalendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -64,6 +65,16 @@ function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAg
 
   app.get('/admin/sports/channels', requireAuth, route(async (_req, res) => {
     res.json({ channels: await savedChannels(), suggestions: baseChannels });
+  }));
+
+  app.get('/admin/sports/competitions', requireAuth, route(async (_req, res) => {
+    res.json({ competitions: sportsCatalog.competitions, dynamicAvailable: sportsCatalog.dynamicAvailable });
+  }));
+
+  app.get('/admin/sports/teams', requireAuth, route(async (req, res) => {
+    const competition = typeof req.query.competition === 'string' ? req.query.competition.trim() : '';
+    if (!competition || competition.length > 120) return res.status(400).json({ error: 'Selecione um campeonato.' });
+    res.json(await sportsCatalog.getTeams(competition));
   }));
 
   app.put('/admin/sports/channels', requireAuth, route(async (req, res) => {
