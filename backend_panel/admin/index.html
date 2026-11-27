@@ -101,6 +101,54 @@
     #navEvolution{font-family:inherit;background-color:transparent;border-top:0;border-right:0;border-bottom:0}
     #evolution [hidden]{display:none}
     #evolution button:disabled{opacity:.5;cursor:default;transform:none}
+    /* ── SPORTS AGENDA ── */
+    .sports-heading{display:block;margin-bottom:18px}
+    .sports-kicker{display:inline-flex;align-items:center;gap:7px;color:#cfb5ff;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:8px}
+    .sports-intro{max-width:760px;color:#a5a5bb;line-height:1.6;margin-top:8px;font-size:14px}
+    .sports-layout{display:grid;grid-template-columns:minmax(250px,.75fr) minmax(0,1.8fr);gap:18px;align-items:start}
+    .sports-box{background:linear-gradient(145deg,#17152a,#11101e);border:1px solid #ffffff12;border-radius:16px;padding:20px;margin-bottom:18px}
+    .sports-box h3{font-size:16px;margin-bottom:6px;color:#f3efff}
+    .sports-help{font-size:12px;color:#9291a7;line-height:1.55;margin:0 0 14px}
+    .sports-catalog textarea{width:100%;min-height:170px;resize:vertical;line-height:1.65}
+    .sports-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:16px 0}
+    .sports-toolbar label{font-size:12px;color:#aaa9bd}
+    .sports-toolbar input.filter-input{width:auto;min-width:150px}
+    .sports-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px 0}
+    .sports-step{padding:11px;border-radius:10px;background:#ffffff06;border:1px solid #ffffff0d;color:#a5a3b9;font-size:11px;line-height:1.5}
+    .sports-step strong{display:block;color:#e6ddff;font-size:12px;margin-bottom:3px}
+    .sports-source{min-height:22px;color:#9b99b0;font-size:12px;line-height:1.5}
+    .sports-source a{color:#8cddff;margin-left:7px}
+    .sports-games{display:grid;gap:12px;margin-top:14px}
+    .sports-match{overflow:hidden;border:1px solid #8d54d733;border-radius:14px;background:#0f0e1b;box-shadow:0 10px 24px #0003}
+    .sports-match-preview{position:relative;padding:16px;background:radial-gradient(ellipse at 10% 0%,#8d35d44a,transparent 52%),linear-gradient(120deg,#1e1730,#13121e 65%,#24133c);border-bottom:1px solid #ffffff12}
+    .sports-match-preview:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#d54bff,#7d45ff,#00d4ff)}
+    .sports-preview-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .sports-preview-time{font:800 20px/1 'Segoe UI',sans-serif;color:#fff;letter-spacing:.03em}
+    .sports-preview-league{font-size:10px;color:#c9bddc;text-transform:uppercase;letter-spacing:.08em;text-align:right}
+    .sports-preview-teams{display:grid;grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);align-items:center;gap:10px}
+    .sports-preview-team{min-width:0;display:flex;align-items:center;gap:9px;color:#f8f6ff;font-size:14px;font-weight:700}
+    .sports-preview-team:last-child{justify-content:flex-end;text-align:right}
+    .sports-team-logo,.sports-team-fallback{width:38px;height:38px;flex:0 0 38px;object-fit:contain;border-radius:50%;background:#ffffffeb;padding:4px}
+    .sports-team-fallback{display:grid;place-items:center;color:#7028a5;background:linear-gradient(135deg,#fff,#e6d5ff);font-size:12px}
+    .sports-team-name{overflow-wrap:anywhere}
+    .sports-preview-vs{text-align:center;color:#b77aff;font-size:12px;font-weight:800}
+    .sports-preview-channels{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+    .sports-channel-chip{padding:5px 9px;border-radius:999px;background:#f5c928;color:#211a04;font-size:10px;font-weight:800;letter-spacing:.02em}
+    .sports-channel-empty{color:#9994a8;font-size:11px;font-style:italic}
+    .sports-match-fields{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(140px,.8fr) 130px;gap:10px;padding:14px 14px 10px}
+    .sports-field{display:grid;gap:4px}
+    .sports-match-fields label{font-size:11px;color:#a9a6ba}
+    .sports-match-fields input{width:100%;margin-top:5px}
+    .sports-channel-editor{padding:0 14px 12px}
+    .sports-channel-title{color:#c4bed2;font-size:11px;font-weight:700;margin-bottom:8px}
+    .sports-channel-options{display:flex;flex-wrap:wrap;gap:7px}
+    .sports-channel-options label{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#ffffff08;border:1px solid #ffffff12;color:#c7c4d3;font-size:11px}
+    .sports-remove{margin:0 14px 14px}
+    .sports-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .sports-channel-details{margin:12px 0;padding:11px 13px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff05}
+    .sports-channel-details summary{cursor:pointer;color:#d4c5ff;font-size:12px;font-weight:600}
+    #sportsByChannel{margin-top:12px;color:#b4b1c2;font-size:12px;line-height:1.7}
+    #sportsStatus,#sportsCatalogStatus{min-height:18px;color:#9fe8ff;font-size:12px;line-height:1.5;margin-top:10px}
     @media(max-width:640px){
       .sidebar{position:sticky;top:0;width:100%;height:auto;min-height:52px;padding:0;display:flex;flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.35);scrollbar-width:thin}
       .sidebar-logo,.nav-section-title{display:none}
@@ -109,6 +157,18 @@
       .sidebar-footer{margin:0;padding:6px 10px}
       .btn-logout{width:auto;padding:8px 10px}
       .main{margin:0;padding:16px;min-height:0}
+    }
+    @media(max-width:900px){.sports-layout{grid-template-columns:1fr}}
+    @media(max-width:640px){
+      .sports-heading .page-header{margin-bottom:8px}
+      .sports-box{padding:15px}
+      .sports-steps{grid-template-columns:1fr}
+      .sports-step{padding:9px 11px}
+      .sports-match-fields{grid-template-columns:1fr 1fr}
+      .sports-match-fields label:first-child{grid-column:1/-1}
+      .sports-preview-team{font-size:12px;gap:6px}
+      .sports-team-logo,.sports-team-fallback{width:32px;height:32px;flex-basis:32px}
+      .sports-preview-time{font-size:18px}
     }
 
     /* ── SERVER BARS ── */
@@ -229,45 +289,58 @@
 <div class="main">
 
   <div id="sportsSettings" class="section">
-    <div class="page-header"><h2>Jogos e Canais</h2></div>
-    <div class="box">
-      <form id="sportsCatalogForm" style="display:grid;gap:10px">
-        <label for="sportsCatalog"><strong>Canais de Jogos</strong></label>
-        <textarea class="filter-input" id="sportsCatalog" rows="5" placeholder="Um canal por linha" aria-describedby="sportsCatalogHint"></textarea>
-        <small id="sportsCatalogHint">Cole um nome por linha, na ordem em que quer mostrar no app. O BlueTV exibe os canais encontrados no catálogo de cada aparelho. A lista também fica disponível no editor da agenda.</small>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" type="submit">Salvar canais</button>
-          <button class="btn btn-sm btn-edit" id="sportsCatalogSuggestions" type="button" disabled>Adicionar canais sugeridos</button>
-        </div>
-        <p id="sportsCatalogStatus" role="status"></p>
-      </form>
+    <div class="sports-heading">
+      <span class="sports-kicker">⚽ Agenda esportiva · Horário de Brasília</span>
+      <div class="page-header"><h2>Jogos e Canais</h2></div>
+      <p class="sports-intro">Organize os jogos do dia e confira como a programação vai aparecer para os clientes. Escolha uma data, importe a agenda disponível, revise os horários e canais e publique quando estiver tudo certo.</p>
     </div>
-    <div class="box">
-      <div class="filters" style="align-items:center">
-        <label for="sportsDate">Calendário</label>
-        <input class="filter-input" type="date" id="sportsDate">
-        <button class="btn btn-sm btn-edit" id="sportsToday" type="button">Hoje</button>
-        <button class="btn btn-sm btn-edit" id="sportsTomorrow" type="button">Amanhã</button>
-      </div>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-        <button class="btn btn-sm btn-edit" id="sportsSync" type="button" disabled>Buscar agenda da fonte</button>
-        <a href="https://www.instagram.com/esportesnatv/" target="_blank" rel="noopener noreferrer" style="color:#00d4ff">Instagram @esportesnatv</a>
-      </div>
-      <p id="sportsSource"></p>
-      <button class="btn btn-sm btn-edit" id="sportsViewDraft" type="button" hidden>Revisar rascunho importado</button>
-      <details style="margin:12px 0">
-        <summary style="cursor:pointer">Ver jogos por canal</summary>
-        <div id="sportsByChannel" style="margin-top:8px"></div>
-      </details>
-      <form id="sportsGamesForm">
-        <div id="sportsGames"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button class="btn btn-sm btn-edit" id="sportsAdd" type="button" disabled>Adicionar jogo</button>
-          <button class="btn btn-primary" id="sportsPublish" type="submit" disabled>Publicar agenda do dia</button>
-          <button class="btn btn-sm btn-edit" id="sportsReset" type="button" hidden>Voltar à agenda automática</button>
+    <div class="sports-layout">
+      <section class="sports-box sports-catalog">
+        <h3>📺 Canais de transmissão</h3>
+        <p class="sports-help">Cadastre um canal por linha. Esses nomes aparecem no app e também como opções para associar a cada partida.</p>
+        <form id="sportsCatalogForm" style="display:grid;gap:10px">
+          <label for="sportsCatalog"><strong>Lista de canais</strong></label>
+          <textarea class="filter-input" id="sportsCatalog" rows="7" placeholder="Premiere 1&#10;SporTV&#10;ESPN" aria-describedby="sportsCatalogHint"></textarea>
+          <small id="sportsCatalogHint" class="sports-help">A ordem da lista é usada no app. Sugestões podem ser adicionadas sem apagar os canais que você já cadastrou.</small>
+          <div class="sports-actions">
+            <button class="btn btn-primary" type="submit">Salvar canais</button>
+            <button class="btn btn-sm btn-edit" id="sportsCatalogSuggestions" type="button" disabled>Adicionar sugestões</button>
+          </div>
+          <p id="sportsCatalogStatus" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section class="sports-box sports-agenda">
+        <h3>🗓️ Agenda do dia</h3>
+        <p class="sports-help">A importação cria ou atualiza um rascunho. Ela não publica sozinha: confira cada partida e toque em “Publicar agenda” para enviar ao app.</p>
+        <div class="sports-toolbar">
+          <label for="sportsDate">Data da programação</label>
+          <input class="filter-input" type="date" id="sportsDate">
+          <button class="btn btn-sm btn-edit" id="sportsToday" type="button">Hoje</button>
+          <button class="btn btn-sm btn-edit" id="sportsTomorrow" type="button">Amanhã</button>
+          <button class="btn btn-sm btn-edit" id="sportsSync" type="button" disabled>↻ Buscar agenda</button>
         </div>
-        <p id="sportsStatus" role="status"></p>
-      </form>
+        <div class="sports-steps" aria-label="Etapas para atualizar a agenda">
+          <div class="sports-step"><strong>1 · Escolha o dia</strong>Use a data, Hoje ou Amanhã.</div>
+          <div class="sports-step"><strong>2 · Busque e revise</strong>Confira horário, campeonato e transmissões.</div>
+          <div class="sports-step"><strong>3 · Publique</strong>As alterações só chegam ao app depois de publicar.</div>
+        </div>
+        <p id="sportsSource" class="sports-source" aria-live="polite"></p>
+        <button class="btn btn-sm btn-edit" id="sportsViewDraft" type="button" hidden>Revisar rascunho importado</button>
+        <details class="sports-channel-details">
+          <summary>Conferir jogos agrupados por canal</summary>
+          <div id="sportsByChannel"></div>
+        </details>
+        <form id="sportsGamesForm">
+          <div id="sportsGames" class="sports-games"></div>
+          <div class="sports-actions">
+            <button class="btn btn-sm btn-edit" id="sportsAdd" type="button" disabled>＋ Adicionar jogo</button>
+            <button class="btn btn-primary" id="sportsPublish" type="submit" disabled>Publicar agenda</button>
+            <button class="btn btn-sm btn-edit" id="sportsReset" type="button" hidden>Restaurar agenda automática</button>
+          </div>
+          <p id="sportsStatus" role="status" aria-live="polite"></p>
+        </form>
+        <p class="sports-help">Fonte auxiliar: <a href="https://www.instagram.com/esportesnatv/" target="_blank" rel="noopener noreferrer">@EsportesNaTV</a>. Sempre revise o rascunho antes de publicar.</p>
+      </section>
     </div>
   </div>
 
@@ -1808,6 +1881,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=4"></script>
+<script src="/admin/sports-settings.js?v=5"></script>
 </body>
 </html>
