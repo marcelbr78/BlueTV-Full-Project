@@ -941,15 +941,10 @@ app.post('/webhook/evolution', async (req, res) => {
     const messageData = data.message || data.messages?.[0] || {};
     const key = data.key || messageData.key || {};
     
-    // Número de quem enviou
-    const remoteJid = key.remoteJid || data.remoteJid || '';
-    const senderPhone = remoteJid
-      .replace(/@s\.whatsapp\.net/g, '')
-      .replace(/@c\.us/g, '')
-      .replace(/@lid/g, '')
-      .replace(/:[0-9]+$/g, '')
-      .replace(/\.[0-9]+$/g, '')
-      .trim();
+    // LIDs identificam a conta, mas não são números de telefone.
+    // O Evolution pode fornecer o número correspondente em remoteJidAlt/
+    // participantAlt; só esses JIDs telefônicos são aceitos como telefone.
+    const senderPhone = extractEvolutionSenderPhone(key, data, body);
     
     // Conteúdo da mensagem
     const message = messageData.conversation 
@@ -959,11 +954,11 @@ app.post('/webhook/evolution', async (req, res) => {
       || body.message
       || '';
 
-    if (!message || !senderPhone) {
+    if (!message) {
       return res.json({ success: true, message: 'Sem conteúdo' });
     }
 
-    console.log(`📞 De: ${senderPhone}`);
+    console.log(senderPhone ? `📞 De: ${senderPhone}` : '📞 Mensagem sem telefone verificável (JID LID)');
     console.log(`💬 Mensagem: ${message.substring(0, 100)}`);
 
     const now = Date.now();
@@ -981,10 +976,12 @@ app.post('/webhook/evolution', async (req, res) => {
       );
 
       if (existing) {
-        await db.run(
-          "UPDATE app_requests SET whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
-          [senderPhone, now, clientId]
-        );
+        if (senderPhone) {
+          await db.run(
+            "UPDATE app_requests SET whatsapp_number = ?, updated_at = ? WHERE client_code = ?",
+            [senderPhone, now, clientId]
+          );
+        }
       } else {
         await db.run(
           `INSERT INTO app_requests 
@@ -1014,10 +1011,16 @@ app.post('/webhook/evolution', async (req, res) => {
       }
 
       // Buscar o Client ID pelo número de telefone
-      const appRequest = await db.get(
+      const appRequestByPhone = senderPhone ? await db.get(
         "SELECT * FROM app_requests WHERE whatsapp_number = ? ORDER BY created_at DESC LIMIT 1",
         [senderPhone]
-      );
+      ) : null;
+      const messageClientCode = parseClientIdFromMessage(message);
+      const appRequestByCode = !appRequestByPhone && messageClientCode ? await db.get(
+        "SELECT * FROM app_requests WHERE client_code = ?",
+        [messageClientCode]
+      ) : null;
+      const appRequest = appRequestByPhone || appRequestByCode;
 
       const clientId = appRequest?.client_code || null;
       console.log(`🔗 Vinculando credenciais ao Client ID: ${clientId}`);
@@ -1558,6 +1561,52 @@ app.get('/admin/matches-today', requireAuth, (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+function phoneFromWhatsappJid(value) {
+  if (typeof value !== 'string') return null;
+  const match = value.trim().match(/^(\d{7,15})(?::\d+)?@(s\.whatsapp\.net|c\.us)$/i);
+  return match ? match[1] : null;
+}
+
+function phoneFromExplicitField(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().replace(/^\+/, '');
+  return /^\d{7,15}$/.test(normalized) ? normalized : null;
+}
+
+function extractEvolutionSenderPhone(key, data, body) {
+  const jidCandidates = [
+    key.remoteJid,
+    key.remoteJidAlt,
+    key.participantAlt,
+    key.participant,
+    data.remoteJid,
+    data.remoteJidAlt,
+    data.participantAlt,
+    data.participant,
+    body.remoteJid,
+    body.remoteJidAlt
+  ];
+  for (const candidate of jidCandidates) {
+    const phone = phoneFromWhatsappJid(candidate);
+    if (phone) return phone;
+  }
+
+  const explicitCandidates = [
+    key.senderPhone,
+    data.senderPhone,
+    data.phoneNumber,
+    data.phone,
+    body.senderPhone,
+    body.phoneNumber,
+    body.phone
+  ];
+  for (const candidate of explicitCandidates) {
+    const phone = phoneFromExplicitField(candidate);
+    if (phone) return phone;
+  }
+  return null;
+}
 
 app.post('/webhook/botbot', async (req, res) => {
   try {
