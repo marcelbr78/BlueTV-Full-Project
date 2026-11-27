@@ -49,6 +49,20 @@ dbReady
   })
   .catch(err => console.error('Erro ao inicializar DB:', err));
 
+// Histórico administrativo é complementar: falha ao registrar nunca deve
+// interromper cadastro, ativação ou captura de credenciais.
+async function logClientHistory(clientCode, category, event, summary, createdAt = Date.now()) {
+  if (!clientCode) return;
+  try {
+    await db.run(
+      'INSERT INTO client_history (client_code, category, event, summary, created_at) VALUES (?, ?, ?, ?, ?)',
+      [String(clientCode).trim().toUpperCase(), category, event, summary, createdAt]
+    );
+  } catch (error) {
+    console.warn('Não foi possível registrar histórico do cliente:', error.code || error.name);
+  }
+}
+
 async function syncAndSave() {
   try {
     const matches = await syncFootball();
@@ -577,6 +591,7 @@ app.post('/admin/clients/manual', requireAuth, async (req, res) => {
       "UPDATE app_requests SET status = 'ok', xtream_id = ?, updated_at = ? WHERE client_code = ?",
       [createdCredentialId, Date.now(), clientCode]
     );
+    await logClientHistory(clientCode, 'status', 'client_activated', 'Cliente ativado.', now);
 
     return res.status(201).json({ success: true, client_code: clientCode, status: 'ok' });
   } catch (err) {
@@ -615,6 +630,7 @@ app.put('/admin/clients/:code/profile', requireAuth, async (req, res) => {
       [name || null, phone || null, date || null, Date.now(), code]
     );
     if (!result.rowsAffected) return res.status(404).json({ error: 'Cliente não encontrado.' });
+    await logClientHistory(code, 'profile', 'profile_updated', 'Ficha do cliente atualizada.');
     return res.json({ success: true });
   } catch (error) {
     console.error('Erro ao salvar ficha de cliente:', error.code || error.name);
@@ -637,12 +653,65 @@ app.get('/admin/client-detail/:code', requireAuth, async (req, res) => {
       [code]
     ).catch(() => []);
 
+    const channelAndErrorEvents = await db.all(
+      `SELECT id, event, channel, quality, error_code, apk_version, ts
+       FROM client_events WHERE client_code = ? ORDER BY ts DESC, id DESC LIMIT 100`,
+      [code]
+    ).catch(() => []);
+    const savedHistory = await db.all(
+      `SELECT category, event, summary, created_at AS ts
+       FROM client_history WHERE client_code = ? ORDER BY created_at DESC, id DESC LIMIT 100`,
+      [code]
+    ).catch(() => []);
+    const credentialHistory = await db.all(
+      `SELECT host, validade, plano, extracted_at AS ts
+       FROM xtream_credentials
+       WHERE request_id = ? OR client_id = ?
+       ORDER BY extracted_at DESC, id DESC LIMIT 50`,
+      [appReq.request_id, code]
+    ).catch(() => []);
+    const whatsappHistory = appReq.whatsapp_number
+      ? await db.all(
+          `SELECT received_at AS ts FROM botbot_messages
+           WHERE phone = ? ORDER BY id DESC LIMIT 50`,
+          [appReq.whatsapp_number]
+        ).catch(() => [])
+      : [];
+
+    const history = [
+      { category: 'status', event: 'client_created', summary: 'Cadastro do cliente criado.', ts: appReq.created_at },
+      ...savedHistory,
+      ...channelAndErrorEvents.map(item => ({
+        category: item.event === 'PLAY_ERROR' ? 'errors' : 'channels',
+        event: item.event,
+        summary: item.event === 'PLAY_START'
+          ? `Assistiu: ${item.channel || 'canal não informado'}`
+          : item.event === 'PLAY_ERROR'
+            ? `Erro de reprodução${item.error_code != null ? ` (código ${item.error_code})` : ''}.`
+            : item.event === 'PLAY_STOP' ? `Parou: ${item.channel || 'canal não informado'}` : `Evento do app: ${item.event}.`,
+        detail: item.event === 'PLAY_START' ? [item.quality, item.apk_version && `APK ${item.apk_version}`].filter(Boolean).join(' · ') : '',
+        ts: item.ts
+      })),
+      ...credentialHistory.map(item => ({
+        category: 'credentials', event: 'credentials_received',
+        summary: 'Credenciais recebidas e processadas.',
+        detail: [item.host, item.plano, item.validade && `Validade ${item.validade}`].filter(Boolean).join(' · '),
+        ts: item.ts
+      })),
+      ...whatsappHistory.map(item => ({
+        category: 'whatsapp', event: 'whatsapp_received',
+        summary: 'Mensagem recebida no WhatsApp (conteúdo oculto).', ts: item.ts
+      }))
+    ].filter(item => Number.isFinite(Number(item.ts)) && Number(item.ts) > 0)
+      .sort((a, b) => Number(b.ts) - Number(a.ts))
+      .slice(0, 200);
+
     const errorCount24h = await db.get(
       `SELECT COUNT(*) as n FROM client_events WHERE client_code = ? AND event = 'PLAY_ERROR' AND ts > ?`,
       [code, Date.now() - 86400000]
     ).catch(() => ({ n: 0 }));
 
-    return res.json({ appReq, xtream, events, errorCount24h: errorCount24h?.n || 0 });
+    return res.json({ appReq, xtream, events, history, errorCount24h: errorCount24h?.n || 0 });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -833,6 +902,7 @@ app.post('/admin/client-inativar', requireAuth, async (req, res) => {
        WHERE client_code = ?`,
       [now, motivo ? `[INATIVO] ${motivo}` : '[INATIVO]', code]
     );
+    await logClientHistory(code, 'status', 'client_deactivated', `Cliente inativado${motivo ? `: ${String(motivo).slice(0, 160)}` : '.'}`, now);
     console.log(`🚫 Cliente inativado: ${code} — motivo: ${motivo || 'não informado'}`);
     return res.json({ success: true });
   } catch (err) {
@@ -861,6 +931,7 @@ app.post('/admin/client-reativar', requireAuth, async (req, res) => {
        WHERE client_code = ?`,
       [novoStatus, now, code]
     );
+    await logClientHistory(code, 'status', 'client_reactivated', `Cliente reativado (${novoStatus}).`, now);
     console.log(`♻️  Cliente reativado: ${code} → ${novoStatus}`);
     return res.json({ success: true, status: novoStatus });
   } catch (err) {
@@ -1011,6 +1082,7 @@ app.post('/webhook/evolution', async (req, res) => {
         "INSERT INTO botbot_messages (phone, message, received_at) VALUES (?, ?, ?)",
         [senderPhone, message, now]
       ).catch(() => {});
+      await logClientHistory(clientId, 'whatsapp', 'whatsapp_received', 'Mensagem de identificação recebida no WhatsApp.', now);
 
       console.log(`✅ Número ${senderPhone} vinculado ao ${clientId}`);
       return res.json({ success: true, clientId, senderPhone });

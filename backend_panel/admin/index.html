@@ -595,13 +595,21 @@
 
       <hr class="divider">
 
-      <!-- Eventos -->
+      <!-- Histórico do cliente -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:#aaa">Histórico de canais</span>
-        <span style="font-size:11px;color:#444">Últimos 80 registros</span>
+        <span style="font-size:13px;font-weight:600;color:#aaa">Histórico do cliente</span>
+        <select id="mdHistoryFilter" onchange="renderClientHistory()" aria-label="Filtrar histórico" style="background:#0d0d1a;color:#aaa;border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 8px;font-size:11px">
+          <option value="all">Tudo</option>
+          <option value="channels">Canais</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="credentials">Credenciais</option>
+          <option value="status">Cadastro e status</option>
+          <option value="profile">Ficha</option>
+          <option value="errors">Erros</option>
+        </select>
       </div>
       <div class="timeline" id="mdTimeline">
-        <div class="tl-empty">Nenhum canal registrado.</div>
+        <div class="tl-empty">Nenhum evento registrado.</div>
       </div>
 
     </div>
@@ -1432,6 +1440,7 @@ document.getElementById('mdProfile').addEventListener('submit', async event => {
 
 async function openDetail(code) {
   currentDetailCode = code;
+  currentClientHistory = [];
   const state = detailValidity = {};
   document.getElementById('mdTitle').textContent = `🔍 ${code}`;
   document.getElementById('testResult').textContent = '';
@@ -1484,6 +1493,8 @@ function applyLocalDetail(c) {
   renderDetailValidity();
 }
 
+let currentClientHistory = [];
+
 function applyFullDetail(d) {
   if (!d.appReq) return;
   const c  = d.appReq;
@@ -1495,16 +1506,29 @@ function applyFullDetail(d) {
   if (c.last_seen) document.getElementById('mdLastSeen').textContent = `${ago(c.last_seen)}\n${fmt(c.last_seen)}`;
   document.getElementById('mdErrors').textContent   = d.errorCount24h > 0 ? `⚠️ ${d.errorCount24h} erros` : '✅ Sem erros';
 
+  currentClientHistory = Array.isArray(d.history) ? d.history : [];
+  renderClientHistory();
+}
+
+function renderClientHistory() {
   const timeline = document.getElementById('mdTimeline');
-  const events = d.events || [];
-  timeline.innerHTML = events.length
-    ? events.map(ev => `
+  if (!timeline) return;
+  const filter = document.getElementById('mdHistoryFilter')?.value || 'all';
+  const entries = currentClientHistory.filter(item => filter === 'all' || item.category === filter);
+  const dotClass = category => category === 'errors' ? 'error'
+    : category === 'credentials' || category === 'status' ? 'ready'
+      : category === 'whatsapp' ? 'net' : category === 'channels' ? 'play' : 'other';
+  timeline.innerHTML = entries.length
+    ? entries.map(item => `
       <div class="tl-item">
-        <div class="tl-dot play"></div>
-        <div class="tl-info"><div class="tl-event">${htmlText(ev.channel || 'Canal')}</div></div>
-        <div class="tl-time">${fmt(ev.ts)}</div>
+        <div class="tl-dot ${dotClass(item.category)}"></div>
+        <div class="tl-info">
+          <div class="tl-event">${htmlText(item.summary || 'Evento')}</div>
+          ${item.detail ? `<div class="tl-detail">${htmlText(item.detail)}</div>` : ''}
+        </div>
+        <div class="tl-time">${htmlText(fmt(Number(item.ts)))}</div>
       </div>`).join('')
-    : '<div class="tl-empty">Nenhum canal registrado.</div>';
+    : '<div class="tl-empty">Nenhum evento registrado nesta categoria.</div>';
 }
 
 // Testar conexão com servidor do cliente
