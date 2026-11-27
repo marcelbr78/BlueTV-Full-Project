@@ -23,6 +23,43 @@
   const day = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
   });
+  let suggestionListId = 0;
+  const competitionSuggestions = [
+    'Brasileirão Série A', 'Brasileirão Série B', 'Copa do Brasil', 'Campeonato Paulista',
+    'Campeonato Carioca', 'Campeonato Mineiro', 'Campeonato Gaúcho', 'Premier League',
+    'EFL Championship', 'FA Cup', 'La Liga', 'Serie A (Itália)', 'Bundesliga', 'Ligue 1',
+    'Eredivisie', 'Primeira Liga', 'Champions League', 'Europa League', 'Conference League',
+    'Copa Libertadores', 'Copa Sul-Americana', 'Mundial de Clubes'
+  ];
+  const teamsByRegion = {
+    brazil: ['América-MG', 'Athletico-PR', 'Atlético-MG', 'Athletic Club', 'Amazonas', 'Avaí', 'Bahia',
+      'Botafogo', 'Botafogo-SP', 'Bragantino', 'Ceará', 'Chapecoense', 'Corinthians', 'Coritiba',
+      'CRB', 'Cruzeiro', 'Cuiabá', 'Ferroviária', 'Flamengo', 'Fluminense', 'Fortaleza', 'Goiás',
+      'Grêmio', 'Guarani', 'Internacional', 'Juventude', 'Mirassol', 'Náutico', 'Novorizontino',
+      'Operário-PR', 'Palmeiras', 'Paysandu', 'Ponte Preta', 'Remo', 'Sampaio Corrêa', 'Santos',
+      'São Paulo', 'Sport', 'Vasco', 'Vila Nova', 'Vitória'],
+    england: ['Arsenal', 'Aston Villa', 'Birmingham City', 'Blackburn Rovers', 'Bournemouth', 'Brentford',
+      'Brighton', 'Bristol City', 'Burnley', 'Cardiff City', 'Chelsea', 'Coventry City', 'Crystal Palace',
+      'Derby County', 'Everton', 'Fulham', 'Leeds United', 'Leicester City', 'Liverpool', 'Manchester City',
+      'Manchester United', 'Middlesbrough', 'Newcastle United', 'Norwich City', 'Nottingham Forest',
+      'Oxford United', 'Portsmouth', 'Preston North End', 'Queens Park Rangers', 'Sheffield United',
+      'Southampton', 'Stoke City', 'Sunderland', 'Swansea City', 'Tottenham', 'Watford', 'West Bromwich',
+      'West Ham', 'Wolverhampton'],
+    europe: ['Ajax', 'Atalanta', 'Atlético de Madrid', 'Barcelona', 'Bayern de Munique', 'Benfica',
+      'Borussia Dortmund', 'Celtic', 'Club Brugge', 'Fenerbahçe', 'Inter de Milão', 'Juventus',
+      'Lazio', 'Lille', 'Liverpool', 'Manchester City', 'Milan', 'Monaco', 'Napoli', 'Newcastle United',
+      'Nottingham Forest', 'Olympique de Marseille', 'Paris Saint-Germain', 'Porto', 'Real Madrid',
+      'Roma', 'Sporting', 'Stade Brestois 29', 'Sevilla', 'Venezia', 'Bologna', 'Chelsea']
+  };
+  const allTeamSuggestions = [...new Set(Object.values(teamsByRegion).flat())].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  function teamSuggestionsFor(league) {
+    const value = (league || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (/brasileir|serie\s*b|copa do brasil|paulista|carioca|mineiro|gaucho/.test(value)) return teamsByRegion.brazil;
+    if (/england|inglaterra|premier|championship|fa cup|efl/.test(value)) return teamsByRegion.england;
+    if (/la liga|italia|serie\s*a|bundesliga|ligue|eredivisie|primeira liga|champions|europa league|conference league|libertadores|sul-americana|mundial/.test(value)) return teamsByRegion.europe;
+    return allTeamSuggestions;
+  }
 
   async function request(path, method = 'GET', data) {
     const response = await fetch(path.startsWith('/') ? path : '/admin/sports/' + path, {
@@ -49,14 +86,42 @@
     return node;
   }
 
-  function input(label, type, value, maxLength, required = true) {
+  function input(label, type, value, maxLength, required = true, dataField = '') {
     const row = create('label', label);
     row.className = 'sports-field';
     const control = create('input');
     Object.assign(control, { type, value: value || '', required, className: 'filter-input' });
     if (maxLength) control.maxLength = maxLength;
+    if (dataField) control.dataset.field = dataField;
     row.append(control);
     return row;
+  }
+
+  function searchableInput(label, value, maxLength, required, dataField, suggestions, placeholder) {
+    const row = create('label', label);
+    row.className = 'sports-field';
+    const listId = 'sports-suggestions-' + (++suggestionListId);
+    const wrap = create('span');
+    wrap.className = 'sports-search-wrap';
+    const control = create('input');
+    Object.assign(control, { type: 'text', value: value || '', required, className: 'filter-input', placeholder });
+    Object.assign(control.dataset, { field: dataField, listId });
+    control.maxLength = maxLength;
+    control.setAttribute('list', listId);
+    const list = create('datalist');
+    list.id = listId;
+    setSuggestions(list, suggestions);
+    wrap.append(control);
+    row.append(wrap, list);
+    return row;
+  }
+
+  function setSuggestions(list, values) {
+    list.replaceChildren(...[...new Set(values)].map(value => {
+      const option = create('option');
+      option.value = value;
+      return option;
+    }));
   }
 
   function validLogo(value) {
@@ -87,11 +152,12 @@
   }
 
   function renderMatchPreview(card) {
-    const [matchField, leagueField, timeField] = card.querySelectorAll('input:not([type="checkbox"])');
-    const text = matchField.value.trim();
-    const sides = text.split(/\s+(?:x|vs\.?|×)\s+/i, 2);
-    const home = sides.length > 1 ? sides[0] : (text || 'Time da casa');
-    const away = sides.length > 1 ? sides[1] : 'Adversário';
+    const homeField = card.querySelector('[data-field="home"]');
+    const awayField = card.querySelector('[data-field="away"]');
+    const leagueField = card.querySelector('[data-field="league"]');
+    const timeField = card.querySelector('[data-field="time"]');
+    const home = homeField.value.trim() || 'Time da casa';
+    const away = awayField.value.trim() || 'Adversário';
     const normalizeTeam = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     const homeLogo = normalizeTeam(home) === normalizeTeam(card.dataset.home || '') ? card.dataset.homeLogo : '';
     const awayLogo = normalizeTeam(away) === normalizeTeam(card.dataset.away || '') ? card.dataset.awayLogo : '';
@@ -144,11 +210,20 @@
     preview.className = 'sports-match-preview';
     const details = create('div');
     details.className = 'sports-match-fields';
-    const matchName = match.match || [match.home, match.away].filter(Boolean).join(' x ');
+    const sides = typeof match.match === 'string' ? match.match.split(/\s+(?:x|×|vs\.?|versus)\s+/i, 2) : [];
+    const home = match.home || sides[0] || '';
+    const away = match.away || sides[1] || '';
+    const league = match.league || '';
+    const leagueField = searchableInput('Campeonato', league, 120, false, 'league', competitionSuggestions,
+      'Digite ou pesquise um campeonato');
+    leagueField.classList.add('sports-field-league');
+    const timeField = input('Horário de Brasília', 'time', match.time, null, true, 'time');
+    timeField.classList.add('sports-field-time');
     details.append(
-      input('Partida', 'text', matchName, 180),
-      input('Campeonato', 'text', match.league, 120, false),
-      input('Horário de Brasília', 'time', match.time)
+      leagueField,
+      timeField,
+      searchableInput('Time da casa', home, 90, true, 'home', teamSuggestionsFor(league), 'Buscar ou digitar o time'),
+      searchableInput('Time visitante', away, 90, true, 'away', teamSuggestionsFor(league), 'Buscar ou digitar o time')
     );
 
     const options = create('div');
@@ -178,8 +253,18 @@
     channelEditor.append(create('p', 'Canais de transmissão'), options);
     channelEditor.firstElementChild.className = 'sports-channel-title';
     card.append(preview, details, channelEditor, remove);
+    refreshTeamSuggestions(card);
     renderMatchPreview(card);
     games.append(card);
+  }
+
+  function refreshTeamSuggestions(card) {
+    const league = card.querySelector('[data-field="league"]').value;
+    for (const side of ['home', 'away']) {
+      const field = card.querySelector('[data-field="' + side + '"]');
+      const list = field && document.getElementById(field.dataset.listId);
+      if (list) setSuggestions(list, [field.value, ...teamSuggestionsFor(league)].filter(Boolean));
+    }
   }
 
   function showEmpty() {
@@ -219,9 +304,12 @@
 
   function readMatches() {
     return [...games.querySelectorAll('article')].map(card => {
-      const [match, league, time] = card.querySelectorAll('input:not([type="checkbox"])');
+      const home = card.querySelector('[data-field="home"]').value.trim();
+      const away = card.querySelector('[data-field="away"]').value.trim();
+      const league = card.querySelector('[data-field="league"]').value.trim();
+      const time = card.querySelector('[data-field="time"]').value;
       const channels = [...card.querySelectorAll('input:checked')].map(control => control.value);
-      return { match: match.value, league: league.value, time: time.value, channels };
+      return { match: [home, away].filter(Boolean).join(' x '), league, time, channels };
     });
   }
 
@@ -381,7 +469,18 @@
   games.addEventListener('input', event => {
     dirty = true;
     const card = event.target.closest('.sports-match');
-    if (card) renderMatchPreview(card);
+    if (card) {
+      if (event.target.matches('[data-field="league"]')) refreshTeamSuggestions(card);
+      renderMatchPreview(card);
+    }
+    renderByChannel();
+  });
+  games.addEventListener('change', event => {
+    const card = event.target.closest('.sports-match');
+    if (!card) return;
+    dirty = true;
+    if (event.target.matches('[data-field="league"]')) refreshTeamSuggestions(card);
+    renderMatchPreview(card);
     renderByChannel();
   });
 
@@ -389,7 +488,7 @@
     renderMatch({});
     showEmpty();
     dirty = true;
-    games.lastElementChild.querySelector('input')?.focus();
+    games.lastElementChild.querySelector('[data-field="home"]')?.focus();
   });
 
   async function updateAgenda(method) {
