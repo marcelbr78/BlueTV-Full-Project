@@ -81,11 +81,6 @@ async function initDb() {
     message TEXT,
     received_at INTEGER
   )`);
-  await run(`CREATE TABLE IF NOT EXISTS evolution_sender_links (
-    sender_jid TEXT PRIMARY KEY,
-    client_code TEXT NOT NULL,
-    updated_at INTEGER NOT NULL
-  )`);
   await run("CREATE INDEX IF NOT EXISTS idx_botbot_phone_id ON botbot_messages(phone, id)");
   await run(`CREATE TABLE IF NOT EXISTS xtream_credentials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
