@@ -14,6 +14,7 @@ const { readPublishedAgenda, registerSportsAdmin } = require('./sports-admin');
 const { completeSerieA, completePublishedSerieA } = require('./services/brasileirao-agenda');
 const { validDate } = require('./services/sete-agenda');
 const { getStandings } = require('./services/cbf-standings');
+const sportsStandings = require('./services/sports-standings');
 
 // Cache enriquecido (com EPG resolvido) — servido direto ao app
 let _enrichedCache = [];
@@ -1584,11 +1585,20 @@ app.get('/app/sports/calendar/:date', requireApiKey, async (req, res) => {
 
 app.get('/app/sports/standings', requireApiKey, async (_req, res) => {
   try {
-    res.set('Cache-Control', 'no-store').json(await getStandings(todayStr().slice(0, 4)));
+    const competition = typeof _req.query.competition === 'string' ? _req.query.competition.trim() : '';
+    const data = competition
+      ? await sportsStandings.getCompetitionStandings(competition, todayStr().slice(0, 4))
+      : await getStandings(todayStr().slice(0, 4));
+    if (competition && !data) return res.status(404).json({ error: 'Campeonato não encontrado.' });
+    res.set('Cache-Control', 'no-store').json(data);
   } catch (error) {
-    console.warn('Classificação da CBF indisponível:', error.message);
-    res.status(503).json({ error: 'Classificação da Série A indisponível.' });
+    console.warn('Classificação esportiva indisponível:', error.message);
+    res.status(503).json({ error: 'Classificação indisponível no momento.' });
   }
+});
+
+app.get('/app/sports/competitions', requireApiKey, (_req, res) => {
+  res.set('Cache-Control', 'no-store').json({ competitions: sportsStandings.getCompetitions() });
 });
 
 // Admin: força sync manual da agenda
