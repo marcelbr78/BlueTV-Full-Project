@@ -81,7 +81,7 @@ function isSeparator(word, pageWidth) {
 
 function teamSide(words) {
   const stopWords = new Set(['campeonato', 'serie', 'liga', 'ligue', 'premier', 'league', 'bundesliga',
-    'championship', 'champions', 'efl', 'chami', 'italia', 'italy', 'franca', 'france', 'inglaterra',
+    'championship', 'champions', 'efl', 'chami', 'cham', 'mier', 'ip', 'italia', 'italy', 'franca', 'france', 'inglaterra',
     'england', 'inglaterr', 'brasileirao', 'playoff', 'final', 'do', 'da', 'de', 'if']);
   const tokens = words.filter(word => word.confidence == null || word.confidence >= 10 || /luminense|brestois/i.test(word.text))
     .map(word => word.text.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
@@ -136,6 +136,15 @@ function parseSportsPoster(words) {
     const x = (word.bbox.x0 + word.bbox.x1) / 2;
     const y = (word.bbox.y0 + word.bbox.y1) / 2;
     if (!anchors.some(anchor => Math.abs(anchor.y - y) < medianHeight * 1.3)) anchors.push({ x, y });
+  }
+  // Posters sometimes omit the center "x" from OCR for one row, even when
+  // both team names, its kickoff time, and the channels were recognized.
+  // Add a virtual center anchor only when the expected row has no OCR anchor.
+  for (const candidate of candidates) {
+    const expectedY = candidate.y + medianHeight * 1.5;
+    if (!anchors.some(anchor => Math.abs(anchor.y - expectedY) <= medianHeight * 3)) {
+      anchors.push({ x: pageWidth * 0.35, y: expectedY, inferred: true });
+    }
   }
   anchors.sort((a, b) => a.y - b.y);
 
