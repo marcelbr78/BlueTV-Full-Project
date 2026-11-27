@@ -1,5 +1,7 @@
+const express = require('express');
 const { baseChannels, normalizePremiereChannels } = require('./sports-channels');
 const { completePublishedSerieA } = require('./services/brasileirao-agenda');
+const { extractAgendaPhoto, supportedImage } = require('./services/agenda-photo');
 
 function isCalendarDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -76,6 +78,24 @@ function registerSportsAdmin(app, db, requireAuth, requireApiKey, getAutomaticAg
     const published = await readPublishedAgenda(db, date);
     res.json(await calendar(date, published, req.query.draft === '1'));
   }));
+
+  app.post('/admin/sports/calendar/:date/image', requireAuth,
+    express.raw({ type: 'image/*', limit: '8mb' }), route(async (req, res) => {
+      const { date } = req.params;
+      const type = (req.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
+      if (!isCalendarDate(date)) return res.status(400).json({ error: 'Selecione uma data válida.' });
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(type)) {
+        return res.status(415).json({ error: 'Envie uma foto JPG, PNG ou WebP.' });
+      }
+      if (!supportedImage(req.body, type)) {
+        return res.status(400).json({ error: 'O arquivo não parece ser uma imagem válida.' });
+      }
+      const matches = await extractAgendaPhoto(req.body);
+      if (!matches.length) {
+        return res.status(422).json({ error: 'Não reconheci jogos nessa foto. Tente uma imagem mais nítida e completa.' });
+      }
+      res.json({ date, matches });
+    }));
 
   app.put('/admin/sports/calendar/:date', requireAuth, route(async (req, res) => {
     const { date } = req.params;
