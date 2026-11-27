@@ -46,7 +46,7 @@
 
   function input(label, type, value, maxLength, required = true) {
     const row = create('label', label);
-    Object.assign(row.style, { display: 'grid', gap: '4px' });
+    row.className = 'sports-field';
     const control = create('input');
     Object.assign(control, { type, value: value || '', required, className: 'filter-input' });
     if (maxLength) control.maxLength = maxLength;
@@ -54,22 +54,100 @@
     return row;
   }
 
+  function validLogo(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && ['media.api-sports.io', 'conteudo.cbf.com.br'].includes(url.hostname)
+        ? url.href : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function teamMark(name, logo) {
+    const safeName = name.trim() || 'Time';
+    if (logo) {
+      const image = create('img');
+      Object.assign(image, { src: logo, alt: '', loading: 'lazy', className: 'sports-team-logo' });
+      image.addEventListener('error', () => {
+        const fallback = create('span', safeName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase());
+        fallback.className = 'sports-team-fallback';
+        image.replaceWith(fallback);
+      }, { once: true });
+      return image;
+    }
+    const fallback = create('span', safeName.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase());
+    fallback.className = 'sports-team-fallback';
+    return fallback;
+  }
+
+  function renderMatchPreview(card) {
+    const [matchField, leagueField, timeField] = card.querySelectorAll('input:not([type="checkbox"])');
+    const text = matchField.value.trim();
+    const sides = text.split(/\s+(?:x|vs\.?|×)\s+/i, 2);
+    const home = sides.length > 1 ? sides[0] : (text || 'Time da casa');
+    const away = sides.length > 1 ? sides[1] : 'Adversário';
+    const normalizeTeam = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const homeLogo = normalizeTeam(home) === normalizeTeam(card.dataset.home || '') ? card.dataset.homeLogo : '';
+    const awayLogo = normalizeTeam(away) === normalizeTeam(card.dataset.away || '') ? card.dataset.awayLogo : '';
+    const preview = card.querySelector('.sports-match-preview');
+    const meta = create('div');
+    meta.className = 'sports-preview-meta';
+    meta.append(create('span', timeField.value || '--:--'));
+    meta.firstElementChild.className = 'sports-preview-time';
+    meta.append(create('span', leagueField.value.trim() || 'Campeonato não informado'));
+    meta.lastElementChild.className = 'sports-preview-league';
+
+    const teams = create('div');
+    teams.className = 'sports-preview-teams';
+    const homeTeam = create('div');
+    homeTeam.className = 'sports-preview-team';
+    homeTeam.append(teamMark(home, validLogo(homeLogo)), create('span', home));
+    homeTeam.lastElementChild.className = 'sports-team-name';
+    const awayTeam = create('div');
+    awayTeam.className = 'sports-preview-team';
+    awayTeam.append(teamMark(away, validLogo(awayLogo)), create('span', away));
+    awayTeam.lastElementChild.className = 'sports-team-name';
+    teams.append(homeTeam, create('span', 'VS'), awayTeam);
+    teams.children[1].className = 'sports-preview-vs';
+
+    const channels = create('div');
+    channels.className = 'sports-preview-channels';
+    const selected = [...card.querySelectorAll('input[type="checkbox"]:checked')].map(control => control.value);
+    if (selected.length) {
+      selected.forEach(name => {
+        const chip = create('span', name);
+        chip.className = 'sports-channel-chip';
+        channels.append(chip);
+      });
+    } else {
+      const empty = create('span', 'Selecione os canais desta partida');
+      empty.className = 'sports-channel-empty';
+      channels.append(empty);
+    }
+    preview.replaceChildren(meta, teams, channels);
+  }
+
   function renderMatch(match) {
     const card = create('article');
-    Object.assign(card.style, {
-      borderTop: '1px solid #ffffff20', marginTop: '12px', paddingTop: '12px',
-      display: 'grid', gap: '10px'
-    });
+    card.className = 'sports-match';
+    card.dataset.homeLogo = validLogo(match.homeLogo);
+    card.dataset.awayLogo = validLogo(match.awayLogo);
+    card.dataset.home = match.home || '';
+    card.dataset.away = match.away || '';
+    const preview = create('div');
+    preview.className = 'sports-match-preview';
     const details = create('div');
-    Object.assign(details.style, { display: 'flex', gap: '12px', flexWrap: 'wrap' });
+    details.className = 'sports-match-fields';
+    const matchName = match.match || [match.home, match.away].filter(Boolean).join(' x ');
     details.append(
-      input('Partida', 'text', match.match, 180),
+      input('Partida', 'text', matchName, 180),
       input('Campeonato', 'text', match.league, 120, false),
       input('Horário de Brasília', 'time', match.time)
     );
 
     const options = create('div');
-    Object.assign(options.style, { display: 'flex', flexWrap: 'wrap', gap: '8px 16px' });
+    options.className = 'sports-channel-options';
     const selected = (match.channels || []).map(channel => typeof channel === 'string' ? channel : channel?.name)
       .filter(Boolean);
     const choices = new Map([...catalog, ...selected].map(name => [name.toLowerCase(), name]));
@@ -84,13 +162,18 @@
     }
     const remove = create('button', 'Remover jogo');
     Object.assign(remove, { type: 'button', className: 'btn btn-sm btn-edit' });
-    remove.style.justifySelf = 'start';
+    remove.classList.add('sports-remove');
     remove.addEventListener('click', () => {
       card.remove();
       dirty = true;
       showEmpty();
     });
-    card.append(details, create('p', 'Canais de transmissão'), options, remove);
+    const channelEditor = create('div');
+    channelEditor.className = 'sports-channel-editor';
+    channelEditor.append(create('p', 'Canais de transmissão'), options);
+    channelEditor.firstElementChild.className = 'sports-channel-title';
+    card.append(preview, details, channelEditor, remove);
+    renderMatchPreview(card);
     games.append(card);
   }
 
@@ -245,7 +328,12 @@
   dateInput.addEventListener('change', () => loadAgenda(dateInput.value));
   field('sportsToday').addEventListener('click', () => loadAgenda(day.format(new Date())));
   field('sportsTomorrow').addEventListener('click', () => loadAgenda(day.format(new Date(Date.now() + 86_400_000))));
-  games.addEventListener('input', () => { dirty = true; renderByChannel(); });
+  games.addEventListener('input', event => {
+    dirty = true;
+    const card = event.target.closest('.sports-match');
+    if (card) renderMatchPreview(card);
+    renderByChannel();
+  });
 
   add.addEventListener('click', () => {
     renderMatch({});
