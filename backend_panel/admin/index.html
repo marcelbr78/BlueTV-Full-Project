@@ -145,6 +145,11 @@
     .sports-channel-options label{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:#ffffff08;border:1px solid #ffffff12;color:#c7c4d3;font-size:11px}
     .sports-remove{margin:0 14px 14px}
     .sports-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .sports-photo-import{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,1fr) auto;gap:10px;align-items:center;padding:13px;border:1px solid #a855f733;border-radius:12px;background:linear-gradient(110deg,#30183e66,#17152a)}
+    .sports-photo-copy strong{display:block;color:#f1e5ff;font-size:13px;margin-bottom:4px}
+    .sports-photo-copy span,.sports-photo-status{color:#a5a0b7;font-size:11px;line-height:1.45}
+    .sports-photo-import input[type=file]{min-width:0;max-width:100%;color:#bbb4ca;font-size:11px}
+    .sports-photo-status{grid-column:1/-1;min-height:16px;margin:0}
     .sports-channel-details{margin:12px 0;padding:11px 13px;border:1px solid #ffffff12;border-radius:10px;background:#ffffff05}
     .sports-channel-details summary{cursor:pointer;color:#d4c5ff;font-size:12px;font-weight:600}
     #sportsByChannel{margin-top:12px;color:#b4b1c2;font-size:12px;line-height:1.7}
@@ -169,6 +174,8 @@
       .sports-preview-team{font-size:12px;gap:6px}
       .sports-team-logo,.sports-team-fallback{width:32px;height:32px;flex-basis:32px}
       .sports-preview-time{font-size:18px}
+      .sports-photo-import{grid-template-columns:1fr}
+      .sports-photo-status{grid-column:auto}
     }
 
     /* ── SERVER BARS ── */
@@ -323,6 +330,15 @@
           <div class="sports-step"><strong>1 · Escolha o dia</strong>Use a data, Hoje ou Amanhã.</div>
           <div class="sports-step"><strong>2 · Busque e revise</strong>Confira horário, campeonato e transmissões.</div>
           <div class="sports-step"><strong>3 · Publique</strong>As alterações só chegam ao app depois de publicar.</div>
+        </div>
+        <div class="sports-photo-import">
+          <div class="sports-photo-copy">
+            <strong>📷 Importar jogos de uma foto</strong>
+            <span>Escolha a arte do calendário. O painel tenta extrair horários, partidas e canais.</span>
+          </div>
+          <input id="sportsImageFile" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Selecionar foto da agenda de jogos" disabled>
+          <button class="btn btn-sm btn-edit" id="sportsImageExtract" type="button" disabled>Extrair jogos</button>
+          <p id="sportsImageStatus" class="sports-photo-status" role="status" aria-live="polite">Revise os dados extraídos e publique quando estiverem corretos.</p>
         </div>
         <p id="sportsSource" class="sports-source" aria-live="polite"></p>
         <button class="btn btn-sm btn-edit" id="sportsViewDraft" type="button" hidden>Revisar rascunho importado</button>
@@ -1881,6 +1897,6 @@ setInterval(() => {
   if (document.getElementById('clients').classList.contains('active')) loadClients();
 }, 30000);
 </script>
-<script src="/admin/sports-settings.js?v=5"></script>
+<script src="/admin/sports-settings.js?v=6"></script>
 </body>
 </html>

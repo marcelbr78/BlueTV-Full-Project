@@ -10,6 +10,9 @@
   const reset = field('sportsReset');
   const sync = field('sportsSync');
   const viewDraft = field('sportsViewDraft');
+  const photoInput = field('sportsImageFile');
+  const extractPhoto = field('sportsImageExtract');
+  const photoStatus = field('sportsImageStatus');
   const suggest = field('sportsCatalogSuggestions');
   let catalog = [];
   let suggestions = [];
@@ -36,6 +39,8 @@
     busy = value;
     for (const button of [dateInput, field('sportsToday'), field('sportsTomorrow')]) button.disabled = value;
     for (const button of [add, publish, reset, sync, viewDraft]) button.disabled = value || !loaded;
+    photoInput.disabled = value || !loaded;
+    extractPhoto.disabled = value || !loaded || !photoInput.files?.length;
   }
 
   function create(tag, text) {
@@ -294,6 +299,51 @@
       status.textContent = data.count + ' jogos encontrados na fonte. Confira o calendário antes de publicar.';
     } catch (error) {
       status.textContent = error.message;
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files?.[0];
+    photoStatus.textContent = file ? file.name + ' selecionada. Toque em “Extrair jogos” para preencher a agenda.' :
+      'Revise os dados extraídos e publique quando estiverem corretos.';
+    extractPhoto.disabled = !loaded || busy || !file;
+  });
+
+  extractPhoto.addEventListener('click', async () => {
+    const file = photoInput.files?.[0];
+    if (!loaded || busy || !file) return;
+    if (dirty && !confirm('Descartar as alterações atuais e substituir pelos jogos extraídos da foto?')) return;
+    if (file.size > 8 * 1024 * 1024) {
+      photoStatus.textContent = 'A imagem precisa ter até 8 MB.';
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      photoStatus.textContent = 'Use uma foto JPG, PNG ou WebP.';
+      return;
+    }
+
+    setBusy(true);
+    photoStatus.textContent = 'Lendo a imagem e procurando horários, partidas e canais…';
+    try {
+      const response = await fetch('/admin/sports/calendar/' + encodeURIComponent(loadedDate) + '/image', {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401) logout();
+      if (!response.ok) throw new Error(result.error || 'Não foi possível ler esta imagem.');
+      renderAgenda({ date: loadedDate, manual: false, draft: true, draft_available: false, matches: result.matches });
+      dirty = true;
+      const count = result.matches.length;
+      status.textContent = count + (count === 1 ? ' jogo extraído da foto.' : ' jogos extraídos da foto.');
+      photoStatus.textContent = 'Extração concluída. Revise os cartões e os canais antes de publicar.';
+      photoInput.value = '';
+      games.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+      photoStatus.textContent = error.message;
     } finally {
       setBusy(false);
     }
