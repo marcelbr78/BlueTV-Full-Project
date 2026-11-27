@@ -46,7 +46,7 @@ function getCompetitions() {
       name: competition.name,
       group: competition.group,
       hasStandings: competition.name === 'Brasileirão Série A' || Boolean(slug),
-      tableFormat: slug ? 'points' : competition.name === 'Copa do Brasil' || competition.name === 'FA Cup' ? 'knockout' : 'unavailable'
+      tableFormat: slug || competition.name === 'Brasileirão Série A' ? 'points' : competition.name === 'Copa do Brasil' || competition.name === 'FA Cup' ? 'knockout' : 'unavailable'
     };
   });
 }
