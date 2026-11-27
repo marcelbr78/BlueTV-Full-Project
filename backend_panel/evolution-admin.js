@@ -79,7 +79,19 @@ async function listInstances(config) {
 
   const entries = Array.isArray(data) ? data : [data];
   const instances = entries.map(instanceSummary).filter(Boolean);
-  return config.instanceName ? instances.filter(({ name }) => name === config.instanceName) : instances;
+  if (!config.instanceName) return instances;
+
+  const configuredInstance = instances.filter(({ name }) => name === config.instanceName);
+  if (configuredInstance.length) return configuredInstance;
+
+  // EVOLUTION_INSTANCE can become stale after an instance is recreated or renamed.
+  // Retry without the filter so the admin can select the real instance and pair it.
+  const allData = await requestEvolution(config, '/instance/fetchInstances');
+  if (!Array.isArray(allData) && !allData?.instance && !allData?.name) {
+    throw new EvolutionError(502, 'O Evolution não retornou a lista de instâncias.');
+  }
+  const allEntries = Array.isArray(allData) ? allData : [allData];
+  return allEntries.map(instanceSummary).filter(Boolean);
 }
 
 function getPairingDetails(data, phone) {
